@@ -6,6 +6,8 @@ com as diretrizes do ecossistema muri-saver. É o equivalente, para o Antigravit
 nomes de modelo reais deste agente (`ask_question` em vez de `AskUserQuestion`,
 `flash_lite`/`flash`/`pro` em vez de `haiku`/`sonnet`/`opus`).
 
+**Seções:** [0. Mapa de palavras-chave](#0-mapa-de-palavras-chave--caminhos-diretos-roteamento-zero-token) · [1. Memória primeiro](#1-regra-de-ouro-first-look-de-memória-memória-primeiro) · [2. Gravação de sessão](#2-gravação-de-sessão-automática--sob-pedido-explícito) · [3. Contexto & limites](#3-gestão-de-contexto--limites-gatilhos-muri-saver) · [4. Subagentes](#4-alocação-escalonada-de-subagentes-invoke_subagent-antigravity) · [5. Compressão de logs](#5-compressão-cirúrgica-de-erros--logs) · [6. Proteções de git](#6-proteções-estritas-de-git) · [7. Mermaid](#7-regra-absoluta-de-diagramas-mermaid-zero-pipes--padrão-sistemáticos) · [8. Fusos horários](#8-sessões-noturnas--fusos-horários) · [9. Handoff](#9-protocolo-de-handoff-ativo-one-click-resume) · [10. Blindagem Markdown](#10-blindagem-de-integridade-markdown--obsidian-anti-quebra-de-sintaxe) · [11. Modo Sticky](#11-modo-sticky-muri-saver--protocolo-nativo-interativo-grill-me) · [12. Graphify](#12-graphify-knowledge-graph-navegação-ast-zero-token)
+
 ---
 
 ## 0. Mapa de Palavras-Chave → Caminhos Diretos (Roteamento Zero-Token)

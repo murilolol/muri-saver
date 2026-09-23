@@ -1,5 +1,12 @@
 # INSTALL-AI.md — runbook autônomo para a IA que for instalar isto
 
+<p>
+  <img src="https://img.shields.io/badge/audi%C3%AAncia-agente_de_IA-6E56CF?style=flat-square" alt="Audiência: agente de IA" />
+  <img src="https://img.shields.io/badge/passos-11-blue?style=flat-square" alt="11 passos" />
+  <img src="https://img.shields.io/badge/onboarding-%2Fgrill--me-D97757?style=flat-square" alt="Onboarding via /grill-me" />
+</p>
+
+> [!IMPORTANT]
 > Este arquivo existe pra uma única finalidade: alguém manda o link deste
 > repositório pro **próprio agente de IA** (Claude Code, Codex, Antigravity,
 > Cursor, o que for) e diz "instala isso pra mim". Você (a IA lendo isto
@@ -7,6 +14,18 @@
 > diretamente**, detectando sozinha o sistema operacional, e só parando para
 > perguntar ao usuário nos pontos marcados com ⚠️. Não peça confirmação a
 > cada comando — peça só nas decisões que só o usuário pode tomar.
+
+**Passos:** [0. Onboarding `/grill-me`](#0-onboarding-interativo-grill-me--sempre-o-primeiro-passo) ·
+[1. Ambiente](#1-detectar-o-ambiente-primeiro-comando-técnico-sempre) ·
+[2. Instalador](#2-clonar-e-rodar-o-instalador) ·
+[3. ai-memory](#3-ai-memory-memória-persistente) ·
+[4. MCP](#4-mcp-servers-ai-memory--obsidian) ·
+[5. Plugin](#5-plugin-claude-obsidian-opcional-mas-recomendado) ·
+[6. Obsidian](#6-app-obsidian) ·
+[7. Doctor](#7-verificação-automática) ·
+[8. Ingestor](#8-importar-sessões-antigas-bin-ingest-sessionsmjs--se-a-resposta-da-pergunta-3-foi-sim) ·
+[9. Skills companheiras](#9-skills-companheiras-opcional) ·
+[10. Confirmar](#10-reiniciar-e-confirmar)
 
 ## 0. Onboarding interativo (`/grill-me`) — sempre o primeiro passo
 
@@ -71,11 +90,12 @@ python3 --version # ou "python --version" no Windows, se "python3" não existir
 claude --version  # Claude Code CLI
 ```
 
-⚠️ **Se Node ou Python não existirem**: pare e avise o usuário — não tente
-instalar runtimes de sistema sozinha sem confirmação explícita. Se
-`python3` não existir mas `python` existir (comum no Windows), siga em
-frente mas note isso pro usuário — o `statusLine` do `settings.json` chama
-especificamente `python3`.
+> [!WARNING]
+> **Se Node ou Python não existirem**: pare e avise o usuário — não tente
+> instalar runtimes de sistema sozinha sem confirmação explícita. Se
+> `python3` não existir mas `python` existir (comum no Windows), siga em
+> frente mas note isso pro usuário — o `statusLine` do `settings.json` chama
+> especificamente `python3`.
 
 ## 2. Clonar e rodar o instalador
 
@@ -115,11 +135,13 @@ Isso, sozinho:
 Flags de diretório pra testes/instalações não-padrão (raramente necessárias):
 `--claude-dir`, `--skills-dir`, `--codex-dir`, `--gemini-dir`.
 
-⚠️ **Se `~/.claude/CLAUDE.md` (ou `~/.gemini/GEMINI.md`/`~/.codex/AGENTS.md`)
-já existir**: o instalador avisa e não sobrescreve (você vai ver o AVISO na
-saída). Pergunte ao usuário se ele quer que você faça o merge seção por seção
-com o template correspondente em `claude-config/`/`antigravity-config/`/`codex-config/`,
-ou se prefere manter o dele como está.
+> [!WARNING]
+> **Se `~/.claude/CLAUDE.md` (ou `~/.gemini/GEMINI.md`/`~/.codex/AGENTS.md`)
+> já existir**: o instalador avisa e não sobrescreve (você vai ver o AVISO na
+> saída). Pergunte ao usuário se ele quer que você faça o merge seção por
+> seção com o template correspondente em
+> `claude-config/`/`antigravity-config/`/`codex-config/`, ou se prefere
+> manter o dele como está.
 
 ## 3. `ai-memory` (memória persistente)
 
@@ -159,9 +181,10 @@ usuário (a resposta da pergunta 4 do Passo 0). Depois:
    nenhuma outra entrada existente**.
 4. Escreva o arquivo de volta.
 
-⚠️ **Se `~/.claude.json` já tiver outros MCP servers com credenciais (API
-keys, tokens em `env`)**: nunca as edite, nunca as imprima no chat, nunca as
-copie pra nenhum arquivo deste repositório ou de qualquer lugar.
+> [!CAUTION]
+> **Se `~/.claude.json` já tiver outros MCP servers com credenciais (API
+> keys, tokens em `env`)**: nunca as edite, nunca as imprima no chat, nunca
+> as copie pra nenhum arquivo deste repositório ou de qualquer lugar.
 
 ## 5. Plugin `claude-obsidian` (opcional, mas recomendado)
 
@@ -233,13 +256,15 @@ um export do Claude Desktop/Web (`conversations.json`), use `--file
 Se você rodou `bin/install.mjs --with-companion-skills` no Passo 2,
 `find-skills`, `tdd`, `prototype` e `grill-with-docs` já foram instaladas.
 
-⚠️ **Não confunda `grill-me` com `grill-with-docs`**: `grill-me` já foi
-copiada no Passo 2 (é vendorizada, sempre acontece, nenhuma flag necessária)
-— é o padrão do dia a dia (e é ela que você já está usando pro onboarding do
-Passo 0). `grill-with-docs` é o upgrade opcional daqui (passo 9), só pra
-quando a entrevista precisa virar ADR/glossário permanente. As duas ficam
-instaladas ao mesmo tempo, uma não substitui a outra — comparação completa em
-[`docs/skills-companion.md`](./docs/skills-companion.md#grill-me-vs-grill-with-docs--uso-as-duas-pra-situações-diferentes).
+> [!NOTE]
+> **Não confunda `grill-me` com `grill-with-docs`**: `grill-me` já foi
+> copiada no Passo 2 (é vendorizada, sempre acontece, nenhuma flag
+> necessária) — é o padrão do dia a dia (e é ela que você já está usando pro
+> onboarding do Passo 0). `grill-with-docs` é o upgrade opcional daqui
+> (passo 9), só pra quando a entrevista precisa virar ADR/glossário
+> permanente. As duas ficam instaladas ao mesmo tempo, uma não substitui a
+> outra — comparação completa em
+> [`docs/skills-companion.md`](./docs/skills-companion.md#grill-me-vs-grill-with-docs--uso-as-duas-pra-situações-diferentes).
 
 Cada skill (instalada ou não) tem uma página própria em
 [`skills/companion/<nome>/README.md`](./skills/companion/) — com o que ela

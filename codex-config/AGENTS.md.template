@@ -14,6 +14,8 @@ suporta hoje.
 > resposta do usuário antes de seguir. Se uma versão futura do Codex expuser uma tool de
 > formulário nativa, prefira ela.
 
+**Seções:** [0. Mapa de palavras-chave](#0-mapa-de-palavras-chave--caminhos-diretos-roteamento-zero-token) · [1. Memória primeiro](#1-regra-de-ouro-first-look-de-memória-memória-primeiro) · [2. Gravação de sessão](#2-gravação-de-sessão-automática--sob-pedido-explícito) · [3. Contexto & limites](#3-gestão-de-contexto--limites) · [4. Subagentes](#4-alocação-de-subagentes--tarefas-delegadas) · [5. Proteções de git](#5-proteções-estritas-de-git) · [6. Mermaid](#6-regra-absoluta-de-diagramas-mermaid-zero-pipes--padrão-sistemáticos) · [7. Fusos horários](#7-sessões-noturnas--fusos-horários) · [8. Handoff](#8-protocolo-de-handoff-ativo-one-click-resume) · [9. Blindagem Markdown](#9-blindagem-de-integridade-markdown--obsidian-anti-quebra-de-sintaxe) · [10. Modo de economia](#10-modo-de-economia-muri-saver-sempre-ativo-sem-skill-separada) · [11. Graphify](#11-graphify-knowledge-graph-navegação-ast-zero-token)
+
 ---
 
 ## 0. Mapa de Palavras-Chave → Caminhos Diretos (Roteamento Zero-Token)

@@ -14,20 +14,49 @@
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT License" />
 </p>
 
+<p align="center">
+  <a href="https://github.com/murilolol/muri-saver/stargazers"><img src="https://img.shields.io/github/stars/murilolol/muri-saver?style=flat-square&color=gold&label=stars" alt="GitHub stars" /></a>
+  <a href="https://github.com/murilolol/muri-saver/commits/main"><img src="https://img.shields.io/github/last-commit/murilolol/muri-saver?style=flat-square&color=blue" alt="Last commit" /></a>
+  <a href="https://github.com/murilolol/muri-saver/issues"><img src="https://img.shields.io/github/issues/murilolol/muri-saver?style=flat-square" alt="Open issues" /></a>
+  <a href="https://github.com/murilolol/muri-saver/network/members"><img src="https://img.shields.io/github/forks/murilolol/muri-saver?style=flat-square&color=blueviolet" alt="Forks" /></a>
+  <img src="https://img.shields.io/badge/zero_runtime_deps-bin%2F*.mjs-lightgrey?style=flat-square" alt="Zero runtime dependencies" />
+</p>
+
 <br>
 
-> **TL;DR** — `CLAUDE.md` (governança sempre carregada) + skill `muri-saver`
-> (modo de economia agressiva sob demanda) + hooks de ciclo de vida que
-> gravam sozinhos em [`ai-memory`](https://github.com/akitaonrails/ai-memory)
+> [!NOTE]
+> **TL;DR** — `CLAUDE.md`/`GEMINI.md`/`AGENTS.md` (governança sempre
+> carregada, um arquivo por agente) + skill `muri-saver` (modo de economia
+> agressiva sob demanda, renomeável com `--alias`) + hooks de ciclo de vida
+> que gravam sozinhos em [`ai-memory`](https://github.com/akitaonrails/ai-memory)
 > (memória durável cross-sessão) e num vault do Obsidian (registro
 > humano-legível). Instalação em 3 comandos, detecta o sistema operacional
-> sozinho.
+> sozinho, funciona pra Claude Code, Antigravity e Codex ao mesmo tempo.
 
+> [!TIP]
 > **Vai instalar com ajuda de uma IA?** Mande o link deste repositório pro
 > seu agente e peça pra ele seguir **[`INSTALL-AI.md`](./INSTALL-AI.md)** —
-> um runbook escrito especificamente pra uma IA executar sozinha, com
-> detecção de SO e verificação automática de cada peça, inclusive o que
-> fazer quando alguma delas não está instalada ou habilitada.
+> um runbook escrito especificamente pra uma IA executar sozinha, que abre
+> com uma entrevista `/grill-me` (nome/alias, quais agentes, importar
+> histórico?) antes de tocar em qualquer arquivo, detecção de SO e
+> verificação automática de cada peça no final.
+
+<details>
+<summary><strong>⚡ Instalação em 30 segundos</strong> (clique pra expandir)</summary>
+
+```bash
+git clone https://github.com/murilolol/muri-saver.git
+cd muri-saver
+node bin/install.mjs --dry-run   # revise o que seria feito, nada é escrito ainda
+node bin/install.mjs --with-all  # Claude Code + Antigravity + Codex de uma vez
+node bin/doctor.mjs              # verifica tudo automaticamente
+```
+
+Quer usar seu próprio nome em vez de `muri-saver`? `--alias mendes-saver`.
+Já tinha sessões antigas de algum desses agentes? `node bin/ingest-sessions.mjs --all --dry-run`
+depois de instalar. Detalhes de tudo isso mais abaixo, ou direto em
+[Instalação](#instalação).
+</details>
 
 <br>
 
@@ -81,28 +110,27 @@ com os números que provam por quê (seção
 realidade — o `bin/doctor.mjs` existe pra você auditar a sua, não só confiar
 na minha.
 
+> [!TIP]
+> **Isso é pra você se:** você já bateu teto de uso sem entender por quê;
+> reexplica o mesmo contexto de projeto toda sessão nova; troca entre Claude
+> Code/Codex/Antigravity e perde continuidade a cada troca; ou só quer um
+> jeito de olhar pra trás e ver o que a IA fez num projeto sem abrir um
+> transcript JSON de 40 mil linhas.
+
 <br>
 
 ## Como funciona
 
-Quatro peças, cada uma resolvendo uma parte diferente do problema:
+Quatro peças, cada uma resolvendo uma parte diferente do problema — a
+governança roda sempre e é barata, o resto liga sob demanda ou em segundo
+plano:
 
-- **`CLAUDE.md`** roda em toda sessão, todo projeto — regras curtas e
-  universais (consultar memória antes de reler arquivo, alocação de modelo
-  por subagente, proteções de git, mapa de palavras-chave pra não varrer
-  diretório às cegas).
-- **Skill `muri-saver`** carrega sob demanda quando você pede economia — aí
-  sim vale a pena gastar contexto numa lista mais longa e agressiva de
-  regras por tipo de tarefa (backend, frontend, browser automation, git,
-  debug...).
-- **Hooks** (`SessionStart`/`Stop`) garantem que a memória e o registro
-  acontecem *sempre*, sem depender do agente lembrar de fazer isso — a
-  versão anterior desse sistema dependia de uma regra escrita no `CLAUDE.md`,
-  e ela parava de ser seguida depois de alguns dias sem enforcement real.
-- **`ai-memory` + Obsidian Vault** são o destino final: um banco
-  SQLite/FTS5 consultável via MCP como fonte de verdade durável, e um vault
-  Markdown como vitrine legível por humano, gerada pelos hooks — não escrita
-  à mão.
+| Peça | Arquivo(s) | Quando roda | Resolve |
+|---|---|---|---|
+| **Governança global** | `CLAUDE.md` / `GEMINI.md` / `AGENTS.md` (um por agente) | Toda sessão, todo projeto | Regras curtas e universais: consultar memória antes de reler arquivo, alocação de modelo por subagente, proteções de git, mapa de palavras-chave pra não varrer diretório às cegas |
+| **Skill `muri-saver`** | `skills/muri-saver/SKILL.md` | Sob demanda ("muri saver" ou pedido explícito de economia) | Lista longa e agressiva de regras por tipo de tarefa (backend, frontend, browser automation, git, debug...) — cara demais pra deixar sempre carregada |
+| **Hooks de ciclo de vida** | `hooks/*.mjs` | `SessionStart` / `Stop`, automático | Memória e registro acontecem **sempre**, sem depender do agente lembrar — a versão anterior dependia de uma regra escrita no `CLAUDE.md` e parava de ser seguida depois de alguns dias sem enforcement real |
+| **`ai-memory` + Obsidian Vault** | daemon externo + `<vault>/` | Consultado/gravado pelos hooks | Destino final: banco SQLite/FTS5 via MCP como fonte de verdade durável, e vault Markdown como vitrine legível por humano — gerado pelos hooks, nunca escrito à mão |
 
 <p align="center">
   <img src="./assets/architecture-diagram.png" alt="Diagrama: Claude Code, Codex e Antigravity alimentam o CLAUDE.md e a skill muri-saver, que acionam hooks de SessionStart/Stop, que gravam em ai-memory e no Obsidian Vault" width="100%" />
@@ -252,6 +280,9 @@ a sua própria e ajuste (é literalmente pra isso que a skill recomenda rodar
 
 ## O que tem aqui
 
+<details open>
+<summary><strong>📂 Estrutura completa do repositório</strong> (clique pra recolher)</summary>
+
 ```
 muri-saver/
 ├── package.json                       # metadata + scripts npm de conveniencia
@@ -301,6 +332,8 @@ muri-saver/
 └── LICENSE
 ```
 
+</details>
+
 <br>
 
 ## Skills incluídas
@@ -341,6 +374,7 @@ instalação). Prévia rápida:
 `obra/superpowers` e decidi não usar — é ótimo, mas pesado demais em
 tokens/contexto pro meu fluxo (o oposto do que este repositório propõe).
 
+> [!TIP]
 > **`grill-me` e `grill-with-docs` são usadas juntas, não uma no lugar da
 > outra**: `grill-me` (minha, sempre instalada) é o padrão do dia a dia;
 > `grill-with-docs` (de terceiros, opcional) é o upgrade só pra quando a
@@ -446,39 +480,65 @@ específico do seu SO quebrar, é bug, não limitação de design.
 
 ## Perguntas rápidas
 
-**Preciso usar Claude Code, ou funciona com outra coisa?**
+<details>
+<summary><strong>Preciso usar Claude Code, ou funciona com outra coisa?</strong></summary>
+
 Não — `bin/install.mjs --with-all` configura Claude Code, Antigravity/Gemini
 CLI e Codex CLI de uma vez, cada um com seu próprio arquivo de governança
 (`CLAUDE.md`/`GEMINI.md`/`AGENTS.md`) e hook de gravação de sessão. Se seu
 agente não é nenhum desses três, adapte os hooks — eles são só scripts
 Node/Bash comuns, e os templates de governança são texto puro.
+</details>
 
-**Isso vai deixar minhas sessões mais lentas?**
+<details>
+<summary><strong>Isso vai deixar minhas sessões mais lentas?</strong></summary>
+
 Não deveria — a skill `muri-saver` existe justamente pra ficar *mais* rápido
 e barato. Os hooks rodam em `SessionStart`/`Stop`, fora do caminho crítico de
-cada resposta.
+cada resposta, e o hook de gravação (`Stop`) tem um teto rígido de ~8s antes
+de cair no fallback 100% local — nunca trava o `/exit` esperando uma API
+externa.
+</details>
 
-**O que acontece se eu não tiver Obsidian instalado?**
+<details>
+<summary><strong>O que acontece se eu não tiver Obsidian instalado?</strong></summary>
+
 Os hooks tentam gravar mesmo assim (criam a pasta se não existir); só a
 *leitura* confortável do resultado depende do app. `bin/doctor.mjs` avisa se
 não encontrar o Obsidian instalado, sem travar o resto da instalação.
+</details>
 
-**Preciso pagar por alguma coisa?**
+<details>
+<summary><strong>Preciso pagar por alguma coisa?</strong></summary>
+
 Não — `ai-memory` é open-source e roda localmente, Obsidian é gratuito pra
 uso pessoal, e as skills companheiras listadas em
-`docs/skills-companion.md` também são todas gratuitas/open-source.
+[`docs/skills-companion.md`](./docs/skills-companion.md) também são todas
+gratuitas/open-source. O único custo é o da sua própria conta Claude
+Code/Codex/Antigravity, que você já paga de qualquer forma.
+</details>
+
+<details>
+<summary><strong>Preciso trocar o nome pra <code>muri-saver</code> funcionar?</strong></summary>
+
+Não, é opcional. Sem `--alias`, o nome padrão continua sendo `muri-saver` —
+a personalização existe pra quem quer adotar o próprio nome (ver
+[Personalize com o seu nome](#personalize-com-o-seu-nome---alias)), não é um
+requisito de funcionamento.
+</details>
 
 <br>
 
 ## Documentação complementar
 
-| Documento | Conteúdo |
-|---|---|
-| [`docs/architecture.md`](./docs/architecture.md) | Por que cada peça existe, como se encaixam |
-| [`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md) | Instalação detalhada do `ai-memory` + Obsidian + MCP session-aware |
-| [`docs/skills-companion.md`](./docs/skills-companion.md) | Skills de terceiros que uso, com créditos, vantagens e comando de instalação |
-| [`docs/session-ingestor.md`](./docs/session-ingestor.md) | Como `bin/ingest-sessions.mjs` importa sessões antigas de cada agente, sem LLM |
-| [`INSTALL-AI.md`](./INSTALL-AI.md) | Runbook pra uma IA instalar tudo sozinha, com onboarding `/grill-me` e verificação |
+| | Documento | Conteúdo |
+|---|---|---|
+| 🧭 | [`docs/architecture.md`](./docs/architecture.md) | Por que cada peça existe, como se encaixam |
+| 🧠 | [`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md) | Instalação detalhada do `ai-memory` + Obsidian + MCP session-aware |
+| 🧩 | [`docs/skills-companion.md`](./docs/skills-companion.md) | Skills de terceiros que uso, com créditos, vantagens e comando de instalação |
+| 📥 | [`docs/session-ingestor.md`](./docs/session-ingestor.md) | Como `bin/ingest-sessions.mjs` importa sessões antigas de cada agente, sem LLM |
+| 👤 | [`INSTALL.md`](./INSTALL.md) | Guia de instalação passo a passo pra humano |
+| 🤖 | [`INSTALL-AI.md`](./INSTALL-AI.md) | Runbook pra uma IA instalar tudo sozinha, com onboarding `/grill-me` e verificação |
 
 <br>
 
@@ -498,3 +558,11 @@ individual de cada uma.
 MIT — ver [`LICENSE`](./LICENSE) pro conteúdo original deste repositório
 (`muri-saver`, `grill-me`, hooks, scripts, documentação). Use, adapte,
 quebre, mande PR se achar bug ou tiver uma regra melhor pra propor.
+
+<br>
+
+<p align="center">
+  <sub>Se isso te economizou tokens ou uma tarde de sessão perdida, uma ⭐ no repositório ajuda outra pessoa a achar.</sub>
+  <br />
+  <a href="#muri-saver">⬆ Voltar ao topo</a>
+</p>

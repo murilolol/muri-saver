@@ -24,6 +24,18 @@ Ao ativar, primeiro classifique a tarefa (backend / frontend / docs / git / debu
 projeto novo / refactor) a partir do prompt do usuário e aplique a seção correspondente
 abaixo. Regras universais valem sempre.
 
+**Seções:** [Regras universais](#regras-universais-sempre-independente-do-tipo-de-tarefa) ·
+[Perfil por tarefa](#perfil-por-tipo-de-tarefa) ·
+[Detecção de projeto](#detecção-de-projeto-ai-memory) ·
+[MCP session-aware](#mcp-session-aware-evita-ambiguidade-de-projeto) ·
+[LLM provider](#ai-memory--llm-provider-anthropic-oauth) ·
+[Obsidian CLI](#obsidian-cli-oficial) ·
+[Skills favoritas](#orquestração-de-skills-favoritas) ·
+[Auditoria](#auditoria-periódica) ·
+[Modo Sticky](#modo-sticky--persistência-de-sessão) ·
+[/grill-me](#protocolo-nativo-interativo-grill-me) ·
+[Governança 2.0](#governança-mestre-muri-saver-20-regras-globais-agy--claude)
+
 ## Regras universais (sempre, independente do tipo de tarefa)
 
 **Resposta**
