@@ -35,19 +35,42 @@ documento.
 | `impeccable` | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Apache-2.0 | [skills/companion/impeccable/](../skills/companion/impeccable/README.md) |
 | `superpowers` (pack) | [obra/superpowers](https://github.com/obra/superpowers) | MIT | [skills/companion/superpowers/](../skills/companion/superpowers/README.md) |
 
-## Sobre `grill-me` especificamente
+## `grill-me` vs `grill-with-docs` — uso as duas, pra situações diferentes
+
+Não é "uma substitui a outra" — no meu fluxo real elas resolvem problemas
+diferentes e as duas ficam instaladas ao mesmo tempo:
+
+| | `grill-me` | `grill-with-docs` |
+|---|---|---|
+| **Instalação neste repo** | Vendorizada — sempre copiada por `bin/install.mjs`, nenhuma flag necessária | Não vendorizada — de terceiros, instale com `npx skills add mattpocock/skills@grill-with-docs` (ou `--with-companion-skills`) |
+| **O que faz** | Entrevista rápida via modal nativo (`AskUserQuestion`/`ask_question`) pra alinhar requisitos/arquitetura antes de agir | A mesma entrevista, só que também gera ADR + glossário como artefato permanente enquanto entrevista |
+| **Quando eu uso** | Praticamente sempre que a skill `muri-saver` decide que vale a pena entrevistar — é o padrão | Só quando a decisão é grande o suficiente pra merecer registro formal (feature fechada, arquitetura importante) — a exceção, não a regra |
+| **Custo** | Mais leve — sem gerar documento | Mais pesado — grava ADR/glossário junto |
+
+Na prática: `grill-me` é o padrão do dia a dia (por isso é minha, vendorizada,
+sempre presente); `grill-with-docs` é o upgrade opcional pra quando o
+resultado da entrevista precisa virar documentação que sobrevive à
+conversa. A própria [`skills/muri-saver/SKILL.md`](../skills/muri-saver/SKILL.md)
+já decide qual oferecer em cada situação, na tabela "Orquestração de skills
+favoritas".
+
+### Por que `grill-me` é vendorizada e `grill-with-docs` não
 
 O `grill-me` original do ecossistema (`mattpocock/skills@grill-me`) é hoje só
 um redirecionamento de 5 linhas pra outra skill interna
 (`Call the Skill tool with "grilling"`). A versão que uso e que está
 vendorizada em [`skills/grill-me/SKILL.md`](../skills/grill-me/SKILL.md) é uma
 reescrita completa e independente, feita por mim, especificamente pra forçar
-o uso do modal nativo de perguntas (`AskUserQuestion` no Claude Code,
-`ask_question` no Antigravity) em vez de texto cru no chat — é essa versão
-que o `CLAUDE.md.template` e a skill `muri-saver` esperam encontrar. Por não
-ser uma cópia de conteúdo alheio (o original tem 5 linhas genéricas; o meu é
-uma reescrita própria sob o mesmo nome/conceito), ela é distribuída aqui sob
-a licença MIT deste repositório, não a do projeto original.
+o uso do modal nativo de perguntas em vez de texto cru no chat — é essa
+versão que o `CLAUDE.md.template` e a skill `muri-saver` esperam encontrar.
+Por não ser uma cópia de conteúdo alheio (o original tem 5 linhas genéricas;
+o meu é uma reescrita própria sob o mesmo nome/conceito), ela é distribuída
+aqui sob a licença MIT deste repositório, não a do projeto original.
+
+`grill-with-docs`, por outro lado, está instalada e funcionando **sem
+modificação** em relação ao `mattpocock/skills` original — não há reescrita
+minha ali pra justificar vendorizar, então ela segue a mesma regra das
+outras skills companheiras: documentação aqui, código na fonte oficial.
 
 ## Se um `npx skills add` falhar
 
