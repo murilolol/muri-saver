@@ -1,0 +1,25 @@
+{
+  "name": "muri-saver",
+  "version": "1.0.0",
+  "description": "Governanca de tokens, memoria persistente (ai-memory) e registro em Obsidian para Claude Code, Codex e Antigravity.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "author": "Murilo Silva <https://github.com/murilolol>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/murilolol/muri-saver.git"
+  },
+  "bin": {
+    "muri-saver-install": "./bin/install.mjs",
+    "muri-saver-doctor": "./bin/doctor.mjs"
+  },
+  "scripts": {
+    "install-config": "node bin/install.mjs",
+    "install-config:dry-run": "node bin/install.mjs --dry-run",
+    "doctor": "node bin/doctor.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
