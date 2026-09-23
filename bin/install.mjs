@@ -183,6 +183,12 @@ function platformLabel(platform) {
 // --with-companion-skills for passado. Falha isolada por pacote não aborta o
 // resto (rede instável, skills.sh fora do ar, etc. não devem travar o resto
 // da instalação).
+//
+// Nota sobre grill-with-docs: NÃO é um substituto de `skills/grill-me/`
+// (vendorizada, sempre copiada acima, independente desta lista) — as duas
+// são usadas juntas. `grill-me` é o padrão do dia a dia; `grill-with-docs`
+// é o upgrade opcional pra quando a entrevista precisa virar ADR/glossário
+// permanente. Ver docs/skills-companion.md para a comparação completa.
 const COMPANION_SKILLS = [
   'vercel-labs/skills@find-skills',
   'mattpocock/skills@tdd',
@@ -279,7 +285,7 @@ function main() {
   log('  1. Instalar o binário ai-memory e rodar `ai-memory install-hooks --client claude-code`.');
   log('  2. Mesclar mcp/mcp-servers.example.json em ~/.claude.json (ou config do seu client) com o caminho real do seu vault.');
   log('  3. Reiniciar o Claude Code pra carregar a skill, os hooks e o CLAUDE.md novos.');
-  log('  4. Rodar `node doctor.mjs` pra verificar tudo automaticamente (Node/Python/Claude CLI/ai-memory/MCP/Obsidian/vault).');
+  log('  4. Rodar `node bin/doctor.mjs` pra verificar tudo automaticamente (Node/Python/Claude CLI/ai-memory/MCP/Obsidian/vault).');
 }
 
 main();
