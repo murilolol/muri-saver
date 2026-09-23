@@ -35,6 +35,7 @@
 
 - [Sobre](#sobre)
 - [Como funciona](#como-funciona)
+- [`ai-memory`](#ai-memory)
 - [Antes / depois](#antes--depois)
 - [Achados reais que justificam cada regra](#achados-reais-que-justificam-cada-regra)
 - [O que tem aqui](#o-que-tem-aqui)
@@ -133,6 +134,47 @@ assim (e não tudo num arquivo só), em
 
 <br>
 
+## `ai-memory`
+
+Quem resolve o problema #2 da seção [Sobre](#sobre) (memória que evapora
+entre sessões) é o **[ai-memory](https://github.com/akitaonrails/ai-memory)**
+— um projeto externo, não é meu, mas é a peça central deste setup.
+
+**O que é:** um servidor de memória de longo prazo pra agentes de IA
+coding, criado por [Fabio Akita](https://github.com/akitaonrails) (mais de
+8 mil estrelas no GitHub, licença MIT, escrito em Rust). A ideia central:
+seu agente já tem alguma memória hoje — Claude Code anota algumas coisas,
+Cursor lembra outras — mas ela fica presa numa máquina, num agente só, e
+some quando você troca de ferramenta. O ai-memory fica do outro lado dessas
+paredes:
+
+- **Atravessa agentes** — mais de 20 harnesses (Claude Code, Codex, Cursor,
+  Gemini CLI, OpenCode, Grok, Devin...) alimentam a mesma memória
+  compartilhada. Sai do Claude Code no meio de uma tarefa, abre o Codex no
+  mesmo diretório, e o próximo agente recebe um handoff de verdade — o que
+  já foi tentado, o que falhou, o que ainda tá em aberto.
+- **Atravessa máquinas** — a memória vive num servidor local (o mesmo
+  notebook, uma homelab, o que for); o projeto que você deixou no desktop é
+  o mesmo que retoma no notebook.
+- **É markdown puro** — a fonte de verdade é uma wiki versionada de
+  arquivos `.md` comuns; o banco (SQLite + FTS5) é um índice derivado que
+  sempre pode ser reconstruído a partir dos arquivos. `grep`, abra no
+  Obsidian, edite à mão — sem vector store pra manter, nada preso num blob
+  binário.
+- **Captura o trabalho sozinho** — hooks de ciclo de vida gravam prompts,
+  tool calls e limites de sessão, sanitizados antes de guardar, sem
+  cerimônia de "lembra disso". O caminho padrão usa **zero chamadas de
+  LLM** — captura, busca e handoff funcionam sem nenhuma API key.
+
+Neste repositório, `hooks/ai-memory-ensure-server.mjs`,
+`hooks/obsidian-vault-check.mjs` e o `CLAUDE.md.template` já vêm
+configurados pra usar o ai-memory como essa fonte de verdade — não preciso
+reescrever nada disso, só integrar. Instalação completa (binário, MCP
+session-aware, marker file por projeto, provedor de LLM opcional) em
+[`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md).
+
+<br>
+
 ## Antes / depois
 
 | | Sem muri-saver | Com muri-saver |
@@ -184,7 +226,10 @@ muri-saver/
 │   └── architecture-diagram.svg       # fonte vetorial editavel do diagrama
 ├── skills/
 │   ├── muri-saver/SKILL.md            # minha skill original — modo de economia agressiva
-│   └── grill-me/SKILL.md              # minha reescrita do protocolo de entrevista via modal nativo
+│   ├── grill-me/SKILL.md              # minha reescrita do protocolo de entrevista via modal nativo
+│   └── companion/                     # NAO sao skills vendorizadas — so README explicando cada uma
+│       ├── find-skills/README.md      # + tdd/, prototype/, grill-with-docs/, openspec/,
+│       └── ...                        #   graphify/, impeccable/, superpowers/ (mesmo padrao)
 ├── claude-config/
 │   ├── CLAUDE.md.template             # governanca global, sempre carregada
 │   └── settings.snippet.json          # trecho de merge pro ~/.claude/settings.json
@@ -231,20 +276,24 @@ repositório:
 
 Uso todo dia, mas **não são copiadas aqui de propósito** — são projetos de
 terceiros, com seus próprios autores e licenças, e uma cópia local só ficaria
-desatualizada. Prévia de cada uma abaixo; detalhes completos (vantagem de
-usar, quando eu uso, comando exato de instalação) em
-**[`docs/skills-companion.md`](./docs/skills-companion.md)**.
+desatualizada. Cada uma tem uma página dedicada em
+[`skills/companion/`](./skills/companion/) — não com o código da skill, mas
+com uma explicação própria (o que é, quando eu uso, vantagem, comando de
+instalação). Prévia rápida:
 
 | Skill | O que faz | Autor | Licença |
 |---|---|---|---|
-| `find-skills` | Descobre e instala outras skills do ecossistema aberto (`skills.sh`) | [Vercel Labs](https://github.com/vercel-labs/skills) | MIT |
-| `tdd` | Referência de test-driven development — loop red→green, o que é um bom teste, anti-padrões | [Matt Pocock](https://github.com/mattpocock/skills) | MIT |
-| `prototype` | Protótipo descartável pra validar modelo de estado/lógica ou layout antes de construir de vez | [Matt Pocock](https://github.com/mattpocock/skills) | MIT |
-| `grill-with-docs` | Entrevista tipo `grill-me` que também gera ADR/glossário como efeito colateral | [Matt Pocock](https://github.com/mattpocock/skills) | MIT |
-| `openspec` | Framework de especificação estruturada (requisitos, arquitetura, plano de execução) antes de implementar | [openspecio](https://github.com/openspecio/openspec) | MIT |
-| `graphify` | Transforma qualquer pasta de código/docs num grafo de conhecimento navegável (`graphify query/path/explain`) | [safishamsi](https://github.com/Graphify-Labs/graphify) | Apache-2.0 |
-| `impeccable` | Revisão/crítica/polish de UI com padrão de design director sênior | [Paul Bakaus](https://github.com/pbakaus/impeccable) | Apache-2.0 |
-| `superpowers` (pack) | Metodologia de dev sênior — debugging sistemático, planejamento, worktrees, code review | [obra](https://github.com/obra/superpowers) | MIT |
+| [`find-skills`](./skills/companion/find-skills/README.md) | Descobre e instala outras skills do ecossistema aberto (`skills.sh`) | [Vercel Labs](https://github.com/vercel-labs/skills) | MIT |
+| [`tdd`](./skills/companion/tdd/README.md) | Referência de test-driven development — loop red→green, o que é um bom teste, anti-padrões | [Matt Pocock](https://github.com/mattpocock/skills) | MIT |
+| [`prototype`](./skills/companion/prototype/README.md) | Protótipo descartável pra validar modelo de estado/lógica ou layout antes de construir de vez | [Matt Pocock](https://github.com/mattpocock/skills) | MIT |
+| [`grill-with-docs`](./skills/companion/grill-with-docs/README.md) | Entrevista tipo `grill-me` que também gera ADR/glossário como efeito colateral | [Matt Pocock](https://github.com/mattpocock/skills) | MIT |
+| [`openspec`](./skills/companion/openspec/README.md) | Framework de especificação estruturada (requisitos, arquitetura, plano de execução) antes de implementar | [openspecio](https://github.com/openspecio/openspec) | MIT |
+| [`graphify`](./skills/companion/graphify/README.md) | Transforma qualquer pasta de código/docs num grafo de conhecimento navegável (`graphify query/path/explain`) | [safishamsi](https://github.com/Graphify-Labs/graphify) | Apache-2.0 |
+| [`impeccable`](./skills/companion/impeccable/README.md) | Revisão/crítica/polish de UI com padrão de design director sênior | [Paul Bakaus](https://github.com/pbakaus/impeccable) | Apache-2.0 |
+| [`superpowers`](./skills/companion/superpowers/README.md) (pack) | Metodologia de dev sênior — debugging sistemático, planejamento, worktrees, code review | [obra](https://github.com/obra/superpowers) | MIT |
+
+Índice completo com mais contexto (quando usar, por que vale a pena) em
+[`docs/skills-companion.md`](./docs/skills-companion.md).
 
 <br>
 
