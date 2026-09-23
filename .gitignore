@@ -1,0 +1,15 @@
+.DS_Store
+Thumbs.db
+
+# Runtime/state files that hooks generate locally — nunca fazem sentido versionados
+*.log
+.claude-rate-limited.json
+.generate-summary-error.log
+.trivial-filter-debug.log
+
+# Segredos — nunca comitar
+.env
+.env.*
+*.bak-*
+
+node_modules/
