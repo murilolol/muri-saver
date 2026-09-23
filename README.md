@@ -295,6 +295,12 @@ instalação). Prévia rápida:
 Índice completo com mais contexto (quando usar, por que vale a pena) em
 [`docs/skills-companion.md`](./docs/skills-companion.md).
 
+> **`grill-me` e `grill-with-docs` são usadas juntas, não uma no lugar da
+> outra**: `grill-me` (minha, sempre instalada) é o padrão do dia a dia;
+> `grill-with-docs` (de terceiros, opcional) é o upgrade só pra quando a
+> decisão é grande o bastante pra virar ADR permanente. Comparação completa
+> em [`docs/skills-companion.md`](./docs/skills-companion.md#grill-me-vs-grill-with-docs--uso-as-duas-pra-situações-diferentes).
+
 <br>
 
 ## Instalação

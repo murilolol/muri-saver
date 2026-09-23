@@ -73,6 +73,11 @@ uma página própria em [`skills/companion/`](./skills/companion/) explicando
 o que é, quem fez, e o comando exato de instalação — índice completo em
 [`docs/skills-companion.md`](./docs/skills-companion.md).
 
+Atenção: `grill-me` **não** está nessa lista porque já foi instalada no
+Passo 1 (é vendorizada, sempre acontece). `grill-with-docs` é diferente —
+uso as duas juntas, não uma no lugar da outra; ver a comparação em
+[`docs/skills-companion.md`](./docs/skills-companion.md#grill-me-vs-grill-with-docs--uso-as-duas-pra-situações-diferentes).
+
 ## Documentação de apoio
 
 | Documento | Conteúdo |

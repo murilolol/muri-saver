@@ -162,6 +162,15 @@ deste documento antes de seguir em frente.
 
 Se você rodou `bin/install.mjs --with-companion-skills` no Passo 1,
 `find-skills`, `tdd`, `prototype` e `grill-with-docs` já foram instaladas.
+
+⚠️ **Não confunda `grill-me` com `grill-with-docs`**: `grill-me` já foi
+copiada no Passo 1 (é vendorizada, sempre acontece, nenhuma flag necessária)
+— é o padrão do dia a dia. `grill-with-docs` é o upgrade opcional daqui
+(passo 7), só pra quando a entrevista precisa virar ADR/glossário
+permanente. As duas ficam instaladas ao mesmo tempo, uma não substitui a
+outra — comparação completa em
+[`docs/skills-companion.md`](./docs/skills-companion.md#grill-me-vs-grill-with-docs--uso-as-duas-pra-situações-diferentes).
+
 Cada skill (instalada ou não) tem uma página própria em
 [`skills/companion/<nome>/README.md`](./skills/companion/) — com o que ela
 faz, o autor, quando usar e o comando de instalação. Se o usuário perguntar
