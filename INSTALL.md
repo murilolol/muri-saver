@@ -31,8 +31,39 @@ hooks pra `~/.claude/hooks/`, os scripts pra `~/.claude/scripts/`, mescla os
 hooks `Stop`/`SessionStart` no seu `~/.claude/settings.json`, e cria
 `~/.claude/CLAUDE.md` a partir do template (só se você ainda não tiver um).
 
-Flags úteis: `--vault "<caminho>"` (cria a estrutura de pastas do Obsidian),
-`--with-codex` (suporte ao Codex CLI), `--with-companion-skills` (instala
+### Personalize com o seu nome (`--alias`)
+
+Quer usar `mendes-saver`, `lucas-saver` ou só `lucas` em vez de `muri-saver`?
+Passe `--alias`:
+
+```bash
+node bin/install.mjs --alias mendes-saver --author-name Mendes
+```
+
+Isso renomeia a skill, o `CLAUDE.md`/`GEMINI.md`/`AGENTS.md` e todos os
+gatilhos de ativação — `"mendes saver"`, `"mendes-saver"`, `"/mendes-saver"` —
+mantendo `"muri-saver"`/`"muri saver"` funcionando como alias alternativo
+herdado do padrão original. Sem `--alias`, o padrão continua sendo
+estritamente `muri-saver`.
+
+### Multi-agente (`--with-codex`, `--with-antigravity`, `--with-all`)
+
+Além do Claude Code (sempre instalado), o instalador também configura
+Antigravity/Gemini CLI e Codex CLI:
+
+```bash
+node bin/install.mjs --with-antigravity   # GEMINI.md + skill em ~/.gemini/
+node bin/install.mjs --with-codex         # AGENTS.md + hook em ~/.codex/
+node bin/install.mjs --with-all           # os três de uma vez
+```
+
+Sem essas flags, o instalador ainda detecta sozinho se `~/.gemini` ou
+`~/.codex` já existem (sinal de que você já usa aquele agente) e configura
+automaticamente mesmo assim — as flags só forçam a instalação quando a pasta
+ainda não existe.
+
+Outras flags úteis: `--vault "<caminho>"` (cria a estrutura de pastas do
+Obsidian), `--with-companion-skills` (instala
 `find-skills`/`tdd`/`prototype`/`grill-with-docs` automaticamente). Detalhes
 de todas em [`INSTALL-AI.md`](./INSTALL-AI.md#passo-1--clonar-e-rodar-o-instalador).
 
@@ -60,8 +91,25 @@ node bin/doctor.mjs --vault "<caminho-do-seu-vault>"
 
 Confere Node, Python, Claude Code CLI, binário e servidor do `ai-memory`,
 hooks registrados, plugin `claude-obsidian`, MCP servers, app Obsidian
-instalado, e a estrutura de pastas do vault — tudo numa passada, com
-`OK`/`AVISO`/`FALHA` por item.
+instalado, a estrutura de pastas do vault, o alias configurado (padrão ou
+customizado) e as sessões brutas/governança de cada agente (Claude
+Code/Antigravity/Codex) — tudo numa passada, com `OK`/`AVISO`/`FALHA` por
+item.
+
+## Passo 5 — Importar sessões antigas (opcional)
+
+Já usava Claude Code, Antigravity ou Codex antes de instalar o muri-saver?
+O ingestor varre o histórico local de cada um e registra retroativamente no
+Obsidian Vault e/ou no `ai-memory` — sem chamar nenhuma LLM (extração 100%
+local):
+
+```bash
+node bin/ingest-sessions.mjs --all --dry-run   # simulação, veja o que seria importado
+node bin/ingest-sessions.mjs --all --limit 20  # importa as 20 sessões mais recentes de cada agente
+```
+
+Detalhes completos (formato de cada fonte, sanitização, idempotência) em
+[`docs/session-ingestor.md`](./docs/session-ingestor.md).
 
 ## Skills companheiras (opcional)
 
@@ -86,4 +134,5 @@ uso as duas juntas, não uma no lugar da outra; ver a comparação em
 | [`docs/architecture.md`](./docs/architecture.md) | Visão geral / por que cada peça existe |
 | [`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md) | `ai-memory` + Obsidian (binário, MCP, marker file) |
 | [`docs/skills-companion.md`](./docs/skills-companion.md) | Skills de terceiros que uso e recomendo |
+| [`docs/session-ingestor.md`](./docs/session-ingestor.md) | Como `bin/ingest-sessions.mjs` importa sessões antigas de cada agente |
 | [`INSTALL-AI.md`](./INSTALL-AI.md) | Runbook completo pra uma IA instalar sozinha |

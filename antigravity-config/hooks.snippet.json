@@ -1,0 +1,15 @@
+{
+  "_comment": "Trecho de exemplo para ~/.gemini/config/hooks.json (Antigravity). Faça merge dentro do que você já tem — não sobrescreva o arquivo inteiro. Troque <HOME> pelo caminho absoluto real da home do usuário. Reaproveita o MESMO hooks/obsidian-vault-check.mjs do Claude Code (já detecta Antigravity via input.conversationId) — não precisa de um script separado.",
+
+  "obsidian-vault-check": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node \"<HOME>/.claude/hooks/obsidian-vault-check.mjs\"",
+        "timeout": 10
+      }
+    ]
+  },
+
+  "_nota_ai_memory_hooks": "Assim como no Claude Code, os hooks do próprio `ai-memory` pro Antigravity (grupo `ai-memory`, eventos PreToolUse/PostToolUse/PreInvocation/Stop chamando `ai-memory hook --event ... --agent antigravity-cli`) não estão aqui de propósito — rode `ai-memory install-hooks --client antigravity` (se sua versão do ai-memory suportar) ou registre manualmente seguindo docs/ai-memory-obsidian-setup.md."
+}

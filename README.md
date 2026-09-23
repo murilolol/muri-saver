@@ -41,6 +41,8 @@
 - [O que tem aqui](#o-que-tem-aqui)
 - [Skills incluídas](#skills-incluídas)
 - [Instalação](#instalação)
+- [Personalize com o seu nome (`--alias`)](#personalize-com-o-seu-nome---alias)
+- [Importando sessões antigas (session ingestor)](#importando-sessões-antigas-session-ingestor)
 - [Multiplataforma](#multiplataforma)
 - [Perguntas rápidas](#perguntas-rápidas)
 - [Documentação complementar](#documentação-complementar)
@@ -219,8 +221,9 @@ a sua própria e ajuste (é literalmente pra isso que a skill recomenda rodar
 muri-saver/
 ├── package.json                       # metadata + scripts npm de conveniencia
 ├── bin/
-│   ├── install.mjs                    # instalador nao-interativo, detecta o SO
-│   └── doctor.mjs                     # verificacao de ambiente (Node/Python/ai-memory/MCP/Obsidian/vault)
+│   ├── install.mjs                    # instalador nao-interativo, detecta o SO, suporta --alias/--with-*
+│   ├── doctor.mjs                     # verificacao de ambiente (Node/Python/ai-memory/MCP/Obsidian/vault/agentes)
+│   └── ingest-sessions.mjs            # importa sessoes antigas de cada agente pro vault/ai-memory, sem LLM
 ├── assets/
 │   ├── architecture-diagram.png       # diagrama usado neste README
 │   └── architecture-diagram.svg       # fonte vetorial editavel do diagrama
@@ -231,10 +234,14 @@ muri-saver/
 │       ├── find-skills/README.md      # + tdd/, prototype/, grill-with-docs/, openspec/,
 │       └── ...                        #   graphify/, impeccable/, emil-design-eng/, taste-skill/
 ├── claude-config/
-│   ├── CLAUDE.md.template             # governanca global, sempre carregada
+│   ├── CLAUDE.md.template             # governanca global do Claude Code, sempre carregada
 │   └── settings.snippet.json          # trecho de merge pro ~/.claude/settings.json
+├── antigravity-config/
+│   ├── GEMINI.md.template             # governanca global do Antigravity/Gemini CLI (equivalente ao CLAUDE.md)
+│   └── hooks.snippet.json             # trecho de merge pro ~/.gemini/config/hooks.json
 ├── codex-config/
-│   └── hooks.snippet.json             # idem, pro ~/.codex/hooks.json (suporte opcional ao Codex)
+│   ├── AGENTS.md.template             # governanca global do Codex CLI (equivalente ao CLAUDE.md)
+│   └── hooks.snippet.json             # trecho de merge pro ~/.codex/hooks.json
 ├── hooks/
 │   ├── obsidian-vault-check.mjs       # Stop: grava a sessao no vault (Claude Code/Antigravity)
 │   ├── ai-memory-ensure-server.mjs    # SessionStart: garante o daemon do ai-memory de pe
@@ -251,10 +258,11 @@ muri-saver/
 ├── docs/
 │   ├── architecture.md                # por que cada peca existe e como se encaixam
 │   ├── ai-memory-obsidian-setup.md    # instalacao detalhada do ai-memory + Obsidian
+│   ├── session-ingestor.md            # formato de cada fonte, sanitizacao e idempotencia do ingestor
 │   └── skills-companion.md            # skills de terceiros que uso, com creditos e vantagens
 ├── README.md
 ├── INSTALL.md                         # guia curto pra humano
-├── INSTALL-AI.md                      # runbook completo pra uma IA instalar sozinha
+├── INSTALL-AI.md                      # runbook completo pra uma IA instalar sozinha (com onboarding /grill-me)
 └── LICENSE
 ```
 
@@ -312,25 +320,91 @@ tokens/contexto pro meu fluxo (o oposto do que este repositório propõe).
 git clone https://github.com/murilolol/muri-saver.git
 cd muri-saver
 node bin/install.mjs --dry-run   # revise o que seria feito
-node bin/install.mjs             # instala de verdade
+node bin/install.mjs             # instala de verdade (só Claude Code)
+node bin/install.mjs --with-all  # ou: Claude Code + Antigravity + Codex de uma vez
 node bin/doctor.mjs              # verifica tudo automaticamente
 ```
 
 Guia completo — pré-requisitos, `ai-memory`, MCP, plugin `claude-obsidian`,
 verificação — em [`INSTALL.md`](./INSTALL.md) (humano) ou
-[`INSTALL-AI.md`](./INSTALL-AI.md) (pra uma IA seguir sozinha).
+[`INSTALL-AI.md`](./INSTALL-AI.md) (pra uma IA seguir sozinha, com onboarding
+interativo via `/grill-me`).
+
+<br>
+
+## Personalize com o seu nome (`--alias`)
+
+`muri-saver` é o nome padrão, mas não é obrigatório. Qualquer dev que clone
+este repositório pode instalar sob o próprio nome ou apelido — útil se você
+(ou um colega, tipo Mendes ou Lucas) quer adotar o mesmo sistema sem ficar
+digitando "muri saver" pra ativar algo que não é seu:
+
+```bash
+node bin/install.mjs --alias mendes-saver --author-name Mendes
+# ou, sem sufixo -saver:
+node bin/install.mjs --alias lucas
+```
+
+Isso renomeia a skill (`~/.agents/skills/<alias>/SKILL.md`) e reescreve todos
+os gatilhos de ativação nos templates de governança (`CLAUDE.md`/`GEMINI.md`/`AGENTS.md`)
+— `"mendes saver"`, `"mendes-saver"`, `"/mendes-saver"` — mantendo
+`"muri-saver"`/`"muri saver"` funcionando como alias alternativo herdado do
+padrão original, então nada quebra se você misturar os dois nomes por hábito.
+`--author-name` é só cosmético, aparece no log da instalação.
+
+<br>
+
+## Importando sessões antigas (session ingestor)
+
+Já usava Claude Code, Antigravity ou Codex antes de instalar isto? O
+`bin/ingest-sessions.mjs` varre o histórico local de cada agente e registra
+retroativamente no Obsidian Vault e/ou no `ai-memory` — **sem chamar nenhuma
+LLM** (extração 100% local; ver [`docs/session-ingestor.md`](./docs/session-ingestor.md)
+pro porquê disso importar):
+
+```bash
+# Simulação — lista o que seria importado, não escreve nada
+node bin/ingest-sessions.mjs --all --dry-run
+
+# Ingestão real, com limite (bom pra primeira vez)
+node bin/ingest-sessions.mjs --all --limit 20
+
+# Só um agente
+node bin/ingest-sessions.mjs --agent antigravity
+```
+
+```mermaid
+graph TD
+    CC["🟧 Claude Code"]
+    AGY["🤖 Antigravity"]
+    CDX["🧩 Codex"]
+    Ing["📥 Ingestor de Sessoes"]
+    AM["🧠 ai-memory"]
+    V["📚 Obsidian Vault"]
+
+    CC --> Ing
+    AGY --> Ing
+    CDX --> Ing
+    Ing --> AM
+    Ing --> V
+```
+
+Idempotente (não duplica o que já foi importado), sanitiza segredos e tags de
+sistema antes de gravar, e suporta `--file <conversations.json>` pra exports
+avulsos do Claude Desktop/Web. Flags completas em
+[`docs/session-ingestor.md`](./docs/session-ingestor.md).
 
 <br>
 
 ## Multiplataforma
 
-`bin/install.mjs` e `bin/doctor.mjs` detectam o sistema operacional sozinhos
-(`process.platform`: `darwin`/`linux`/`win32`) e resolvem todo caminho
-relativo à home do usuário (`os.homedir()`) — nada de `/Users/...` ou
-`C:\Users\...` hardcoded. `bin/doctor.mjs` inclusive adapta onde procura o
-binário do `ai-memory` (`~/.local/bin` vs `~/.cargo/bin`) e o app Obsidian
-(`/Applications`, `AppData\Local`, `/usr/bin`) por SO. Testado em macOS;
-Linux e Windows seguem a mesma lógica de resolução de caminho — se algo
+`bin/install.mjs`, `bin/doctor.mjs` e `bin/ingest-sessions.mjs` detectam o
+sistema operacional sozinhos (`process.platform`: `darwin`/`linux`/`win32`) e
+resolvem todo caminho relativo à home do usuário (`os.homedir()`) — nada de
+`/Users/...` ou `C:\Users\...` hardcoded. `bin/doctor.mjs` inclusive adapta
+onde procura o binário do `ai-memory` (`~/.local/bin` vs `~/.cargo/bin`) e o
+app Obsidian (`/Applications`, `AppData\Local`, `/usr/bin`) por SO. Testado em
+macOS; Linux e Windows seguem a mesma lógica de resolução de caminho — se algo
 específico do seu SO quebrar, é bug, não limitação de design.
 
 <br>
@@ -338,11 +412,11 @@ específico do seu SO quebrar, é bug, não limitação de design.
 ## Perguntas rápidas
 
 **Preciso usar Claude Code, ou funciona com outra coisa?**
-O núcleo (`CLAUDE.md` + hooks) foi desenhado pro Claude Code, mas os hooks e
-o formato de skill são compatíveis com Codex CLI (suporte incluído) e
-Antigravity/Gemini CLI (mesma convenção de `AGENTS.md`/hooks espelhados,
-ajuste manual). Se seu agente não é nenhum desses três, adapte os hooks —
-eles são só scripts Node/Bash comuns.
+Não — `bin/install.mjs --with-all` configura Claude Code, Antigravity/Gemini
+CLI e Codex CLI de uma vez, cada um com seu próprio arquivo de governança
+(`CLAUDE.md`/`GEMINI.md`/`AGENTS.md`) e hook de gravação de sessão. Se seu
+agente não é nenhum desses três, adapte os hooks — eles são só scripts
+Node/Bash comuns, e os templates de governança são texto puro.
 
 **Isso vai deixar minhas sessões mais lentas?**
 Não deveria — a skill `muri-saver` existe justamente pra ficar *mais* rápido
@@ -368,7 +442,8 @@ uso pessoal, e as skills companheiras listadas em
 | [`docs/architecture.md`](./docs/architecture.md) | Por que cada peça existe, como se encaixam |
 | [`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md) | Instalação detalhada do `ai-memory` + Obsidian + MCP session-aware |
 | [`docs/skills-companion.md`](./docs/skills-companion.md) | Skills de terceiros que uso, com créditos, vantagens e comando de instalação |
-| [`INSTALL-AI.md`](./INSTALL-AI.md) | Runbook pra uma IA instalar tudo sozinha, com verificação |
+| [`docs/session-ingestor.md`](./docs/session-ingestor.md) | Como `bin/ingest-sessions.mjs` importa sessões antigas de cada agente, sem LLM |
+| [`INSTALL-AI.md`](./INSTALL-AI.md) | Runbook pra uma IA instalar tudo sozinha, com onboarding `/grill-me` e verificação |
 
 <br>
 
