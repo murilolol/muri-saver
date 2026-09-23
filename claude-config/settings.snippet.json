@@ -1,0 +1,40 @@
+{
+  "_comment": "Trechos de exemplo para ~/.claude/settings.json. NÃO substitua seu settings.json inteiro por isto — faça merge das chaves abaixo dentro do que você já tem. Troque toda ocorrência de <HOME> pelo caminho absoluto real da home do usuário no destino (ex: /Users/voce ou C:\\Users\\voce) — o Claude Code NÃO expande ~ dentro de settings.json.",
+
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["<HOME>/.claude/hooks/obsidian-vault-check.mjs"],
+            "statusMessage": "Checando gravação no Obsidian Vault"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["<HOME>/.claude/hooks/ai-memory-ensure-server.mjs"],
+            "statusMessage": "Garantindo servidor ai-memory de pé"
+          }
+        ]
+      }
+    ]
+  },
+
+  "statusLine": {
+    "type": "command",
+    "command": "python3 <HOME>/.claude/scripts/statusline.py",
+    "padding": 1
+  },
+
+  "_nota_ai_memory_hooks": "Os hooks de SessionStart/Stop/PreToolUse/PostToolUse/etc do PRÓPRIO ai-memory (que chamam o binário `ai-memory hook --event ...`) NÃO estão neste snippet de propósito — eles são gerados e mantidos pelo instalador oficial do ai-memory. Depois de instalar o binário, rode `ai-memory install-hooks --client claude-code` (ver docs/ai-memory-obsidian-setup.md) pra essa parte ser adicionada automaticamente e corretamente versionada."
+}

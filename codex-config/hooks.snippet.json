@@ -1,0 +1,20 @@
+{
+  "_comment": "Trecho de exemplo para ~/.codex/hooks.json (Codex CLI). Faça merge dentro do que você já tem — não sobrescreva o arquivo inteiro. Troque <HOME> pelo caminho absoluto real da home do usuário.",
+
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"<HOME>/.codex/hooks/obsidian-codex-session.mjs\"",
+            "statusMessage": "Saving Codex session to Obsidian"
+          }
+        ]
+      }
+    ]
+  },
+
+  "_nota_ai_memory_hooks": "Assim como no Claude Code, os hooks do próprio `ai-memory` pro Codex (PostToolUse/Stop/SessionStart/etc chamando `ai-memory hook --event ... --agent codex`) não estão aqui de propósito — rode `ai-memory install-hooks --client codex` (se sua versão do ai-memory suportar) ou registre manualmente seguindo docs/ai-memory-obsidian-setup.md."
+}
