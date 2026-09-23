@@ -1,10 +1,25 @@
 # Ingestor de Sessões (`bin/ingest-sessions.mjs`)
 
+<p>
+  <img src="https://img.shields.io/badge/LLM_calls-zero-brightgreen?style=flat-square" alt="Zero chamadas de LLM" />
+  <img src="https://img.shields.io/badge/depend%C3%AAncias-zero-brightgreen?style=flat-square" alt="Zero dependências externas" />
+  <img src="https://img.shields.io/badge/idempotente-sim-blue?style=flat-square" alt="Idempotente" />
+  <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js >= 18" />
+</p>
+
 Varre as sessões que cada IA já gravou sozinha na sua máquina — antes mesmo de
 você instalar o muri-saver — e registra elas retroativamente no Obsidian Vault
 e/ou no `ai-memory`. Útil pra quem já usa Claude Code/Antigravity/Codex há
 meses e não quer perder esse histórico só porque os hooks deste repositório
 não estavam instalados ainda.
+
+**Nesta página:** [Por que não chama LLM](#por-que-não-chama-nenhuma-llm) ·
+[Fontes suportadas](#fontes-suportadas-e-onde-cada-uma-guarda-sessão) ·
+[Pipeline](#pipeline) · [Detecção de projeto](#detecção-de-projeto) ·
+[Sanitização](#sanitização) · [Idempotência](#idempotência) ·
+[Destinos](#destinos) · [Flags](#flags)
+
+<br>
 
 ## Por que não chama nenhuma LLM
 
@@ -17,6 +32,8 @@ LLM nenhuma**. Toda sessão importada vira o equivalente ao "dump bruto" que os
 hooks já usam pra sessões triviais: prompts e respostas extraídos localmente,
 sem narrativa gerada, sem categorização automática em `projects/<projeto>/<categoria>/`
 (essa parte exige um julgamento de LLM que este script de propósito não faz).
+
+<br>
 
 ## Fontes suportadas e onde cada uma guarda sessão
 
@@ -33,6 +50,29 @@ Cada fonte tem seu próprio parser em `bin/ingest-sessions.mjs`
 `parseDesktopFile`) — todos tolerantes a linhas malformadas (ignoram e
 seguem) e a formatos que mudem em versões futuras dos agentes (o script nunca
 lança uma exceção só porque uma sessão específica é ilegível).
+
+<br>
+
+## Pipeline
+
+```mermaid
+graph TD
+    Src["Fonte bruta jsonl ou json"]
+    Parse["Parser especifico do agente"]
+    Norm["Normalizacao exchanges role texto"]
+    San["Sanitizacao segredos tags html"]
+    Cache["Cache de idempotencia"]
+    Out1["Obsidian Vault"]
+    Out2["ai-memory write-page"]
+    Out3["export-dir markdown avulso"]
+
+    Src --> Parse --> Norm --> San --> Cache
+    Cache --> Out1
+    Cache --> Out2
+    Cache --> Out3
+```
+
+<br>
 
 ## Detecção de projeto
 
@@ -51,29 +91,25 @@ O nome do projeto usado nas notas é só o `basename` do caminho detectado (ex:
 `/Users/voce/Documents/site` → `site`) — não a taxonomia completa de 12
 categorias que os hooks ao vivo mantêm (ver acima, por que não chama LLM).
 
+<br>
+
 ## Sanitização
 
 Antes de gravar qualquer coisa (vault, `ai-memory` ou `--export-dir`), cada
 mensagem passa por três passadas, nessa ordem:
 
-1. **Mascaramento de segredos** (`maskSecrets`): regexes pra chaves da
-   Anthropic (`sk-ant-...`), OpenAI-like (`sk-...`), GitHub (`ghp_...` e
-   variantes), Slack (`xox...`), AWS (`AKIA...` e `aws_secret_access_key=...`),
-   JWT, `Bearer <token>`, e atribuições de senha (`senha=`/`password=`).
-   Cada ocorrência vira `***REDACTED-<TIPO>***`.
-2. **Expurgo de tags de sistema** (`stripSystemTags`): remove marcadores
-   internos que vazam nas transcrições brutas (`<USER_REQUEST>`,
-   `<SYSTEM_MESSAGE>`, `<PLAN>`, `<ADDITIONAL_METADATA>`, `<CONTEXT_SUMMARY>`,
-   `<local-command-caveat>`, etc.) — mantém o texto interno, remove só o
-   marcador.
-3. **Blindagem anti-quebra do Obsidian** (`escapeStrayHtml`): qualquer outra
-   tag HTML/JSX/SVG solta que sobrar vira inline-code (`` `<div>` ``) — a
-   mesma técnica já usada em produção por `hooks/obsidian-vault-check.mjs`,
-   pra nunca deixar uma tag desbalanceada engolir o resto da nota.
+| # | Passada | O que faz |
+|---|---|---|
+| 1 | **Mascaramento de segredos** (`maskSecrets`) | Regexes pra chaves da Anthropic (`sk-ant-...`), OpenAI-like (`sk-...`), GitHub (`ghp_...` e variantes), Slack (`xox...`), AWS (`AKIA...` e `aws_secret_access_key=...`), JWT, `Bearer <token>`, e atribuições de senha (`senha=`/`password=`). Cada ocorrência vira `***REDACTED-<TIPO>***` |
+| 2 | **Expurgo de tags de sistema** (`stripSystemTags`) | Remove marcadores internos que vazam nas transcrições brutas (`<USER_REQUEST>`, `<SYSTEM_MESSAGE>`, `<PLAN>`, `<ADDITIONAL_METADATA>`, `<CONTEXT_SUMMARY>`, `<local-command-caveat>`, etc.) — mantém o texto interno, remove só o marcador |
+| 3 | **Blindagem anti-quebra do Obsidian** (`escapeStrayHtml`) | Qualquer outra tag HTML/JSX/SVG solta que sobrar vira inline-code (`` `<div>` ``) — a mesma técnica já usada em produção por `hooks/obsidian-vault-check.mjs`, pra nunca deixar uma tag desbalanceada engolir o resto da nota |
 
-O `title:` do frontmatter YAML é sempre gerado com aspas e escaping próprio
-(`yamlQuote`) — títulos vêm do primeiro prompt real do usuário, texto
-arbitrário que pode conter `:` (que quebraria YAML sem aspas) ou `"`.
+> [!NOTE]
+> O `title:` do frontmatter YAML é sempre gerado com aspas e escaping próprio
+> (`yamlQuote`) — títulos vêm do primeiro prompt real do usuário, texto
+> arbitrário que pode conter `:` (que quebraria YAML sem aspas) ou `"`.
+
+<br>
 
 ## Idempotência
 
@@ -88,29 +124,41 @@ do arquivo fonte) — não o conteúdo. Uma sessão só é reprocessada se:
 `--dry-run` nunca toca o cache (nem lê pra decidir pular, além de informar o
 status — nem grava).
 
+<br>
+
 ## Destinos
 
-- **Obsidian Vault** (padrão, desativável com `--skip-vault`): mesma
-  convenção de pasta dos hooks — `dailies/` raiz cross-agente pra
-  claude/antigravity/desktop, `codex/dailies/` própria pro Codex (não compete
-  com a raiz). Sessão em `<agente>/sessions/Session-YYYY-MM-DD_HHhMM-<Tag>-<id8>.md`.
-  Idempotente também no nível do arquivo (não sobrescreve se já existe uma
-  sessão com o mesmo id no vault, mesmo se o cache tiver sido apagado).
-- **`ai-memory`** (padrão, desativável com `--skip-ai-memory`): via CLI
-  (`ai-memory write-page --path sessions/imported-<agente>-<data>-<id8>.md --body -
-  --tier episodic -t session -t <agente> -t muri-saver -t imported [-t <projeto>]
-  [--project <projeto>]`). Se o binário não estiver disponível no PATH nem em
-  `~/.local/bin`/`~/.cargo/bin`, o script avisa e segue sem falhar a sessão
-  inteira.
-- **`--export-dir <caminho>`**: ignora vault e `ai-memory` por completo — só
-  escreve um `.md` avulso por sessão em `<caminho>/<agente>-<data>_<hora>-<id8>.md`.
-  Útil pra quem não tem nem Obsidian nem `ai-memory` configurados ainda, ou
-  quer revisar antes de importar de verdade.
+| Destino | Ativo por padrão? | Comportamento |
+|---|---|---|
+| **Obsidian Vault** | Sim (`--skip-vault` desativa) | Mesma convenção de pasta dos hooks — `dailies/` raiz cross-agente pra claude/antigravity/desktop, `codex/dailies/` própria pro Codex (não compete com a raiz). Sessão em `<agente>/sessions/Session-YYYY-MM-DD_HHhMM-<Tag>-<id8>.md`. Idempotente também no nível do arquivo (não sobrescreve se já existe uma sessão com o mesmo id no vault, mesmo se o cache tiver sido apagado) |
+| **`ai-memory`** | Sim (`--skip-ai-memory` desativa) | Via CLI: `ai-memory write-page --path sessions/imported-<agente>-<data>-<id8>.md --body - --tier episodic -t session -t <agente> -t muri-saver -t imported [-t <projeto>] [--project <projeto>]`. Se o binário não estiver disponível no PATH nem em `~/.local/bin`/`~/.cargo/bin`, o script avisa e segue sem falhar a sessão inteira |
+| **`--export-dir <caminho>`** | Não (opt-in, ignora os dois acima) | Escreve um `.md` avulso por sessão em `<caminho>/<agente>-<data>_<hora>-<id8>.md`. Útil pra quem não tem nem Obsidian nem `ai-memory` configurados ainda, ou quer revisar antes de importar de verdade |
+
+<br>
 
 ## Flags
 
-Ver `node bin/ingest-sessions.mjs --help` pra lista completa. Combine como
-quiser, ex:
+<details open>
+<summary><strong>Referência completa</strong> (mesmo texto de <code>--help</code>)</summary>
+
+| Flag | Descrição |
+|---|---|
+| `--all` | Varre todos os agentes detectados na máquina |
+| `--agent <nome[,nome2,...]>` | Filtra por agente(s): `claude`, `antigravity`, `codex`, `desktop` |
+| `--dry-run` | Simulação: lista sessões e contagens, não escreve nada |
+| `--limit <N>` | Limita às N sessões mais recentes por agente (padrão: sem limite) |
+| `--since <YYYY-MM-DD>` | Só sessões a partir dessa data |
+| `--vault <caminho>` | Caminho do Obsidian Vault (padrão: `~/Documents/Obsidian Vault`) |
+| `--skip-ai-memory` | Não grava no `ai-memory` |
+| `--skip-vault` | Não grava no Obsidian |
+| `--export-dir <caminho>` | Exporta Markdown/JSON avulsos pra essa pasta (não precisa de vault/`ai-memory`) |
+| `--file <caminho>` | Processa um arquivo exportado avulso (ex: `conversations.json` do Claude Desktop/Web) |
+| `--force` | Reimporta mesmo se já estiver no cache de idempotência |
+| `--help` | Mostra a ajuda |
+
+</details>
+
+Combine como quiser:
 
 ```bash
 # Simulação total, todos os agentes

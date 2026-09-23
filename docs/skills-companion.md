@@ -1,5 +1,11 @@
 # Skills companheiras
 
+<p>
+  <img src="https://img.shields.io/badge/vendorizadas_aqui-2-brightgreen?style=flat-square" alt="2 skills vendorizadas" />
+  <img src="https://img.shields.io/badge/companheiras_de_terceiros-9-blue?style=flat-square" alt="9 skills companheiras" />
+  <img src="https://img.shields.io/badge/gerenciador-npx_skills-000?style=flat-square" alt="npx skills" />
+</p>
+
 Este repositório vendoriza (copia o arquivo inteiro) só as duas skills que são
 realmente minhas: [`muri-saver`](../skills/muri-saver/SKILL.md) e
 [`grill-me`](../skills/grill-me/SKILL.md). As outras skills que uso todo dia
@@ -21,25 +27,30 @@ da lista (`find-skills`) já te dá a ferramenta pra descobrir e instalar
 qualquer skill nova que você precisar no futuro, sem precisar deste
 documento.
 
+<br>
+
 ## Índice
 
-| Skill | Status | Autor / fonte | Licença | Documentação |
-|---|---|---|---|---|
-| `find-skills` | uso hoje | [vercel-labs/skills](https://github.com/vercel-labs/skills) | MIT | [skills/companion/find-skills/](../skills/companion/find-skills/README.md) |
-| `tdd` | uso hoje | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | [skills/companion/tdd/](../skills/companion/tdd/README.md) |
-| `prototype` | uso hoje | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | [skills/companion/prototype/](../skills/companion/prototype/README.md) |
-| `grill-me` | uso hoje | reescrita própria (ver nota abaixo) | MIT (deste repo) | já vendorizada em [`skills/grill-me/`](../skills/grill-me/SKILL.md) |
-| `grill-with-docs` | uso hoje | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | [skills/companion/grill-with-docs/](../skills/companion/grill-with-docs/README.md) |
-| `openspec` | uso hoje | [openspecio/openspec](https://github.com/openspecio/openspec) | MIT | [skills/companion/openspec/](../skills/companion/openspec/README.md) |
-| `graphify` | uso hoje | [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) (safishamsi) | Apache-2.0 | [skills/companion/graphify/](../skills/companion/graphify/README.md) |
-| `impeccable` | uso hoje | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Apache-2.0 | [skills/companion/impeccable/](../skills/companion/impeccable/README.md) |
-| `emil-design-eng` (pack) | quero usar | [emilkowalski/skills](https://github.com/emilkowalski/skills) | MIT | [skills/companion/emil-design-eng/](../skills/companion/emil-design-eng/README.md) |
-| `taste-skill` | quero usar | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT | [skills/companion/taste-skill/](../skills/companion/taste-skill/README.md) |
+| | Skill | Status | Autor / fonte | Licença | Documentação |
+|---|---|---|---|---|---|
+| 🔍 | `find-skills` | ✅ uso hoje | [vercel-labs/skills](https://github.com/vercel-labs/skills) | MIT | [skills/companion/find-skills/](../skills/companion/find-skills/README.md) |
+| 🧪 | `tdd` | ✅ uso hoje | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | [skills/companion/tdd/](../skills/companion/tdd/README.md) |
+| 🧬 | `prototype` | ✅ uso hoje | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | [skills/companion/prototype/](../skills/companion/prototype/README.md) |
+| ❓ | `grill-me` | ✅ uso hoje | reescrita própria (ver nota abaixo) | MIT (deste repo) | já vendorizada em [`skills/grill-me/`](../skills/grill-me/SKILL.md) |
+| 📝 | `grill-with-docs` | ✅ uso hoje | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | [skills/companion/grill-with-docs/](../skills/companion/grill-with-docs/README.md) |
+| 📐 | `openspec` | ✅ uso hoje | [openspecio/openspec](https://github.com/openspecio/openspec) | MIT | [skills/companion/openspec/](../skills/companion/openspec/README.md) |
+| 🕸️ | `graphify` | ✅ uso hoje | [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) (safishamsi) | Apache-2.0 | [skills/companion/graphify/](../skills/companion/graphify/README.md) |
+| 🎨 | `impeccable` | ✅ uso hoje | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Apache-2.0 | [skills/companion/impeccable/](../skills/companion/impeccable/README.md) |
+| 🎞️ | `emil-design-eng` (pack) | 🔜 quero usar | [emilkowalski/skills](https://github.com/emilkowalski/skills) | MIT | [skills/companion/emil-design-eng/](../skills/companion/emil-design-eng/README.md) |
+| 🖌️ | `taste-skill` | 🔜 quero usar | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT | [skills/companion/taste-skill/](../skills/companion/taste-skill/README.md) |
 
-Não uso (e não recomendo por padrão) o pacote `obra/superpowers` — é ótimo,
-mas pesado: puxa muito contexto/token pro que meu fluxo precisa. Combina bem
-com a filosofia deste repositório (`muri-saver` existe justamente pra cortar
-gasto desnecessário) deixar ele de fora até que o custo compense.
+> [!NOTE]
+> Não uso (e não recomendo por padrão) o pacote `obra/superpowers` — é ótimo,
+> mas pesado: puxa muito contexto/token pro que meu fluxo precisa. Combina bem
+> com a filosofia deste repositório (`muri-saver` existe justamente pra cortar
+> gasto desnecessário) deixar ele de fora até que o custo compense.
+
+<br>
 
 ## `grill-me` vs `grill-with-docs` — uso as duas, pra situações diferentes
 
@@ -68,15 +79,18 @@ um redirecionamento de 5 linhas pra outra skill interna
 vendorizada em [`skills/grill-me/SKILL.md`](../skills/grill-me/SKILL.md) é uma
 reescrita completa e independente, feita por mim, especificamente pra forçar
 o uso do modal nativo de perguntas em vez de texto cru no chat — é essa
-versão que o `CLAUDE.md.template` e a skill `muri-saver` esperam encontrar.
-Por não ser uma cópia de conteúdo alheio (o original tem 5 linhas genéricas;
-o meu é uma reescrita própria sob o mesmo nome/conceito), ela é distribuída
-aqui sob a licença MIT deste repositório, não a do projeto original.
+versão que a governança global (`CLAUDE.md`/`GEMINI.md`/`AGENTS.md`) e a
+skill `muri-saver` esperam encontrar. Por não ser uma cópia de conteúdo
+alheio (o original tem 5 linhas genéricas; o meu é uma reescrita própria sob
+o mesmo nome/conceito), ela é distribuída aqui sob a licença MIT deste
+repositório, não a do projeto original.
 
 `grill-with-docs`, por outro lado, está instalada e funcionando **sem
 modificação** em relação ao `mattpocock/skills` original — não há reescrita
 minha ali pra justificar vendorizar, então ela segue a mesma regra das
 outras skills companheiras: documentação aqui, código na fonte oficial.
+
+<br>
 
 ## Se um `npx skills add` falhar
 

@@ -1,11 +1,30 @@
 # Instalação
 
+<p>
+  <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js >= 18" />
+  <img src="https://img.shields.io/badge/Python-3-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3" />
+  <img src="https://img.shields.io/badge/macOS_%7C_Linux_%7C_Windows-cross--platform-555?style=flat-square" alt="Cross-platform" />
+  <img src="https://img.shields.io/badge/tempo-~10min-blue?style=flat-square" alt="~10 minutos" />
+</p>
+
+> [!TIP]
 > Tem uma IA à mão (Claude Code, Codex, Antigravity...)? É bem mais rápido
 > mandar o link deste repositório pra ela e pedir pra instalar — o runbook
 > completo, autônomo e que detecta o sistema operacional sozinho está em
 > **[`INSTALL-AI.md`](./INSTALL-AI.md)**. Este documento aqui é a versão pra
 > fazer manualmente, ou pra revisar o que a IA vai fazer antes de deixar ela
 > rodar.
+
+## Checklist
+
+- [ ] [Pré-requisitos](#pré-requisitos) instalados
+- [ ] [Passo 1](#passo-1--instalar-a-skill-os-hooks-e-o-claudemd) — skill, hooks e `CLAUDE.md`
+- [ ] [Passo 2](#passo-2--instalar-e-configurar-o-ai-memory) — `ai-memory`
+- [ ] [Passo 3](#passo-3--conectar-o-mcp-ai-memory--obsidian) — MCP (`ai-memory` + Obsidian)
+- [ ] [Passo 4](#passo-4--verificar-tudo) — `bin/doctor.mjs`
+- [ ] [Passo 5](#passo-5--importar-sessões-antigas-opcional) — importar histórico antigo (opcional)
+
+<br>
 
 ## Pré-requisitos
 
@@ -16,6 +35,8 @@
 | [Claude Code](https://claude.com/claude-code) | O client que carrega a skill, os hooks e o `CLAUDE.md` | — |
 | [ai-memory](https://github.com/akitaonrails/ai-memory) | Memória persistente cross-sessão (ver [explicação completa no README](./README.md#ai-memory)) | binário próprio, instalado à parte |
 | [Obsidian](https://obsidian.md) | Onde o vault de registro humano-legível vive | opcional, mas recomendado |
+
+<br>
 
 ## Passo 1 — Instalar a skill, os hooks e o `CLAUDE.md`
 
@@ -31,7 +52,7 @@ hooks pra `~/.claude/hooks/`, os scripts pra `~/.claude/scripts/`, mescla os
 hooks `Stop`/`SessionStart` no seu `~/.claude/settings.json`, e cria
 `~/.claude/CLAUDE.md` a partir do template (só se você ainda não tiver um).
 
-### Personalize com o seu nome (`--alias`)
+### 🏷️ Personalize com o seu nome (`--alias`)
 
 Quer usar `mendes-saver`, `lucas-saver` ou só `lucas` em vez de `muri-saver`?
 Passe `--alias`:
@@ -46,7 +67,7 @@ mantendo `"muri-saver"`/`"muri saver"` funcionando como alias alternativo
 herdado do padrão original. Sem `--alias`, o padrão continua sendo
 estritamente `muri-saver`.
 
-### Multi-agente (`--with-codex`, `--with-antigravity`, `--with-all`)
+### 🌐 Multi-agente (`--with-codex`, `--with-antigravity`, `--with-all`)
 
 Além do Claude Code (sempre instalado), o instalador também configura
 Antigravity/Gemini CLI e Codex CLI:
@@ -57,15 +78,33 @@ node bin/install.mjs --with-codex         # AGENTS.md + hook em ~/.codex/
 node bin/install.mjs --with-all           # os três de uma vez
 ```
 
-Sem essas flags, o instalador ainda detecta sozinho se `~/.gemini` ou
-`~/.codex` já existem (sinal de que você já usa aquele agente) e configura
-automaticamente mesmo assim — as flags só forçam a instalação quando a pasta
-ainda não existe.
+> [!NOTE]
+> Sem essas flags, o instalador ainda detecta sozinho se `~/.gemini` ou
+> `~/.codex` já existem (sinal de que você já usa aquele agente) e configura
+> automaticamente mesmo assim — as flags só forçam a instalação quando a pasta
+> ainda não existe.
 
-Outras flags úteis: `--vault "<caminho>"` (cria a estrutura de pastas do
-Obsidian), `--with-companion-skills` (instala
-`find-skills`/`tdd`/`prototype`/`grill-with-docs` automaticamente). Detalhes
-de todas em [`INSTALL-AI.md`](./INSTALL-AI.md#passo-1--clonar-e-rodar-o-instalador).
+<details>
+<summary><strong>Ver todas as flags de <code>bin/install.mjs</code></strong></summary>
+
+| Flag | O que faz |
+|---|---|
+| `--dry-run` | Simula, não escreve nada |
+| `--alias <nome>` / `--skill-name <nome>` | Renomeia a skill e os gatilhos de ativação |
+| `--author-name <nome>` | Cosmético, aparece no log da instalação |
+| `--vault "<caminho>"` | Também cria a estrutura de pastas do Obsidian |
+| `--with-codex` | Força suporte a Codex CLI mesmo sem `~/.codex` detectado |
+| `--with-antigravity` | Força suporte a Antigravity mesmo sem `~/.gemini` detectado |
+| `--with-all` | Os dois acima de uma vez |
+| `--with-companion-skills` | Instala `find-skills`/`tdd`/`prototype`/`grill-with-docs` via `npx skills add` |
+| `--skip-claude-md` | Pula a criação do `CLAUDE.md` |
+| `--claude-dir`, `--skills-dir`, `--codex-dir`, `--gemini-dir` | Sobrescrevem os diretórios de destino (raramente necessário) |
+
+Detalhes de uso de cada uma em
+[`INSTALL-AI.md`](./INSTALL-AI.md#passo-1--clonar-e-rodar-o-instalador).
+</details>
+
+<br>
 
 ## Passo 2 — Instalar e configurar o `ai-memory`
 
@@ -76,12 +115,16 @@ README](./README.md#ai-memory). Siga
 instalar o binário, registrar os hooks oficiais dele
 (`ai-memory install-hooks`), e ativar o modo session-aware do MCP.
 
-## Passo 3 — Conectar o MCP (ai-memory + Obsidian)
+<br>
+
+## Passo 3 — Conectar o MCP (`ai-memory` + Obsidian)
 
 Abra [`mcp/mcp-servers.example.json`](./mcp/mcp-servers.example.json), troque
 `<CAMINHO_DO_SEU_VAULT>` pelo caminho real do seu vault, e mescle as duas
 entradas dentro da chave `mcpServers` do seu `~/.claude.json` — sem
 sobrescrever o arquivo inteiro (ele guarda outras coisas suas).
+
+<br>
 
 ## Passo 4 — Verificar tudo
 
@@ -95,6 +138,8 @@ instalado, a estrutura de pastas do vault, o alias configurado (padrão ou
 customizado) e as sessões brutas/governança de cada agente (Claude
 Code/Antigravity/Codex) — tudo numa passada, com `OK`/`AVISO`/`FALHA` por
 item.
+
+<br>
 
 ## Passo 5 — Importar sessões antigas (opcional)
 
@@ -111,6 +156,8 @@ node bin/ingest-sessions.mjs --all --limit 20  # importa as 20 sessões mais rec
 Detalhes completos (formato de cada fonte, sanitização, idempotência) em
 [`docs/session-ingestor.md`](./docs/session-ingestor.md).
 
+<br>
+
 ## Skills companheiras (opcional)
 
 `find-skills`, `tdd`, `prototype`, `grill-with-docs`, `openspec`,
@@ -122,17 +169,21 @@ comando exato de instalação — índice completo em
 [`docs/skills-companion.md`](./docs/skills-companion.md), que também lista
 `emil-design-eng` e `taste-skill` (ainda não uso, mas pretendo).
 
-Atenção: `grill-me` **não** está nessa lista porque já foi instalada no
-Passo 1 (é vendorizada, sempre acontece). `grill-with-docs` é diferente —
-uso as duas juntas, não uma no lugar da outra; ver a comparação em
-[`docs/skills-companion.md`](./docs/skills-companion.md#grill-me-vs-grill-with-docs--uso-as-duas-pra-situações-diferentes).
+> [!NOTE]
+> `grill-me` **não** está nessa lista porque já foi instalada no Passo 1 (é
+> vendorizada, sempre acontece). `grill-with-docs` é diferente — uso as duas
+> juntas, não uma no lugar da outra; ver a comparação em
+> [`docs/skills-companion.md`](./docs/skills-companion.md#grill-me-vs-grill-with-docs--uso-as-duas-pra-situações-diferentes).
+
+<br>
 
 ## Documentação de apoio
 
-| Documento | Conteúdo |
-|---|---|
-| [`docs/architecture.md`](./docs/architecture.md) | Visão geral / por que cada peça existe |
-| [`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md) | `ai-memory` + Obsidian (binário, MCP, marker file) |
-| [`docs/skills-companion.md`](./docs/skills-companion.md) | Skills de terceiros que uso e recomendo |
-| [`docs/session-ingestor.md`](./docs/session-ingestor.md) | Como `bin/ingest-sessions.mjs` importa sessões antigas de cada agente |
-| [`INSTALL-AI.md`](./INSTALL-AI.md) | Runbook completo pra uma IA instalar sozinha |
+| | Documento | Conteúdo |
+|---|---|---|
+| 🧭 | [`docs/architecture.md`](./docs/architecture.md) | Visão geral / por que cada peça existe |
+| 🧠 | [`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md) | `ai-memory` + Obsidian (binário, MCP, marker file) |
+| 🧩 | [`docs/skills-companion.md`](./docs/skills-companion.md) | Skills de terceiros que uso e recomendo |
+| 📥 | [`docs/session-ingestor.md`](./docs/session-ingestor.md) | Como `bin/ingest-sessions.mjs` importa sessões antigas de cada agente |
+| 🤖 | [`INSTALL-AI.md`](./INSTALL-AI.md) | Runbook completo pra uma IA instalar sozinha |
+| 📖 | [`README.md`](./README.md) | Visão geral do projeto, achados reais, antes/depois |
