@@ -8,7 +8,47 @@
 > perguntar ao usuário nos pontos marcados com ⚠️. Não peça confirmação a
 > cada comando — peça só nas decisões que só o usuário pode tomar.
 
-## 0. Detectar o ambiente (primeiro comando, sempre)
+## 0. Onboarding interativo (`/grill-me`) — sempre o primeiro passo
+
+Antes de rodar qualquer comando, alinhe as decisões que só o usuário pode
+tomar. **Não pergunte item por item em texto corrido** — dispare uma única
+bateria de perguntas usando a ferramenta nativa de formulário/modal do seu
+harness:
+
+- No **Claude Code**: `AskUserQuestion`.
+- No **Antigravity**: `ask_question`.
+- Em qualquer outro harness sem tool nativa de formulário confirmada (ex:
+  Codex CLI hoje): apresente a mesma lista como perguntas numeradas e claras
+  no terminal, aguardando a resposta antes de seguir — nunca invente as
+  respostas por conta própria.
+
+Faça estas 5 perguntas (com as opções sugeridas entre parênteses; marque a
+primeira opção como recomendada quando aplicável):
+
+1. **Identidade da skill**: "Você quer manter o nome padrão `muri-saver` ou
+   personalizar (ex: `mendes-saver`, `lucas-saver`, `dev-saver`, ou só um
+   nome como `lucas`)?" — (Recomendado: manter `muri-saver` se for a
+   primeira vez usando; personalizar se o usuário já se identificou pelo
+   nome/apelido na conversa.)
+2. **Agentes usados nesta máquina**: "Quais IAs de código você usa aqui?"
+   (multi-seleção: Claude Code / Antigravity (Google AGY / Gemini CLI) /
+   Codex CLI / mais de um).
+3. **Ingestão retroativa**: "Quer que eu importe as sessões antigas dessas
+   IAs (que já existem na sua máquina) pro Obsidian Vault e/ou pro
+   `ai-memory` agora, ou só configurar a governança daqui pra frente?" —
+   (Recomendado: importar, com `--dry-run` primeiro pra revisar antes.)
+4. **Caminho do Obsidian Vault**: "Qual o caminho do seu vault?" (padrão
+   sugerido: `~/Documents/Obsidian Vault` — pergunte se ele já tem um vault
+   em outro lugar).
+5. **Skills companheiras**: "Quer instalar também as skills companheiras
+   recomendadas (`find-skills`, `tdd`, `prototype`, `grill-with-docs`)?" —
+   (Recomendado: sim, elas ajudam com descoberta de skills, TDD e
+   prototipagem — mas nenhuma é obrigatória pro muri-saver funcionar.)
+
+Com as respostas em mãos, os passos abaixo já te dizem exatamente qual flag
+usar pra cada resposta — não precisa adivinhar.
+
+## 1. Detectar o ambiente (primeiro comando técnico, sempre)
 
 ```bash
 node -e "console.log(process.platform, process.arch, require('os').homedir())"
@@ -17,10 +57,11 @@ node -e "console.log(process.platform, process.arch, require('os').homedir())"
 Isso te dá os três fatos que decidem todo o resto: `darwin` (macOS), `linux`
 ou `win32` (Windows), e o caminho da home. **Todo o resto deste guia usa
 caminhos relativos à home** (`~/.claude`, `~/.agents/skills`, etc.) — eles
-funcionam nos três sistemas porque `bin/install.mjs` e `bin/doctor.mjs` resolvem isso
-sozinhos via `os.homedir()`/`path.join()`, nunca com `/` ou `\` hardcoded.
-Você não precisa adaptar comandos manualmente por SO, exceto onde este
-documento diz explicitamente o contrário (ex: onde o Obsidian instala o app).
+funcionam nos três sistemas porque `bin/install.mjs`, `bin/doctor.mjs` e
+`bin/ingest-sessions.mjs` resolvem isso sozinhos via `os.homedir()`/`path.join()`,
+nunca com `/` ou `\` hardcoded. Você não precisa adaptar comandos manualmente
+por SO, exceto onde este documento diz explicitamente o contrário (ex: onde o
+Obsidian instala o app).
 
 Depois, confirme os pré-requisitos:
 
@@ -36,7 +77,7 @@ instalar runtimes de sistema sozinha sem confirmação explícita. Se
 frente mas note isso pro usuário — o `statusLine` do `settings.json` chama
 especificamente `python3`.
 
-## 1. Clonar e rodar o instalador
+## 2. Clonar e rodar o instalador
 
 ```bash
 git clone https://github.com/murilolol/muri-saver.git
@@ -45,40 +86,42 @@ node bin/install.mjs --dry-run
 ```
 
 Leia a saída do `--dry-run` (lista cada arquivo que seria copiado/mesclado —
-nada é escrito ainda). Depois rode de verdade:
+nada é escrito ainda). Depois rode de verdade, **traduzindo as respostas do
+Passo 0 em flags**:
 
 ```bash
-node bin/install.mjs
+node bin/install.mjs \
+  [--alias "<nome-da-pergunta-1>"] [--author-name "<nome-do-usuário>"] \
+  [--with-antigravity] [--with-codex]   # conforme a pergunta 2 (pode combinar os dois, ou usar --with-all) \
+  [--vault "<caminho-da-pergunta-4>"] \
+  [--with-companion-skills]             # se a resposta da pergunta 5 foi sim
 ```
 
 Isso, sozinho:
-- copia `skills/muri-saver/SKILL.md` e `skills/grill-me/SKILL.md` →
-  `~/.agents/skills/<nome>/SKILL.md`
+- copia `skills/muri-saver/SKILL.md` (com o alias aplicado, se algum foi
+  pedido) e `skills/grill-me/SKILL.md` → `~/.agents/skills/<alias>/SKILL.md`
+  e `~/.agents/skills/grill-me/SKILL.md`
 - copia `hooks/*.mjs` → `~/.claude/hooks/`
 - copia `scripts/*` → `~/.claude/scripts/` (com permissão de execução)
 - mescla os hooks `Stop`/`SessionStart` + `statusLine` em
   `~/.claude/settings.json` (faz backup do arquivo original primeiro)
 - cria `~/.claude/CLAUDE.md` a partir do template **só se ainda não existir**
+- com `--with-antigravity`: cria `~/.gemini/GEMINI.md`, copia a skill pra
+  `~/.gemini/config/skills/<alias>/`, mescla `~/.gemini/config/hooks.json`
+- com `--with-codex`: cria `~/.codex/AGENTS.md`, copia o hook Codex, mescla
+  `~/.codex/hooks.json`
+- com `--with-all`: os dois acima de uma vez
 
-Flags relevantes (combine como precisar):
-- `--vault "<caminho-do-vault>"` — também cria o esqueleto de pastas do
-  Obsidian (`dailies/`, `claude/sessions/`, `overview/`, `projects/`).
-- `--with-codex` — o Codex já é detectado sozinho se `~/.codex` existir; use
-  esta flag só se quiser forçar mesmo sem detecção.
-- `--with-companion-skills` — também instala via `npx skills add` as skills
-  de terceiros que valem a pena ter (`find-skills`, `tdd`, `prototype`,
-  `grill-with-docs`). Ver [`docs/skills-companion.md`](./docs/skills-companion.md)
-  pras outras (`openspec`, `graphify`, `impeccable`, `emil-design-eng`,
-  `taste-skill`) que não têm instalação automática confiável.
-- `--skip-claude-md` — pula a criação do `CLAUDE.md`.
+Flags de diretório pra testes/instalações não-padrão (raramente necessárias):
+`--claude-dir`, `--skills-dir`, `--codex-dir`, `--gemini-dir`.
 
-⚠️ **Se `~/.claude/CLAUDE.md` já existir**: o instalador avisa e não
-sobrescreve (você vai ver o AVISO na saída). Pergunte ao usuário se ele quer
-que você faça o merge seção por seção com
-[`claude-config/CLAUDE.md.template`](./claude-config/CLAUDE.md.template), ou
-se prefere manter o dele como está.
+⚠️ **Se `~/.claude/CLAUDE.md` (ou `~/.gemini/GEMINI.md`/`~/.codex/AGENTS.md`)
+já existir**: o instalador avisa e não sobrescreve (você vai ver o AVISO na
+saída). Pergunte ao usuário se ele quer que você faça o merge seção por seção
+com o template correspondente em `claude-config/`/`antigravity-config/`/`codex-config/`,
+ou se prefere manter o dele como está.
 
-## 2. `ai-memory` (memória persistente)
+## 3. `ai-memory` (memória persistente)
 
 **O que é, antes de instalar:** [ai-memory](https://github.com/akitaonrails/ai-memory)
 é um servidor de memória de longo prazo pra agentes de IA coding, criado por
@@ -104,11 +147,11 @@ na íntegra. Resumo do que você vai fazer lá:
    `ANTHROPIC_OAUTH_TOKEN` vs `CLAUDE_CODE_OAUTH_TOKEN`** no doc, setar a
    errada quebra o login do Claude Code inteiro.
 
-## 3. MCP servers (`ai-memory` + Obsidian)
+## 4. MCP servers (`ai-memory` + Obsidian)
 
 Abra [`mcp/mcp-servers.example.json`](./mcp/mcp-servers.example.json). Troque
 `<CAMINHO_DO_SEU_VAULT>` pelo caminho absoluto real do vault Obsidian do
-usuário (pergunte se não tiver certeza ⚠️). Depois:
+usuário (a resposta da pergunta 4 do Passo 0). Depois:
 
 1. Leia `~/.claude.json` inteiro.
 2. Localize (ou crie) a chave `mcpServers`.
@@ -120,10 +163,10 @@ usuário (pergunte se não tiver certeza ⚠️). Depois:
 keys, tokens em `env`)**: nunca as edite, nunca as imprima no chat, nunca as
 copie pra nenhum arquivo deste repositório ou de qualquer lugar.
 
-## 4. Plugin `claude-obsidian` (opcional, mas recomendado)
+## 5. Plugin `claude-obsidian` (opcional, mas recomendado)
 
 Dá os comandos `/wiki`, `/save`, canvas, etc. dentro do Claude Code. Se
-`bin/doctor.mjs` (passo 6) reportar que ele não está habilitado:
+`bin/doctor.mjs` (passo 7) reportar que ele não está habilitado:
 
 ```
 /plugin marketplace add AgriciDaniel/claude-obsidian
@@ -134,14 +177,14 @@ Dá os comandos `/wiki`, `/save`, canvas, etc. dentro do Claude Code. Se
 use `/plugin` sem argumento pra abrir o menu interativo e procure por
 "claude-obsidian".)
 
-## 5. App Obsidian
+## 6. App Obsidian
 
 Se `bin/doctor.mjs` reportar que o app não foi encontrado, baixe em
 <https://obsidian.md> — instalador nativo pra macOS/Windows/Linux. Depois de
 instalado, abra o app pelo menos uma vez e aponte pro vault que você criou no
-Passo 1 (`--vault`) ou pro vault existente do usuário.
+Passo 2 (`--vault`) ou pro vault existente do usuário.
 
-## 6. Verificação automática
+## 7. Verificação automática
 
 ```bash
 node bin/doctor.mjs --vault "<caminho-do-vault>"
@@ -150,25 +193,52 @@ node bin/doctor.mjs --vault "<caminho-do-vault>"
 Isso substitui checar item por item manualmente — o script já detecta o SO e
 reporta `OK` / `AVISO` / `FALHA` para: Node, Python, Claude Code CLI, binário
 e servidor do `ai-memory`, hooks registrados em `settings.json`, plugin
-`claude-obsidian`, MCP servers em `~/.claude.json`, app Obsidian instalado, e
-a estrutura de pastas do vault. Trate cada `FALHA` como bloqueante e cada
-`AVISO` como algo a mencionar pro usuário mas não necessariamente resolver
-sozinha.
+`claude-obsidian`, MCP servers em `~/.claude.json`, app Obsidian instalado, a
+estrutura de pastas do vault, o alias configurado (padrão ou customizado), as
+sessões brutas + governança de cada agente (Claude Code/Antigravity/Codex), e
+a presença do ingestor. Trate cada `FALHA` como bloqueante e cada `AVISO`
+como algo a mencionar pro usuário mas não necessariamente resolver sozinha.
 
 Se `bin/doctor.mjs` reportar `FALHA` em algo, volte pra seção correspondente
 deste documento antes de seguir em frente.
 
-## 7. Skills companheiras (opcional)
+## 8. Importar sessões antigas (`bin/ingest-sessions.mjs`) — se a resposta da pergunta 3 foi sim
 
-Se você rodou `bin/install.mjs --with-companion-skills` no Passo 1,
+```bash
+node bin/ingest-sessions.mjs --all --dry-run
+```
+
+Revise a saída com o usuário (quantas sessões por agente, desde quando) antes
+de rodar de verdade. Sugestões de flag conforme o volume:
+
+```bash
+# Importação completa
+node bin/ingest-sessions.mjs --all
+
+# Só as N sessões mais recentes por agente (bom pra primeira importação de teste)
+node bin/ingest-sessions.mjs --all --limit 20
+
+# Só a partir de uma data
+node bin/ingest-sessions.mjs --all --since 2026-09-01
+```
+
+Isso nunca chama LLM nenhuma (extração 100% local — ver
+[`docs/session-ingestor.md`](./docs/session-ingestor.md) pro porquê) e é
+idempotente: rodar de novo não duplica nada já importado. Se o usuário tiver
+um export do Claude Desktop/Web (`conversations.json`), use `--file
+<caminho>` em vez de `--all`/`--agent`.
+
+## 9. Skills companheiras (opcional)
+
+Se você rodou `bin/install.mjs --with-companion-skills` no Passo 2,
 `find-skills`, `tdd`, `prototype` e `grill-with-docs` já foram instaladas.
 
 ⚠️ **Não confunda `grill-me` com `grill-with-docs`**: `grill-me` já foi
-copiada no Passo 1 (é vendorizada, sempre acontece, nenhuma flag necessária)
-— é o padrão do dia a dia. `grill-with-docs` é o upgrade opcional daqui
-(passo 7), só pra quando a entrevista precisa virar ADR/glossário
-permanente. As duas ficam instaladas ao mesmo tempo, uma não substitui a
-outra — comparação completa em
+copiada no Passo 2 (é vendorizada, sempre acontece, nenhuma flag necessária)
+— é o padrão do dia a dia (e é ela que você já está usando pro onboarding do
+Passo 0). `grill-with-docs` é o upgrade opcional daqui (passo 9), só pra
+quando a entrevista precisa virar ADR/glossário permanente. As duas ficam
+instaladas ao mesmo tempo, uma não substitui a outra — comparação completa em
 [`docs/skills-companion.md`](./docs/skills-companion.md#grill-me-vs-grill-with-docs--uso-as-duas-pra-situações-diferentes).
 
 Cada skill (instalada ou não) tem uma página própria em
@@ -180,15 +250,18 @@ de inventar a descrição. Índice geral em
 terceiros, mantidas fora deste repositório de propósito (nunca vendorize o
 conteúdo delas aqui).
 
-## 8. Reiniciar e confirmar
+## 10. Reiniciar e confirmar
 
-Peça pro usuário reiniciar o Claude Code (`/exit` e abrir de novo) pra
-carregar `CLAUDE.md`, as skills e os hooks novos. Depois, confirme com ele:
+Peça pro usuário reiniciar o Claude Code (`/exit` e abrir de novo — e
+Antigravity/Codex, se instalados) pra carregar `CLAUDE.md`/`GEMINI.md`/`AGENTS.md`,
+as skills e os hooks novos. Depois, confirme com ele:
 
-1. Digitar `muri saver` numa conversa nova — o agente deve confirmar a
-   ativação do modo.
+1. Digitar o gatilho da skill (ex: `muri saver`, ou o alias escolhido no
+   Passo 0) numa conversa nova — o agente deve confirmar a ativação do modo.
 2. Terminar essa sessão de teste e checar se apareceu uma entrada nova em
-   `<vault>/dailies/Daily-YYYY-MM-DD.md` e em `<vault>/claude/sessions/`.
+   `<vault>/dailies/Daily-YYYY-MM-DD.md` e em `<vault>/claude/sessions/`
+   (ou `<vault>/antigravity/sessions/`/`<vault>/codex/sessions/`, conforme o
+   agente testado).
 
 Se os dois funcionarem, a instalação está completa. Rode
 `node bin/doctor.mjs` de novo a qualquer momento pra confirmar o estado geral —

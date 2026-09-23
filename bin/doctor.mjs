@@ -11,14 +11,16 @@
 // Sai com código 1 se alguma checagem crítica falhar, 0 caso contrário —
 // útil se você quiser usar isto num script maior.
 
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import os from 'node:os';
 import net from 'node:net';
 import { execSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const PLATFORM = process.platform; // 'darwin' | 'linux' | 'win32'
 const HOME = os.homedir();
+const REPO_ROOT = dirname(dirname(fileURLToPath(import.meta.url))); // bin/doctor.mjs -> raiz do repo
 
 let failures = 0;
 let warnings = 0;
@@ -45,6 +47,55 @@ function readJsonSafe(path) {
   } catch {
     return null;
   }
+}
+
+function fileContains(path, needle) {
+  try {
+    return readFileSync(path, 'utf8').includes(needle);
+  } catch {
+    return false;
+  }
+}
+
+// Acha a skill muri-saver mesmo se instalada sob um alias custom (--alias no
+// install.mjs renomeia a pasta e o frontmatter `name:`) — procura pelo texto
+// distintivo do corpo da skill em vez de assumir o nome literal da pasta.
+function detectAlias(skillsDir) {
+  try {
+    const entries = readdirSync(skillsDir, { withFileTypes: true }).filter((e) => e.isDirectory());
+    for (const e of entries) {
+      const p = join(skillsDir, e.name, 'SKILL.md');
+      if (fileContains(p, 'Modo de economia agressiva')) return e.name;
+    }
+  } catch {
+    // pasta de skills não existe ainda
+  }
+  return null;
+}
+
+// Conta arquivos (recursivo, limitado) pra dar um sinal de "tem sessões aqui"
+// sem precisar ler o conteúdo de cada uma.
+function countFilesRecursive(dir, matcher, maxDepth = 4, maxFiles = 200) {
+  let count = 0;
+  const stack = [{ d: dir, depth: 0 }];
+  while (stack.length && count < maxFiles) {
+    const { d, depth } = stack.pop();
+    let entries;
+    try {
+      entries = readdirSync(d, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const e of entries) {
+      const full = join(d, e.name);
+      if (e.isDirectory()) {
+        if (depth < maxDepth) stack.push({ d: full, depth: depth + 1 });
+      } else if (!matcher || matcher(e.name)) {
+        count++;
+      }
+    }
+  }
+  return count;
 }
 
 function cmdExists(cmd, versionFlag = '--version') {
@@ -153,8 +204,11 @@ async function main() {
   if (existsSync(join(claudeDir, 'hooks', 'ai-memory-ensure-server.mjs'))) ok('arquivo hooks/ai-memory-ensure-server.mjs presente em ~/.claude/hooks');
   else fail('~/.claude/hooks/ai-memory-ensure-server.mjs não encontrado');
 
-  if (existsSync(join(HOME, '.agents', 'skills', 'muri-saver', 'SKILL.md'))) ok('skill muri-saver instalada em ~/.agents/skills');
-  else fail('~/.agents/skills/muri-saver/SKILL.md não encontrado');
+  const skillsDir = join(HOME, '.agents', 'skills');
+  const detectedAlias = detectAlias(skillsDir);
+  if (detectedAlias && detectedAlias === 'muri-saver') ok('skill muri-saver instalada em ~/.agents/skills (alias padrão)');
+  else if (detectedAlias) ok(`skill muri-saver instalada em ~/.agents/skills sob alias customizado "${detectedAlias}"`, 'muri-saver/muri saver continuam funcionando como alias alternativo');
+  else fail('nenhuma skill muri-saver (padrão ou alias customizado) encontrada em ~/.agents/skills', 'rode node install.mjs [--alias <nome>]');
 
   if (existsSync(join(claudeDir, 'CLAUDE.md'))) ok('~/.claude/CLAUDE.md existe');
   else warn('~/.claude/CLAUDE.md não existe ainda', 'rode node install.mjs (ele cria a partir do template se não existir)');
@@ -188,13 +242,58 @@ async function main() {
   section('Vault');
   if (existsSync(vaultPath)) {
     ok('pasta do vault existe', vaultPath);
-    for (const sub of ['dailies', join('claude', 'sessions'), 'overview', 'projects']) {
+    for (const sub of ['dailies', join('claude', 'sessions'), join('antigravity', 'sessions'), join('codex', 'sessions'), 'overview', 'projects']) {
       const p = join(vaultPath, sub);
       if (existsSync(p)) ok(`  vault/${sub}`);
       else warn(`  vault/${sub} não existe ainda`, 'roda node install.mjs --vault "<caminho>" pra criar');
     }
   } else {
     warn('pasta do vault não encontrada', `${vaultPath} — passe --vault "<caminho>" se o seu vault estiver em outro lugar`);
+  }
+
+  section('Multi-agente — governança e sessões brutas de cada IA');
+  // Claude Code
+  const claudeProjectsDir = join(HOME, '.claude', 'projects');
+  if (existsSync(claudeProjectsDir)) {
+    const n = countFilesRecursive(claudeProjectsDir, (f) => f.endsWith('.jsonl'));
+    ok('sessões brutas do Claude Code encontradas', `~/.claude/projects (${n}${n >= 200 ? '+' : ''} arquivo(s) .jsonl)`);
+  } else {
+    warn('~/.claude/projects não encontrado', 'normal se o Claude Code nunca rodou nesta máquina ainda');
+  }
+
+  // Antigravity / Gemini CLI
+  const geminiDir = join(HOME, '.gemini');
+  const antigravityBrainDir = join(geminiDir, 'antigravity-cli', 'brain');
+  if (existsSync(antigravityBrainDir)) {
+    const n = countFilesRecursive(antigravityBrainDir, (f) => f === 'transcript_full.jsonl' || f === 'transcript.jsonl');
+    ok('sessões brutas do Antigravity encontradas', `~/.gemini/antigravity-cli/brain (${n}${n >= 200 ? '+' : ''} transcript(s))`);
+  } else {
+    warn('~/.gemini/antigravity-cli/brain não encontrado', 'normal se o Antigravity nunca rodou nesta máquina, ou se --with-antigravity ainda não foi usado');
+  }
+  if (existsSync(join(geminiDir, 'GEMINI.md'))) ok('~/.gemini/GEMINI.md existe (governança Antigravity instalada)');
+  else warn('~/.gemini/GEMINI.md não existe ainda', 'rode node install.mjs --with-antigravity (ele cria a partir do template se não existir)');
+
+  // Codex
+  const codexSessionsDir = join(HOME, '.codex', 'sessions');
+  const codexSqliteCandidates = [join(HOME, '.codex', 'thread_history_1.sqlite')];
+  if (existsSync(codexSessionsDir)) {
+    const n = countFilesRecursive(codexSessionsDir, (f) => f.endsWith('.jsonl'));
+    ok('sessões brutas do Codex encontradas', `~/.codex/sessions (${n}${n >= 200 ? '+' : ''} rollout(s) .jsonl)`);
+  } else if (codexSqliteCandidates.some(existsSync)) {
+    ok('histórico do Codex encontrado', 'via SQLite (thread_history_1.sqlite)');
+  } else {
+    warn('~/.codex/sessions não encontrado', 'normal se o Codex CLI nunca rodou nesta máquina, ou se --with-codex ainda não foi usado');
+  }
+  if (existsSync(join(HOME, '.codex', 'AGENTS.md'))) ok('~/.codex/AGENTS.md existe (governança Codex instalada)');
+  else warn('~/.codex/AGENTS.md não existe ainda', 'rode node install.mjs --with-codex (ele cria a partir do template se não existir)');
+
+  section('Ingestor de sessões (bin/ingest-sessions.mjs)');
+  const ingestorPath = join(REPO_ROOT, 'bin', 'ingest-sessions.mjs');
+  if (existsSync(ingestorPath)) {
+    ok('bin/ingest-sessions.mjs presente neste repositório');
+    console.log('        Sugestão: node bin/ingest-sessions.mjs --all --dry-run   (simulação, não escreve nada)');
+  } else {
+    warn('bin/ingest-sessions.mjs não encontrado neste checkout', 'confirme que você está rodando o doctor a partir da raiz do repositório muri-saver');
   }
 
   console.log(`\n${'-'.repeat(60)}`);
