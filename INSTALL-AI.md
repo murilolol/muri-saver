@@ -80,6 +80,17 @@ se prefere manter o dele como está.
 
 ## 2. `ai-memory` (memória persistente)
 
+**O que é, antes de instalar:** [ai-memory](https://github.com/akitaonrails/ai-memory)
+é um servidor de memória de longo prazo pra agentes de IA coding, criado por
+[Fabio Akita](https://github.com/akitaonrails) (MIT, Rust, 8k+ estrelas). Ele
+resolve o problema de cada agente/máquina ter sua própria memória isolada:
+20+ harnesses (Claude Code, Codex, Cursor, Gemini CLI...) podem alimentar a
+mesma memória compartilhada, guardada como wiki markdown versionada
+(indexada em SQLite/FTS5), com captura automática via hooks e handoff real
+entre sessões — sem exigir nenhuma chamada de LLM no caminho padrão. Se o
+usuário perguntar "o que é isso", essa é a explicação; detalhes completos em
+[`README.md#ai-memory`](./README.md#ai-memory).
+
 Isto **não** é instalado pelo `bin/install.mjs` de propósito — é um projeto
 externo com seu próprio instalador. Siga
 **[`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md)**
@@ -149,12 +160,16 @@ deste documento antes de seguir em frente.
 
 ## 7. Skills companheiras (opcional)
 
-Se você rodou `bin/install.mjs --with-companion-skills` no Passo 1, `find-skills`,
-`tdd`, `prototype` e `grill-with-docs` já foram instaladas. Para
-`openspec`, `graphify`, `impeccable` e o pacote `superpowers`, veja os
-comandos exatos e a atribuição de cada autor em
+Se você rodou `bin/install.mjs --with-companion-skills` no Passo 1,
+`find-skills`, `tdd`, `prototype` e `grill-with-docs` já foram instaladas.
+Cada skill (instalada ou não) tem uma página própria em
+[`skills/companion/<nome>/README.md`](./skills/companion/) — com o que ela
+faz, o autor, quando usar e o comando de instalação. Se o usuário perguntar
+sobre alguma delas, leia a página correspondente antes de responder, em vez
+de inventar a descrição. Índice geral em
 [`docs/skills-companion.md`](./docs/skills-companion.md) — são todas de
-terceiros, mantidas fora deste repositório de propósito.
+terceiros, mantidas fora deste repositório de propósito (nunca vendorize o
+conteúdo delas aqui).
 
 ## 8. Reiniciar e confirmar
 
