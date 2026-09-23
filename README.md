@@ -35,6 +35,7 @@
 
 - [Sobre](#sobre)
 - [Como funciona](#como-funciona)
+- [Status line](#status-line)
 - [`ai-memory`](#ai-memory)
 - [Antes / depois](#antes--depois)
 - [Achados reais que justificam cada regra](#achados-reais-que-justificam-cada-regra)
@@ -133,6 +134,40 @@ recebem só um registro barato (sem custo de LLM), nunca são silenciosamente
 ignoradas. Decisões de design completas, e por que a arquitetura é separada
 assim (e não tudo num arquivo só), em
 [`docs/architecture.md`](./docs/architecture.md).
+
+<br>
+
+## Status line
+
+`scripts/statusline.py` é a status line que uso todo dia no Claude Code —
+mesmo motor visual (barras, cor por limiar, dicas proativas) do renderizador
+que uso no Antigravity (`~/.gemini/scripts/usage-status.py`), pra manter a
+leitura consistente entre os agentes. Exemplo real, exatamente como aparece
+no meu terminal:
+
+```
+📁 muri-saver │ 🌿 main* │ 🧠 on │ ⏱ 1m 46s │ ◔ 170k/1m ▓░░░░░░░ 17% → considere /compact │ 5h ▓░░░░░░░ 9% → 3h 41m │ 7d ░░░░░░░░ 0% → 167h 01m │ ◆ Sonnet 5
+```
+
+| Segmento | Significado |
+|---|---|
+| `📁 muri-saver` | Diretório do projeto atual |
+| `🌿 main*` | Branch git (`*` = mudanças não commitadas) |
+| `🧠 on` | Servidor local do `ai-memory` respondendo (`off` em cinza se não estiver) |
+| `⏱ 1m 46s` | Duração da sessão atual |
+| `◔ 170k/1m ▓░░░░░░░ 17% → considere /compact` | Tokens de contexto usados / janela total, barra proporcional, e dica que escala em 4 níveis (`tranquilo` → `acompanhe o contexto` → `considere /compact` → `/compact ou /clear agora`) |
+| `5h ▓░░░░░░░ 9% → 3h 41m` | % da janela de uso de 5h e contagem regressiva até o reset |
+| `7d ░░░░░░░░ 0% → 167h 01m` | % da janela semanal e contagem regressiva |
+| `◆ Sonnet 5` | Modelo ativo na sessão |
+
+Cor muda por limiar (branco → amarelo em 70% → vermelho em 90%) em qualquer
+barra de porcentagem, e o layout se adapta sozinho pra terminal estreito
+(<120 colunas), caindo pra só números sem barra. Instalado automaticamente
+pelo `bin/install.mjs` via `claude-config/settings.snippet.json` (chave
+`statusLine`) — só não mexe se você já tiver um `statusLine` customizado no
+seu `settings.json`. O Codex CLI tem status line própria embutida no TUI (não
+scriptável do mesmo jeito), por isso não tem uma versão equivalente deste
+arquivo aqui — a consistência visual hoje é entre Claude Code e Antigravity.
 
 <br>
 
