@@ -1,0 +1,20 @@
+{
+  "_comment": "Trecho de exemplo para a chave `mcpServers` do seu client (Claude Code: ~/.claude.json). Copie só as entradas que fizerem sentido pra você — não sobrescreva o arquivo inteiro, faça merge manual ou peça pra IA instaladora mesclar.",
+
+  "ai-memory": {
+    "type": "http",
+    "url": "http://127.0.0.1:49374/mcp",
+    "_comment": "Servidor local do ai-memory (https://github.com/akitaonrails/ai-memory). Sobe sozinho via hooks/ai-memory-ensure-server.mjs, não precisa iniciar manualmente depois de instalado."
+  },
+
+  "obsidian": {
+    "type": "stdio",
+    "command": "npx",
+    "args": [
+      "-y",
+      "@bitbonsai/mcpvault",
+      "<CAMINHO_DO_SEU_VAULT>"
+    ],
+    "_comment": "Troque <CAMINHO_DO_SEU_VAULT> pelo caminho absoluto do seu vault Obsidian, ex: /Users/voce/Documents/Obsidian Vault ou C:\\Users\\voce\\Documents\\Obsidian Vault. Não usa ~/env var aqui, o mcpvault espera caminho literal."
+  }
+}
