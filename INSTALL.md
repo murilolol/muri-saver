@@ -66,12 +66,13 @@ instalado, e a estrutura de pastas do vault — tudo numa passada, com
 ## Skills companheiras (opcional)
 
 `find-skills`, `tdd`, `prototype`, `grill-with-docs`, `openspec`,
-`graphify`, `impeccable` e o pacote `superpowers` não são instaladas por
-`bin/install.mjs` a menos que você use `--with-companion-skills` (e mesmo
-assim, só as 4 primeiras têm instalação automática confiável). Cada uma tem
-uma página própria em [`skills/companion/`](./skills/companion/) explicando
-o que é, quem fez, e o comando exato de instalação — índice completo em
-[`docs/skills-companion.md`](./docs/skills-companion.md).
+`graphify` e `impeccable` não são instaladas por `bin/install.mjs` a menos
+que você use `--with-companion-skills` (e mesmo assim, só as 4 primeiras têm
+instalação automática confiável). Cada uma tem uma página própria em
+[`skills/companion/`](./skills/companion/) explicando o que é, quem fez, e o
+comando exato de instalação — índice completo em
+[`docs/skills-companion.md`](./docs/skills-companion.md), que também lista
+`emil-design-eng` e `taste-skill` (ainda não uso, mas pretendo).
 
 Atenção: `grill-me` **não** está nessa lista porque já foi instalada no
 Passo 1 (é vendorizada, sempre acontece). `grill-with-docs` é diferente —

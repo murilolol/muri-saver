@@ -229,7 +229,7 @@ muri-saver/
 │   ├── grill-me/SKILL.md              # minha reescrita do protocolo de entrevista via modal nativo
 │   └── companion/                     # NAO sao skills vendorizadas — so README explicando cada uma
 │       ├── find-skills/README.md      # + tdd/, prototype/, grill-with-docs/, openspec/,
-│       └── ...                        #   graphify/, impeccable/, superpowers/ (mesmo padrao)
+│       └── ...                        #   graphify/, impeccable/, emil-design-eng/, taste-skill/
 ├── claude-config/
 │   ├── CLAUDE.md.template             # governanca global, sempre carregada
 │   └── settings.snippet.json          # trecho de merge pro ~/.claude/settings.json
@@ -290,10 +290,13 @@ instalação). Prévia rápida:
 | [`openspec`](./skills/companion/openspec/README.md) | Framework de especificação estruturada (requisitos, arquitetura, plano de execução) antes de implementar | [openspecio](https://github.com/openspecio/openspec) | MIT |
 | [`graphify`](./skills/companion/graphify/README.md) | Transforma qualquer pasta de código/docs num grafo de conhecimento navegável (`graphify query/path/explain`) | [safishamsi](https://github.com/Graphify-Labs/graphify) | Apache-2.0 |
 | [`impeccable`](./skills/companion/impeccable/README.md) | Revisão/crítica/polish de UI com padrão de design director sênior | [Paul Bakaus](https://github.com/pbakaus/impeccable) | Apache-2.0 |
-| [`superpowers`](./skills/companion/superpowers/README.md) (pack) | Metodologia de dev sênior — debugging sistemático, planejamento, worktrees, code review | [obra](https://github.com/obra/superpowers) | MIT |
+| [`emil-design-eng`](./skills/companion/emil-design-eng/README.md) (pack) — *quero usar* | Revisão de animação e UI polish com o critério de quem construiu Vaul e Sonner | [Emil Kowalski](https://github.com/emilkowalski/skills) | MIT |
+| [`taste-skill`](./skills/companion/taste-skill/README.md) — *quero usar* | Dá "bom gosto" visual à IA a partir de referências reais, evita interface genérica | [Leonxlnx](https://github.com/Leonxlnx/taste-skill) | MIT |
 
 Índice completo com mais contexto (quando usar, por que vale a pena) em
-[`docs/skills-companion.md`](./docs/skills-companion.md).
+[`docs/skills-companion.md`](./docs/skills-companion.md). Avaliei o pacote
+`obra/superpowers` e decidi não usar — é ótimo, mas pesado demais em
+tokens/contexto pro meu fluxo (o oposto do que este repositório propõe).
 
 > **`grill-me` e `grill-with-docs` são usadas juntas, não uma no lugar da
 > outra**: `grill-me` (minha, sempre instalada) é o padrão do dia a dia;

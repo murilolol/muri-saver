@@ -68,8 +68,8 @@ Flags relevantes (combine como precisar):
 - `--with-companion-skills` — também instala via `npx skills add` as skills
   de terceiros que valem a pena ter (`find-skills`, `tdd`, `prototype`,
   `grill-with-docs`). Ver [`docs/skills-companion.md`](./docs/skills-companion.md)
-  pras outras (`openspec`, `graphify`, `impeccable`, `superpowers`) que não
-  têm instalação automática confiável.
+  pras outras (`openspec`, `graphify`, `impeccable`, `emil-design-eng`,
+  `taste-skill`) que não têm instalação automática confiável.
 - `--skip-claude-md` — pula a criação do `CLAUDE.md`.
 
 ⚠️ **Se `~/.claude/CLAUDE.md` já existir**: o instalador avisa e não
