@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1076" height="653" viewBox="0 0 1076 653" role="img" aria-label="bin/install.mjs">
+  <rect width="1076" height="653" rx="10" fill="#0d1117"/>
+  <rect x="0.5" y="0.5" width="1075" height="652" rx="10" fill="none" stroke="#30363d"/>
+  <circle cx="20" cy="17" r="6" fill="#ff5f57"/><circle cx="40" cy="17" r="6" fill="#febc2e"/><circle cx="60" cy="17" r="6" fill="#28c840"/>
+  <text x="538" y="21" fill="#8b949e" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" text-anchor="middle">bin/install.mjs</text>
+  <line x1="0" y1="34" x2="1076" y2="34" stroke="#21262d"/>
+  <g font-family="ui-monospace,'SF Mono','SFMono-Regular',Menlo,Consolas,'Liberation Mono',monospace" font-size="12">
+  <text x="18" y="64" xml:space="preserve"><tspan fill="#3fb950">$</tspan><tspan fill="#c9d1d9"> node bin/install.mjs --alias mendes-saver --author-name Mendes --vault "~/Documents/Obsidian Vault" --timezone America/Sao_Paulo</tspan></text>
+  <text x="18" y="83" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] muri-saver 2.0.0 — SO: macOS (darwin/arm64) — home: ~</tspan></text>
+  <text x="18" y="102" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] Alias personalizado: "mendes-saver" (autor: Mendes) — "muri-saver" continua como alias alternativo.</tspan></text>
+  <text x="18" y="121" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] Fuso: America/Sao_Paulo — vault: ~/Documents/Obsidian Vault</tspan></text>
+  <text x="18" y="140" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.agents/skills/mendes-saver/SKILL.md</tspan></text>
+  <text x="18" y="159" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.agents/skills/grill-me/SKILL.md</tspan></text>
+  <text x="18" y="178" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.claude/hooks/ai-memory-ensure-server.mjs</tspan></text>
+  <text x="18" y="197" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.claude/hooks/obsidian-vault-check.mjs</tspan></text>
+  <text x="18" y="216" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.claude/scripts/ai-memory-llm-mode.ps1</tspan></text>
+  <text x="18" y="235" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.claude/scripts/ai-memory-llm-mode.sh</tspan></text>
+  <text x="18" y="254" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.claude/scripts/statusline.py</tspan></text>
+  <text x="18" y="273" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.claude/scripts/test-vault-hooks.sh</tspan></text>
+  <text x="18" y="292" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.claude/scripts/usage-status.py</tspan></text>
+  <text x="18" y="311" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] gravar ~/.claude/settings.json (hooks Stop/SessionStart do muri-saver)</tspan></text>
+  <text x="18" y="330" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.claude/CLAUDE.md</tspan></text>
+  <text x="18" y="349" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] vault pronto em ~/Documents/Obsidian Vault (dailies/, claude|antigravity|codex/sessions/, overview/, projects/)</tspan></text>
+  <text x="18" y="368" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.codex/hooks/obsidian-codex-session.mjs</tspan></text>
+  <text x="18" y="387" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.codex/AGENTS.md</tspan></text>
+  <text x="18" y="406" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] gravar ~/.codex/hooks.json (hook Stop do muri-saver pro Codex)</tspan></text>
+  <text x="18" y="425" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.gemini/config/skills/mendes-saver/SKILL.md</tspan></text>
+  <text x="18" y="444" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.gemini/config/skills/grill-me/SKILL.md</tspan></text>
+  <text x="18" y="463" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] criar ~/.gemini/GEMINI.md</tspan></text>
+  <text x="18" y="482" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] gravar ~/.gemini/config/hooks.json (hook Stop do muri-saver pro Antigravity)</tspan></text>
+  <text x="18" y="501" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] Pronto: 15 arquivo(s) criado(s)/atualizado(s), 0 já em dia, 0 backup(s), 0 antigo(s) movido(s). Config: ~/.claude/muri-saver.json</tspan></text>
+  <text x="18" y="520" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] Próximos passos (detalhes em INSTALL-AI.md):</tspan></text>
+  <text x="18" y="539" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver]   1. ai-memory: instalar o binário e rodar `ai-memory install-hooks --client claude-code`.</tspan></text>
+  <text x="18" y="558" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver]   2. MCP: mesclar mcp/mcp-servers.example.json no ~/.claude.json com o caminho real do vault.</tspan></text>
+  <text x="18" y="577" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver]   3. Reiniciar Claude Code/Antigravity/Codex pra carregar skill, hooks e governança.</tspan></text>
+  <text x="18" y="596" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver]   4. `node bin/doctor.mjs` pra conferir tudo.</tspan></text>
+  <text x="18" y="615" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver]   5. Opcional: `node bin/ingest-sessions.mjs --all --dry-run` pra importar sessões antigas.</tspan></text>
+  <text x="18" y="634" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver]   Atualizar depois: `node bin/install.mjs --update` · Remover: `node bin/install.mjs --uninstall`.</tspan></text>
+  </g>
+</svg>
