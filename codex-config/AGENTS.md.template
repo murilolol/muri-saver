@@ -32,6 +32,8 @@ Quando o usuário mencionar estes tópicos, vá DIRETO ao destino sem listagens 
 | `sessões brutas do codex` | `~/.codex/sessions/<ano>/<mes>/<dia>/rollout-*.jsonl`, `~/.codex/history.jsonl` | Transcrições nativas do Codex |
 | `hooks codex` | `~/.codex/hooks.json`, `~/.codex/hooks/` | Automações de ciclo de vida do Codex |
 
+> Caminhos de vault acima = padrão. Se a instalação usou `--vault`, o caminho real está em `~/.claude/muri-saver.json` (`vault`).
+
 ---
 
 ## 1. Regra de Ouro: First-Look de Memória (Memória Primeiro)
@@ -110,8 +112,8 @@ mesmo arquivo.
 ---
 
 ## 7. Sessões Noturnas & Fusos Horários
-- **Fuso Horário Oficial**: sempre nomear arquivos e registrar timestamps no horário local
-  configurado do usuário (padrão de referência: BRT / UTC-3).
+- **Fuso Horário Oficial**: sempre nomear arquivos e registrar timestamps no fuso configurado em
+  `~/.claude/muri-saver.json` (`timezone`; padrão: o do sistema — ex: BRT / UTC-3).
 - **Sessões Noturnas / Madrugada**: se uma sessão cruzar a virada da meia-noite, indexe em
   ambos os diários com o marcador `(Overnight / Madrugada)`.
 

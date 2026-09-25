@@ -13,11 +13,19 @@ agentes ao mesmo tempo.
 
 **Nesta página:** [Visão geral](#visão-geral) · [As peças](#as-peças) ·
 [Multi-agente e o ingestor](#multi-agente-e-o-ingestor) ·
+[Configuração (`muri-saver.json`)](#configuração-muri-saverjson) ·
+[Código e testes](#código-compartilhado-e-testes) ·
 [Por que separar tudo assim](#por-que-separar-tudo-assim)
 
 <br>
 
 ## Visão geral
+
+<p align="center">
+  <img src="../assets/architecture-diagram.png" alt="Diagrama v2: agentes carregam a governança; hooks gravam sessões novas e o ingestor grava o histórico no ai-memory e no Obsidian Vault" width="100%" />
+</p>
+
+Versão simplificada, em Mermaid:
 
 ```mermaid
 graph TD
@@ -106,8 +114,9 @@ referenciadas, com o comando de instalação de cada uma.
 **`bin/doctor.mjs`**
 Verificação read-only de todo o ambiente — detecta o SO e confere runtimes,
 binário/servidor do `ai-memory`, hooks registrados, plugin `claude-obsidian`,
-MCP servers, app Obsidian, a estrutura do vault, o alias configurado, e as
-sessões brutas + governança de cada agente (Claude Code/Antigravity/Codex).
+MCP servers, app Obsidian, a estrutura do vault, a config salva (com
+integridade dos arquivos instalados por sha256), e as sessões brutas +
+governança de cada agente (Claude Code/Antigravity/Codex).
 Existe pra uma IA instaladora (ou você) confirmar o estado real em vez de
 assumir que um passo funcionou.
 
@@ -138,6 +147,44 @@ graph TD
     San --> AM
     San --> V
 ```
+
+<br>
+
+## Configuração (`muri-saver.json`)
+
+O instalador grava `~/.claude/muri-saver.json` com alias, vault, fuso,
+agentes configurados, caminhos usados e um **manifesto** (caminho + sha256
++ tipo) de cada arquivo que ele escreveu. É o ponto único de verdade da
+instalação:
+
+| Quem lê | Pra quê |
+|---|---|
+| `hooks/obsidian-vault-check.mjs` | Vault e fuso onde gravar cada sessão (procura o arquivo uma pasta acima de `hooks/`, então funciona com `--claude-dir` também) |
+| `hooks/codex/obsidian-codex-session.mjs` | Idem, pro Codex (via `~/.claude/muri-saver.json` ou `MURI_SAVER_CONFIG`) |
+| `bin/ingest-sessions.mjs` | Vault e fuso padrão quando não vêm por flag |
+| `bin/install.mjs --update` | Reinstalar sem repetir flags; saber quais arquivos de governança ele criou e ninguém editou |
+| `bin/install.mjs --uninstall` | Remover exatamente o que foi instalado, e só se o hash ainda bater |
+| `bin/doctor.mjs` | Mostrar a config e conferir a integridade dos arquivos instalados |
+
+Precedência do vault em todos eles: flag `--vault` > `OBSIDIAN_VAULT` >
+`muri-saver.json` > `~/Documents/Obsidian Vault`.
+
+<br>
+
+## Código compartilhado e testes
+
+`bin/*.mjs` são finos: a lógica mora em `lib/` (config, alias,
+sanitização, parsers de cada agente, escrita no vault, enriquecimento,
+merge de hooks), o que deixa tudo testável com `node:test` sem dependência
+nenhuma. A exceção deliberada são os **hooks**: eles são copiados sozinhos
+pra `~/.claude/hooks`, então carregam a própria cópia da sanitização e da
+leitura de config em vez de importar de `lib/`.
+
+Os testes (`test/`) usam fixtures de cada agente (sessões fictícias com um
+segredo falso, HTML solto e tags de sistema de propósito) e rodam cada
+script num `HOME` temporário. O CI roda em macOS, Linux e Windows × Node
+18/22/24. `tools/build-assets.mjs` usa os mesmos fixtures pra gerar
+[`examples/vault/`](../examples/vault/) e as imagens do README.
 
 <br>
 
