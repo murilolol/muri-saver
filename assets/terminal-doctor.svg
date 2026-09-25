@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1208" height="1204" viewBox="0 0 1208 1204" role="img" aria-label="bin/doctor.mjs">
+  <rect width="1208" height="1204" rx="10" fill="#0d1117"/>
+  <rect x="0.5" y="0.5" width="1207" height="1203" rx="10" fill="none" stroke="#30363d"/>
+  <circle cx="20" cy="17" r="6" fill="#ff5f57"/><circle cx="40" cy="17" r="6" fill="#febc2e"/><circle cx="60" cy="17" r="6" fill="#28c840"/>
+  <text x="604" y="21" fill="#8b949e" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" text-anchor="middle">bin/doctor.mjs</text>
+  <line x1="0" y1="34" x2="1208" y2="34" stroke="#21262d"/>
+  <g font-family="ui-monospace,'SF Mono','SFMono-Regular',Menlo,Consolas,'Liberation Mono',monospace" font-size="12">
+  <text x="18" y="64" xml:space="preserve"><tspan fill="#3fb950">$</tspan><tspan fill="#c9d1d9"> node bin/doctor.mjs</tspan></text>
+  <text x="18" y="83" xml:space="preserve"><tspan fill="#c9d1d9">muri-saver doctor — SO detectado: macOS (darwin/arm64)</tspan></text>
+  <text x="18" y="102" xml:space="preserve"></text>
+  <text x="18" y="121" xml:space="preserve"><tspan fill="#39c5cf">=== Runtimes ===</tspan></text>
+  <text x="18" y="140" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    Node.js — v24.21.0</tspan></text>
+  <text x="18" y="159" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    node:sqlite disponível — o ingestor também lê o histórico SQLite do Codex</tspan></text>
+  <text x="18" y="178" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    Python 3 — Python 3.11.0</tspan></text>
+  <text x="18" y="197" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    Claude Code CLI — 2.1.282 (Claude Code)</tspan></text>
+  <text x="18" y="216" xml:space="preserve"></text>
+  <text x="18" y="235" xml:space="preserve"><tspan fill="#39c5cf">=== ai-memory ===</tspan></text>
+  <text x="18" y="254" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    binário ai-memory — ~/.local/bin/ai-memory</tspan></text>
+  <text x="18" y="273" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    servidor ai-memory respondendo — http://127.0.0.1:49374</tspan></text>
+  <text x="18" y="292" xml:space="preserve"></text>
+  <text x="18" y="311" xml:space="preserve"><tspan fill="#39c5cf">=== Configuração do muri-saver (muri-saver.json) ===</tspan></text>
+  <text x="18" y="330" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    config encontrada — ~/.claude/muri-saver.json</tspan></text>
+  <text x="18" y="349" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    versão instalada — 2.0.0</tspan></text>
+  <text x="18" y="368" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    alias — mendes-saver (muri-saver continua como alternativo)</tspan></text>
+  <text x="18" y="387" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    fuso horário — America/Sao_Paulo</tspan></text>
+  <text x="18" y="406" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    agentes configurados — claude, codex, antigravity</tspan></text>
+  <text x="18" y="425" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    arquivos instalados íntegros — 15 arquivo(s) conferidos por sha256</tspan></text>
+  <text x="18" y="444" xml:space="preserve"></text>
+  <text x="18" y="463" xml:space="preserve"><tspan fill="#39c5cf">=== Config do Claude Code ===</tspan></text>
+  <text x="18" y="482" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    hook Stop (obsidian-vault-check.mjs) registrado em settings.json</tspan></text>
+  <text x="18" y="501" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    hook SessionStart (ai-memory-ensure-server.mjs) registrado em settings.json</tspan></text>
+  <text x="18" y="520" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    plugin claude-obsidian habilitado — claude-obsidian@agricidaniel-claude-obsidian</tspan></text>
+  <text x="18" y="539" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    arquivo hooks/obsidian-vault-check.mjs presente em ~/.claude/hooks</tspan></text>
+  <text x="18" y="558" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    arquivo hooks/ai-memory-ensure-server.mjs presente em ~/.claude/hooks</tspan></text>
+  <text x="18" y="577" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    skill muri-saver instalada em ~/.agents/skills sob alias customizado "mendes-saver" — muri-saver/muri saver continuam funcionando como alias alternativo</tspan></text>
+  <text x="18" y="596" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    ~/.claude/CLAUDE.md existe</tspan></text>
+  <text x="18" y="615" xml:space="preserve"></text>
+  <text x="18" y="634" xml:space="preserve"><tspan fill="#39c5cf">=== MCP servers ===</tspan></text>
+  <text x="18" y="653" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    MCP "ai-memory" registrado em ~/.claude.json</tspan></text>
+  <text x="18" y="672" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    MCP "obsidian" (@bitbonsai/mcpvault) registrado em ~/.claude.json</tspan></text>
+  <text x="18" y="691" xml:space="preserve"></text>
+  <text x="18" y="710" xml:space="preserve"><tspan fill="#39c5cf">=== Obsidian (app) ===</tspan></text>
+  <text x="18" y="729" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    app Obsidian encontrado — /Applications/Obsidian.app</tspan></text>
+  <text x="18" y="748" xml:space="preserve"></text>
+  <text x="18" y="767" xml:space="preserve"><tspan fill="#39c5cf">=== Vault ===</tspan></text>
+  <text x="18" y="786" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    pasta do vault existe — ~/Documents/Obsidian Vault</tspan></text>
+  <text x="18" y="805" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">      vault/dailies</tspan></text>
+  <text x="18" y="824" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">      vault/claude/sessions</tspan></text>
+  <text x="18" y="843" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">      vault/antigravity/sessions</tspan></text>
+  <text x="18" y="862" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">      vault/codex/sessions</tspan></text>
+  <text x="18" y="881" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">      vault/overview</tspan></text>
+  <text x="18" y="900" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">      vault/projects</tspan></text>
+  <text x="18" y="919" xml:space="preserve"></text>
+  <text x="18" y="938" xml:space="preserve"><tspan fill="#39c5cf">=== Multi-agente — governança e sessões brutas de cada IA ===</tspan></text>
+  <text x="18" y="957" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    sessões brutas do Claude Code encontradas — ~/.claude/projects (81 arquivo(s) .jsonl)</tspan></text>
+  <text x="18" y="976" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    sessões brutas do Antigravity encontradas — ~/.gemini/antigravity-cli/brain (200+ transcript(s))</tspan></text>
+  <text x="18" y="995" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    ~/.gemini/GEMINI.md existe (governança Antigravity instalada)</tspan></text>
+  <text x="18" y="1014" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    sessões brutas do Codex encontradas — ~/.codex/sessions (26 rollout(s) .jsonl)</tspan></text>
+  <text x="18" y="1033" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    ~/.codex/AGENTS.md existe (governança Codex instalada)</tspan></text>
+  <text x="18" y="1052" xml:space="preserve"></text>
+  <text x="18" y="1071" xml:space="preserve"><tspan fill="#39c5cf">=== Ingestor de sessões (bin/ingest-sessions.mjs) ===</tspan></text>
+  <text x="18" y="1090" xml:space="preserve"><tspan fill="#c9d1d9">  </tspan><tspan fill="#3fb950">OK</tspan><tspan fill="#c9d1d9">    bin/ingest-sessions.mjs presente neste repositório</tspan></text>
+  <text x="18" y="1109" xml:space="preserve"><tspan fill="#c9d1d9">        Sugestão: node bin/ingest-sessions.mjs --all --dry-run   (simulação, não escreve nada)</tspan></text>
+  <text x="18" y="1128" xml:space="preserve"></text>
+  <text x="18" y="1147" xml:space="preserve"><tspan fill="#c9d1d9">------------------------------------------------------------</tspan></text>
+  <text x="18" y="1166" xml:space="preserve"><tspan fill="#c9d1d9">Resumo: 0 falha(s), 0 aviso(s).</tspan></text>
+  <text x="18" y="1185" xml:space="preserve"><tspan fill="#c9d1d9">Tudo certo — instalação completa.</tspan></text>
+  </g>
+</svg>
