@@ -41,7 +41,14 @@ harness:
   no terminal, aguardando a resposta antes de seguir — nunca invente as
   respostas por conta própria.
 
-Faça estas 5 perguntas (com as opções sugeridas entre parênteses; marque a
+Antes de perguntar, descubra o fuso do sistema (vai virar a opção
+recomendada da pergunta 6):
+
+```bash
+node -e "console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)"
+```
+
+Faça estas 6 perguntas (com as opções sugeridas entre parênteses; marque a
 primeira opção como recomendada quando aplicável):
 
 1. **Identidade da skill**: "Você quer manter o nome padrão `muri-saver` ou
@@ -55,7 +62,9 @@ primeira opção como recomendada quando aplicável):
 3. **Ingestão retroativa**: "Quer que eu importe as sessões antigas dessas
    IAs (que já existem na sua máquina) pro Obsidian Vault e/ou pro
    `ai-memory` agora, ou só configurar a governança daqui pra frente?" —
-   (Recomendado: importar, com `--dry-run` primeiro pra revisar antes.)
+   opções: importar sem LLM (Recomendado, grátis, com `--dry-run` primeiro) /
+   importar e enriquecer as N sessões mais recentes com narrativa via Haiku
+   (`--enrich`, custa centavos por sessão da cota do usuário) / não importar.
 4. **Caminho do Obsidian Vault**: "Qual o caminho do seu vault?" (padrão
    sugerido: `~/Documents/Obsidian Vault` — pergunte se ele já tem um vault
    em outro lugar).
@@ -63,6 +72,9 @@ primeira opção como recomendada quando aplicável):
    recomendadas (`find-skills`, `tdd`, `prototype`, `grill-with-docs`)?" —
    (Recomendado: sim, elas ajudam com descoberta de skills, TDD e
    prototipagem — mas nenhuma é obrigatória pro muri-saver funcionar.)
+6. **Fuso horário**: "Os nomes de arquivo e os diários usam o fuso
+   `<fuso detectado>`. Está certo?" — (Recomendado: o detectado; outra opção
+   é o usuário informar um nome IANA como `America/Sao_Paulo`.)
 
 Com as respostas em mãos, os passos abaixo já te dizem exatamente qual flag
 usar pra cada resposta — não precisa adivinhar.
@@ -113,9 +125,18 @@ Passo 0 em flags**:
 node bin/install.mjs \
   [--alias "<nome-da-pergunta-1>"] [--author-name "<nome-do-usuário>"] \
   [--with-antigravity] [--with-codex]   # conforme a pergunta 2 (pode combinar os dois, ou usar --with-all) \
-  [--vault "<caminho-da-pergunta-4>"] \
+  --vault "<caminho-da-pergunta-4>" \
+  --timezone "<fuso-da-pergunta-6>" \
   [--with-companion-skills]             # se a resposta da pergunta 5 foi sim
 ```
+
+> [!IMPORTANT]
+> Sempre passe `--vault` explicitamente: é esse caminho que vai pro
+> `~/.claude/muri-saver.json`, e é dali que os hooks e o ingestor leem onde
+> gravar. Se o `doctor` disser que o `muri-saver.json` não existe mas o resto
+> do muri-saver já está instalado (instalação anterior à v2), rodar este
+> comando uma vez registra tudo — nas próximas vezes, `node bin/install.mjs --update`
+> basta.
 
 Isso, sozinho:
 - copia `skills/muri-saver/SKILL.md` (com o alias aplicado, se algum foi
@@ -245,11 +266,27 @@ node bin/ingest-sessions.mjs --all --limit 20
 node bin/ingest-sessions.mjs --all --since 2026-09-01
 ```
 
-Isso nunca chama LLM nenhuma (extração 100% local — ver
+Por padrão isso nunca chama LLM nenhuma (extração 100% local — ver
 [`docs/session-ingestor.md`](./docs/session-ingestor.md) pro porquê) e é
-idempotente: rodar de novo não duplica nada já importado. Se o usuário tiver
-um export do Claude Desktop/Web (`conversations.json`), use `--file
-<caminho>` em vez de `--all`/`--agent`.
+idempotente: rodar de novo não duplica nada já importado.
+
+Variações conforme a resposta da pergunta 3 e a situação do usuário:
+
+```bash
+# Enriquecer as sessões mais recentes com narrativa + taxonomia (Haiku, opt-in)
+node bin/ingest-sessions.mjs --all --enrich --enrich-limit 5
+
+# Sessões de uma máquina antiga copiadas pra um backup
+node bin/ingest-sessions.mjs --all --source-home "/caminho/da/home/antiga"
+
+# Export do Claude Desktop/Web
+node bin/ingest-sessions.mjs --file "/caminho/conversations.json"
+```
+
+> [!WARNING]
+> `--enrich` gasta cota do usuário (uma chamada Haiku por sessão, teto de
+> US$ 0,20 cada). Só use se ele escolheu isso na pergunta 3, e respeite o
+> número de sessões que ele aceitou.
 
 ## 9. Skills companheiras (opcional)
 
@@ -291,3 +328,9 @@ as skills e os hooks novos. Depois, confirme com ele:
 Se os dois funcionarem, a instalação está completa. Rode
 `node bin/doctor.mjs` de novo a qualquer momento pra confirmar o estado geral —
 ele é 100% leitura, seguro de rodar quantas vezes quiser.
+
+Diga ao usuário, no fim, os dois comandos de manutenção:
+`node bin/install.mjs --update` (depois de `git pull`) e
+`node bin/install.mjs --uninstall` (remove só o que não foi editado, com
+backup). Se algo falhar em qualquer passo, consulte
+[`docs/troubleshooting.md`](./docs/troubleshooting.md) antes de improvisar.

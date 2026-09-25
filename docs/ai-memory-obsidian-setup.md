@@ -121,7 +121,11 @@ absoluto real do seu vault.
 ## 5. Estrutura do vault
 
 O `bin/install.mjs` deste repo, com `--vault <caminho>`, cria o esqueleto
-completo pros três agentes:
+completo pros três agentes **e grava esse caminho em
+`~/.claude/muri-saver.json`** — é dali que os hooks e o ingestor leem onde
+gravar (com `OBSIDIAN_VAULT` como override). Instalou antes da v2? O hook
+daquela versão ignorava o `--vault`; rode `node bin/install.mjs --vault "<caminho>"`
+de novo.
 
 ```
 <vault>/

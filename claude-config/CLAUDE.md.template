@@ -23,6 +23,8 @@ Quando o usuário mencionar estes tópicos, vá DIRETO ao destino sem listagens 
 | `scripts claude`, `hooks` | `~/.claude/scripts/`, `~/.claude/hooks/` | Automações e hooks de ciclo de vida |
 | `skills`, `superpowers` | `~/.agents/skills/` | Repositório compartilhado de skills |
 
+> Caminhos de vault acima = padrão. Se a instalação usou `--vault`, o caminho real está em `~/.claude/muri-saver.json` (`vault`).
+
 ---
 
 ## 1. Regra de Ouro: First-Look de Memória (Memória Primeiro)
@@ -35,7 +37,7 @@ Quando o usuário mencionar estes tópicos, vá DIRETO ao destino sem listagens 
 ---
 
 ## 2. Gravação de Sessão (automática + sob pedido explícito)
-Desde 2026-09-04 o hook `Stop` (`~/.claude/hooks/obsidian-vault-check.mjs`, espelhado no Antigravity via plugin) **gera sozinho** a entrada de sessão em `claude/sessions/Session-YYYY-MM-DD_HHhMM-Claude-<id8>.md` e o append em `dailies/Daily-YYYY-MM-DD.md` (diário de bordo cross-agente, raiz do vault) via chamada headless barata — o `<id8>` é os 8 primeiros caracteres do `session_id`. Isso roda **automaticamente ao encerrar a sessão** (`/exit` ou Stop). Sessões muito curtas/triviais são ignoradas automaticamente.
+Desde 2026-09-04 o hook `Stop` (`~/.claude/hooks/obsidian-vault-check.mjs`, espelhado no Antigravity via plugin) **gera sozinho** a entrada de sessão em `claude/sessions/Session-YYYY-MM-DD_HHhMM-Claude-<id8>.md` e o append em `dailies/Daily-YYYY-MM-DD.md` (diário de bordo cross-agente, raiz do vault) via chamada headless barata — o `<id8>` é os 8 primeiros caracteres do `session_id`. Isso roda **automaticamente ao encerrar a sessão** (`/exit` ou Stop). Sessões muito curtas/triviais viram um dump barato, sem LLM. Segredos colados em prompts são gravados como `[REDACTED:TIPO]`.
 
 - **NÃO faça `Write`/`Update` manual desses arquivos de vault durante a sessão, e também NÃO rode `Bash`/`grep`/`cat` pra checar se a gravação "já aconteceu"** — essa verificação (`dailyDone`/`sessionDone`) já é feita pelo próprio hook antes de gerar, não é trabalho do agente. Se o usuário pedir "salva no obsidian/handoff" no meio da conversa, a resposta é curta: informar que a gravação do vault acontece sozinha ao encerrar — sem disparar tool calls pesadas de escrita nem de checagem.
 - **Exceção**: só escreva manualmente se (a) o hook bloquear avisando que a geração automática falhou (fallback), ou (b) o usuário disser explicitamente que precisa do registro síncrono agora porque a sessão não vai passar por um `Stop` normal (ex: vai matar o processo).
@@ -93,7 +95,7 @@ Mapeado especificamente pro Claude Code (não Gemini/Antigravity — os modelos 
 ---
 
 ## 8. Sessões Noturnas & Fusos Horários
-- **Fuso Horário Oficial**: Sempre nomear arquivos e registrar timestamps no horário local de Brasília (BRT / UTC-3).
+- **Fuso Horário Oficial**: Sempre nomear arquivos e registrar timestamps no fuso de `~/.claude/muri-saver.json` (`timezone`; padrão: o do sistema — ex: BRT / UTC-3).
 - **Sessões Noturnas / Madrugada**: Se uma sessão cruzar a virada da meia-noite, ela deve ser indexada em **ambos os diários (`Daily-YYYY-MM-DD.md`)** com o marcador `(Overnight / Madrugada)`.
 
 ---

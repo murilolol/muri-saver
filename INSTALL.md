@@ -24,6 +24,8 @@
 - [ ] [Passo 4](#passo-4--verificar-tudo) — `bin/doctor.mjs`
 - [ ] [Passo 5](#passo-5--importar-sessões-antigas-opcional) — importar histórico antigo (opcional)
 
+Depois: [atualizar e remover](#atualizar-e-remover) · deu problema? [`docs/troubleshooting.md`](./docs/troubleshooting.md)
+
 <br>
 
 ## Pré-requisitos
@@ -44,13 +46,23 @@
 git clone https://github.com/murilolol/muri-saver.git
 cd muri-saver
 node bin/install.mjs --dry-run   # revise o que seria feito, nada é escrito ainda
-node bin/install.mjs             # instala de verdade (nunca sobrescreve sem fazer backup antes)
+node bin/install.mjs --vault "$HOME/Documents/Obsidian Vault"   # instala (nunca sobrescreve sem backup)
 ```
+
+Sem clonar: `npx github:murilolol/muri-saver install --vault "..."` faz o
+mesmo direto do GitHub.
 
 Isso copia a skill `muri-saver` (e `grill-me`) pra `~/.agents/skills/`, os
 hooks pra `~/.claude/hooks/`, os scripts pra `~/.claude/scripts/`, mescla os
-hooks `Stop`/`SessionStart` no seu `~/.claude/settings.json`, e cria
-`~/.claude/CLAUDE.md` a partir do template (só se você ainda não tiver um).
+hooks `Stop`/`SessionStart` no seu `~/.claude/settings.json`, cria
+`~/.claude/CLAUDE.md` a partir do template (só se você ainda não tiver um) e
+grava tudo que fez em `~/.claude/muri-saver.json` — vault, fuso, alias e um
+manifesto com o hash de cada arquivo. É esse arquivo que os hooks leem pra
+saber onde gravar.
+
+> [!TIP]
+> O fuso dos nomes de arquivo é o do seu sistema. Pra fixar outro, use
+> `--timezone America/Sao_Paulo` (qualquer nome IANA).
 
 ### 🏷️ Personalize com o seu nome (`--alias`)
 
@@ -92,7 +104,10 @@ node bin/install.mjs --with-all           # os três de uma vez
 | `--dry-run` | Simula, não escreve nada |
 | `--alias <nome>` / `--skill-name <nome>` | Renomeia a skill e os gatilhos de ativação |
 | `--author-name <nome>` | Cosmético, aparece no log da instalação |
-| `--vault "<caminho>"` | Também cria a estrutura de pastas do Obsidian |
+| `--vault "<caminho>"` | Vault usado pelos hooks e pelo ingestor (também cria a estrutura de pastas) |
+| `--timezone <IANA>` | Fuso dos nomes de arquivo e diários (padrão: o do sistema) |
+| `--update` | Reinstala reaproveitando o `muri-saver.json` salvo |
+| `--uninstall` | Remove o que foi instalado (o que você editou fica) |
 | `--with-codex` | Força suporte a Codex CLI mesmo sem `~/.codex` detectado |
 | `--with-antigravity` | Força suporte a Antigravity mesmo sem `~/.gemini` detectado |
 | `--with-all` | Os dois acima de uma vez |
@@ -151,10 +166,30 @@ local):
 ```bash
 node bin/ingest-sessions.mjs --all --dry-run   # simulação, veja o que seria importado
 node bin/ingest-sessions.mjs --all --limit 20  # importa as 20 sessões mais recentes de cada agente
+node bin/ingest-sessions.mjs --all --enrich --enrich-limit 5   # opcional: narrativa + taxonomia via Haiku em até 5 sessões
 ```
 
-Detalhes completos (formato de cada fonte, sanitização, idempotência) em
+Tem a home de uma máquina antiga num backup? `--source-home /caminho/da/home`
+lê as sessões de lá. Detalhes completos (formato de cada fonte, sanitização,
+idempotência, custo do `--enrich`) em
 [`docs/session-ingestor.md`](./docs/session-ingestor.md).
+
+<br>
+
+## Atualizar e remover
+
+```bash
+git pull                              # pega a versão nova do repositório
+node bin/install.mjs --update         # reinstala com a config salva (alias, vault, fuso, agentes)
+node bin/install.mjs --uninstall      # remove tudo que foi instalado e não editado por você
+```
+
+O `--update` atualiza os arquivos de governança que o instalador criou e
+você não mexeu; os que você editou ficam como estão. O `--uninstall` move o
+que remove pra `~/.claude/muri-saver-backups/<data>/` (pra desfazer é só
+copiar de volta) e nunca toca no vault, nos dados do `ai-memory` ou em
+skills de terceiros. Instalou uma versão anterior à v2? Rode
+`node bin/install.mjs` uma vez antes — isso registra o que já existe.
 
 <br>
 
@@ -185,5 +220,6 @@ comando exato de instalação — índice completo em
 | 🧠 | [`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md) | `ai-memory` + Obsidian (binário, MCP, marker file) |
 | 🧩 | [`docs/skills-companion.md`](./docs/skills-companion.md) | Skills de terceiros que uso e recomendo |
 | 📥 | [`docs/session-ingestor.md`](./docs/session-ingestor.md) | Como `bin/ingest-sessions.mjs` importa sessões antigas de cada agente |
+| 🩹 | [`docs/troubleshooting.md`](./docs/troubleshooting.md) | Problemas conhecidos e como resolver |
 | 🤖 | [`INSTALL-AI.md`](./INSTALL-AI.md) | Runbook completo pra uma IA instalar sozinha |
 | 📖 | [`README.md`](./README.md) | Visão geral do projeto, achados reais, antes/depois |

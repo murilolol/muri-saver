@@ -27,6 +27,8 @@ Quando o usuário mencionar estes tópicos, vá DIRETO ao destino sem listagens 
 | `brain`, `transcript`, `sessões antigas` | `~/.gemini/antigravity-cli/brain/<conversation-id>/.system_generated/logs/` | Transcrições brutas do Antigravity |
 | `skills`, `superpowers` | `~/.gemini/config/skills/` | Repositório de skills do Antigravity |
 
+> Caminhos de vault acima = padrão. Se a instalação usou `--vault`, o caminho real está em `~/.claude/muri-saver.json` (`vault`).
+
 ---
 
 ## 1. Regra de Ouro: First-Look de Memória (Memória Primeiro)
@@ -129,8 +131,8 @@ Mapeado especificamente pro Antigravity — os modelos reais disponíveis aqui s
 ---
 
 ## 8. Sessões Noturnas & Fusos Horários
-- **Fuso Horário Oficial**: sempre nomear arquivos e registrar timestamps no horário local configurado
-  do usuário (padrão de referência: BRT / UTC-3 — ajuste se o usuário estiver em outro fuso).
+- **Fuso Horário Oficial**: sempre nomear arquivos e registrar timestamps no fuso configurado em
+  `~/.claude/muri-saver.json` (`timezone`; padrão: o do sistema — ex: BRT / UTC-3).
 - **Sessões Noturnas / Madrugada**: se uma sessão cruzar a virada da meia-noite, ela deve ser indexada
   em **ambos os diários (`Daily-YYYY-MM-DD.md`)** com o marcador `(Overnight / Madrugada)`.
 
