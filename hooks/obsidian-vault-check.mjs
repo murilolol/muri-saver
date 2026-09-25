@@ -13,11 +13,46 @@
 // Ver decisions/obsidian-vault-check-hook.md e decisions/obsidian-auto-generate.md no ai-memory.
 
 import { readFileSync, existsSync, mkdirSync, writeFileSync, readdirSync, appendFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import os from 'node:os';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-const VAULT = join(os.homedir(), 'Documents', 'Obsidian Vault');
+// Self-contained on purpose (this file is copied alone into ~/.claude/hooks):
+// reads the muri-saver.json written by bin/install.mjs, which sits one level
+// above the hooks folder, so a vault/timezone chosen at install time is
+// honored here too.
+function loadMuriSaverConfig() {
+  const candidates = [
+    process.env.MURI_SAVER_CONFIG,
+    join(dirname(dirname(fileURLToPath(import.meta.url))), 'muri-saver.json'),
+    join(os.homedir(), '.claude', 'muri-saver.json'),
+  ].filter(Boolean);
+  for (const p of candidates) {
+    try {
+      return JSON.parse(readFileSync(p, 'utf8'));
+    } catch {
+      // try the next candidate
+    }
+  }
+  return {};
+}
+
+function validTimezone(tz) {
+  try {
+    return Boolean(tz) && Boolean(new Intl.DateTimeFormat('en-US', { timeZone: tz }));
+  } catch {
+    return false;
+  }
+}
+
+const MURI_CONFIG = loadMuriSaverConfig();
+const VAULT = process.env.OBSIDIAN_VAULT || MURI_CONFIG.vault || join(os.homedir(), 'Documents', 'Obsidian Vault');
+const TIMEZONE = [process.env.MURI_SAVER_TZ, MURI_CONFIG.timezone, Intl.DateTimeFormat().resolvedOptions().timeZone]
+  .find(validTimezone) || 'UTC';
+const NOW = process.env.MURI_SAVER_NOW && !Number.isNaN(Date.parse(process.env.MURI_SAVER_NOW))
+  ? new Date(process.env.MURI_SAVER_NOW)
+  : new Date();
 const MAX_TRANSCRIPT_CHARS = 45000; // orçamento de contexto pra chamada claude -p (~10k tokens)
 const GEN_TIMEOUT_MS = 8000; // teto rigoroso de 8s (evita travar o /exit se a API externa oscilar ou der ETIMEDOUT)
 const GENERATE_SUMMARY_ERROR_LOG = join(os.homedir(), '.claude', 'hooks', '.generate-summary-error.log');
@@ -52,16 +87,16 @@ function readStdin() {
   }
 }
 
-function brDateString(d = new Date()) {
+function brDateString(d = NOW) {
   const fmt = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+    timeZone: TIMEZONE, year: 'numeric', month: '2-digit', day: '2-digit',
   });
   return fmt.format(d);
 }
 
-function brTimeString(d = new Date()) {
+function brTimeString(d = NOW) {
   const fmt = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false,
+    timeZone: TIMEZONE, hour: '2-digit', minute: '2-digit', hour12: false,
   });
   return fmt.format(d).replace(':', 'h');
 }
@@ -199,7 +234,7 @@ function extractLocalMetadata(transcriptPath, cwd) {
   try {
     // --porcelain sozinho já cobre modificados (tracked) e novos (untracked);
     // não precisa de um `git diff` separado (economiza um segundo spawn).
-    const out = execFileSync('git', ['-C', cwd, 'status', '--porcelain'], { encoding: 'utf8', timeout: 1500 });
+    const out = execFileSync('git', ['-C', cwd, 'status', '--porcelain'], { encoding: 'utf8', timeout: 1500, stdio: ['ignore', 'pipe', 'ignore'] });
     out.split('\n').filter(Boolean).forEach((l) => filesTouched.add(l.slice(3).trim()));
   } catch {
     // não é repo git ou git ausente — ignora
@@ -402,7 +437,7 @@ function buildRawDumpBody(exchanges) {
 
 function buildRawDumpSessionFile({ agentLabel, agentTag, idShort, id, dateStr, timeStr, exchanges, reason = 'trivial', filesTouched = [], commandCount = 0, taskSummary = null }) {
   const firstUserPrompt = exchanges.find((e) => e.role === 'user');
-  const titulo = sanitize(firstUserPrompt ? firstUserPrompt.text.slice(0, 80) : 'Sessão sem prompts registrados');
+  const titulo = excerptText(firstUserPrompt ? firstUserPrompt.text : 'Sessão sem prompts registrados', 80);
   const icon = agentTag === 'claude' ? '🟧' : '🤖';
 
   const metaLines = [`- **Comandos/ações executados:** ${commandCount}`];
@@ -424,7 +459,7 @@ function buildRawDumpSessionFile({ agentLabel, agentTag, idShort, id, dateStr, t
   }
 
   return `---
-title: Sessão ${agentLabel} ${idShort} (dump local) — ${titulo}
+title: ${yamlQuote(`Sessão ${agentLabel} ${idShort} (dump local) — ${titulo}`)}
 agent: ${agentTag}
 date_start: ${dateStr}
 session_id: ${idShort}
@@ -462,10 +497,54 @@ ${buildRawDumpBody(exchanges)}
 `;
 }
 
-// Remove tags tipo HTML cru de um texto (blindagem anti-quebra de Markdown/Obsidian).
+// Mesma sanitização de lib/sanitize.mjs (copiada porque este hook roda
+// sozinho em ~/.claude/hooks): mascara segredos, remove tags de sistema e
+// escapa HTML solto (blindagem anti-quebra de Markdown/Obsidian).
+const SECRET_PATTERNS = [
+  [/sk-ant-[A-Za-z0-9_-]{10,}/g, 'ANTHROPIC_KEY'],
+  [/sk-proj-[A-Za-z0-9_-]{10,}/g, 'OPENAI_PROJECT_KEY'],
+  [/\bsk-[A-Za-z0-9]{20,}\b/g, 'API_KEY'],
+  [/gh[pousr]_[A-Za-z0-9]{20,}/g, 'GITHUB_TOKEN'],
+  [/github_pat_[A-Za-z0-9_]{20,}/g, 'GITHUB_TOKEN'],
+  [/xox[baprs]-[A-Za-z0-9-]{10,}/g, 'SLACK_TOKEN'],
+  [/AKIA[0-9A-Z]{16}/g, 'AWS_ACCESS_KEY_ID'],
+  [/(?:aws_secret_access_key|AWS_SECRET_ACCESS_KEY)\s*[:=]\s*['"]?[A-Za-z0-9/+=]{40}['"]?/g, 'AWS_SECRET_ACCESS_KEY'],
+  [/AIza[0-9A-Za-z_-]{35}/g, 'GOOGLE_API_KEY'],
+  [/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g, 'JWT'],
+  [/Bearer\s+[A-Za-z0-9._-]{20,}/g, 'BEARER_TOKEN'],
+  [/-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g, 'PRIVATE_KEY'],
+  [/(?:senha|password|passwd)\s*[:=]\s*['"]?\S{6,}['"]?/gi, 'PASSWORD'],
+];
+const DROP_BLOCKS_RE = /<(ADDITIONAL_METADATA|SYSTEM_MESSAGE|system-reminder|local-command-caveat|CONTEXT_SUMMARY)>[\s\S]*?<\/\1>/g;
+const SYSTEM_TAGS_RE = /<\/?(?:USER_REQUEST|ADDITIONAL_METADATA|CONTEXT_SUMMARY|SYSTEM_MESSAGE|PLAN|local-command-caveat|local-command-stdout|command-name|command-message|command-args|system-reminder)>/g;
+
+function cleanText(text) {
+  let out = String(text || '');
+  for (const [re, label] of SECRET_PATTERNS) out = out.replace(re, `[REDACTED:${label}]`);
+  return out.replace(DROP_BLOCKS_RE, '').replace(SYSTEM_TAGS_RE, '');
+}
+
+// Titles come from the user's first prompt; unquoted, a ": " would break the
+// note's YAML frontmatter.
+function yamlQuote(text) {
+  return `"${String(text).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\r?\n/g, ' ')}"`;
+}
+
+function escapeHtml(text) {
+  return String(text).replace(/<\/?[a-zA-Z][^>]*>/g, (m) => '`' + m + '`');
+}
+
 function sanitize(text) {
   if (!text) return '';
-  return String(text).replace(/<\/?[a-zA-Z][^>]*>/g, (m) => '`' + m + '`');
+  return escapeHtml(cleanText(text));
+}
+
+// Limpa antes de cortar: cortar texto cru pode partir um segredo ou uma tag
+// ao meio, e a metade não casa mais com os padrões que os removem.
+function excerptText(text, max) {
+  const cleaned = cleanText(text).replace(/\s+/g, ' ').trim();
+  const cut = cleaned.length > max ? `${cleaned.slice(0, max - 1).replace(/<[^>]*$/, '').trimEnd()}…` : cleaned;
+  return escapeHtml(cut);
 }
 
 // No Windows, spawnSync/execFileSync não consegue rodar `claude.cmd` diretamente
@@ -543,7 +622,8 @@ function slugify(text) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
-    .slice(0, 40) || 'item';
+    .slice(0, 40)
+    .replace(/-+$/, '') || 'item';
 }
 
 function generateSummary(transcriptExcerpt, agentLabel, knownProjects) {
@@ -660,7 +740,7 @@ function writeClassifiedNotes(summary, { dateStr, idShort, agentTag, agentLabel,
         item.prioridade ? `**Prioridade:** ${item.prioridade}` : null,
       ].filter(Boolean).join(' · ');
       writeFileSync(filePath, `---
-title: ${titulo}
+title: ${yamlQuote(titulo)}
 projeto: ${item.projeto}
 categoria: ${item.categoria}
 origem: ${item.origem}
@@ -756,7 +836,7 @@ function buildSessionFile({ agentLabel, agentTag, idShort, id, dateStr, timeStr,
   const icon = agentTag === 'claude' ? '🟧' : '🤖';
 
   return `---
-title: Sessão ${agentLabel} ${idShort} — ${titulo}
+title: ${yamlQuote(`Sessão ${agentLabel} ${idShort} — ${titulo}`)}
 agent: ${agentTag}
 date_start: ${dateStr}
 session_id: ${idShort}
@@ -922,7 +1002,7 @@ Registro cronológico e síntese de todas as atividades, implementações e gove
 
 function appendDailyEntry(dailyPath, dateStr, agentTag, entryMarkdown) {
   if (!existsSync(dailyPath)) {
-    writeFileSync(dailyPath, ensureDailySkeleton(dateStr, agentTag).replace('<!-- ENTRIES -->', entryMarkdown));
+    writeFileSync(dailyPath, ensureDailySkeleton(dateStr, agentTag).replace('<!-- ENTRIES -->', `${entryMarkdown}\n<!-- ENTRIES -->`));
     return;
   }
   const content = readFileSync(dailyPath, 'utf8');
@@ -991,9 +1071,9 @@ function main() {
     if (!dailyDone) {
       const firstUserPrompt = exchanges.find((e) => e.role === 'user');
       const resumoLinha = firstUserPrompt
-        ? firstUserPrompt.text.slice(0, 140)
+        ? firstUserPrompt.text
         : 'Sessão concluída (modo muri-saver)';
-      const entry = `### [[${agentTag}/sessions/${sessionLinkTarget}|Sessão ${agentLabel} ${idShort}]] (${timeStr}) 🛡️ _muri-saver_\n- **Resumo:** ${sanitize(resumoLinha)} _(encerramento instantâneo local - 0 tokens de LLM)_`;
+      const entry = `### [[${agentTag}/sessions/${sessionLinkTarget}|Sessão ${agentLabel} ${idShort}]] (${timeStr}) 🛡️ _muri-saver_\n- **Resumo:** ${excerptText(resumoLinha, 140)} _(encerramento instantâneo local - 0 tokens de LLM)_`;
       appendDailyEntry(dailyPath, dateStr, agentTag, entry);
     }
     return allow();
@@ -1011,9 +1091,9 @@ function main() {
     if (!dailyDone) {
       const firstUserPrompt = exchanges.find((e) => e.role === 'user');
       const resumoLinha = firstUserPrompt
-        ? firstUserPrompt.text.slice(0, 140)
+        ? firstUserPrompt.text
         : 'Sessão trivial sem prompts substantivos';
-      const entry = `### [[${agentTag}/sessions/${sessionLinkTarget}|Sessão ${agentLabel} ${idShort}]] (${timeStr}) 🪶 _raw_\n- **Resumo:** ${sanitize(resumoLinha)} _(sessão trivial — dump bruto, sem narrativa IA)_`;
+      const entry = `### [[${agentTag}/sessions/${sessionLinkTarget}|Sessão ${agentLabel} ${idShort}]] (${timeStr}) 🪶 _raw_\n- **Resumo:** ${excerptText(resumoLinha, 140)} _(sessão trivial — dump bruto, sem narrativa IA)_`;
       appendDailyEntry(dailyPath, dateStr, agentTag, entry);
     }
     return allow();
@@ -1040,11 +1120,11 @@ function main() {
     if (!dailyDone) {
       const firstUserPrompt = exchanges.find((e) => e.role === 'user');
       const resumoLinha = firstUserPrompt
-        ? firstUserPrompt.text.slice(0, 140)
+        ? firstUserPrompt.text
         : 'Sessão concluída (fallback local sem LLM)';
       const label = reason === 'rate-limit' ? '⚡ _fast-local_' : '🪶 _fallback_';
       const detail = reason === 'rate-limit' ? 'fallback automático - limite de LLM ativo' : 'fallback automático - LLM externa indisponível';
-      const entry = `### [[${agentTag}/sessions/${sessionLinkTarget}|Sessão ${agentLabel} ${idShort}]] (${timeStr}) ${label}\n- **Resumo:** ${sanitize(resumoLinha)} _(${detail})_`;
+      const entry = `### [[${agentTag}/sessions/${sessionLinkTarget}|Sessão ${agentLabel} ${idShort}]] (${timeStr}) ${label}\n- **Resumo:** ${excerptText(resumoLinha, 140)} _(${detail})_`;
       appendDailyEntry(dailyPath, dateStr, agentTag, entry);
     }
     return allow();
@@ -1067,7 +1147,7 @@ function main() {
 
   if (!dailyDone) {
     const resumoLinha = (summary.resumo_executivo || summary.resumo_paragrafos || [])[0] || summary.titulo_curto;
-    const entry = `### [[${agentTag}/sessions/${sessionLinkTarget}|Sessão ${agentLabel} ${idShort}]] (${timeStr})\n- **Resumo:** ${sanitize(resumoLinha)}`;
+    const entry = `### [[${agentTag}/sessions/${sessionLinkTarget}|Sessão ${agentLabel} ${idShort}]] (${timeStr})\n- **Resumo:** ${excerptText(resumoLinha, 140)}`;
     appendDailyEntry(dailyPath, dateStr, agentTag, entry);
   }
 

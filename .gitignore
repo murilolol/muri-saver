@@ -13,3 +13,6 @@ Thumbs.db
 *.bak-*
 
 node_modules/
+.ai-memory
+.impeccable
+*.tgz

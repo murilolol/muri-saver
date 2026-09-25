@@ -9,7 +9,7 @@ import { execFileSync } from 'node:child_process';
 function filesTouched(cwd) {
   if (!cwd) return [];
   try {
-    const out = execFileSync('git', ['-C', cwd, 'status', '--porcelain'], { encoding: 'utf8', timeout: 1500 });
+    const out = execFileSync('git', ['-C', cwd, 'status', '--porcelain'], { encoding: 'utf8', timeout: 1500, stdio: ['ignore', 'pipe', 'ignore'] });
     return out.split('\n').filter(Boolean).map((l) => l.slice(3).trim()).slice(0, 30);
   } catch {
     return [];
@@ -71,18 +71,46 @@ function countCodexCommands(rolloutPath) {
   }
 }
 
-const vault = process.env.OBSIDIAN_VAULT || path.join(os.homedir(), 'Documents', 'Obsidian Vault');
+// Same muri-saver.json the Claude Code hook reads (written by bin/install.mjs
+// under ~/.claude); this file lives in ~/.codex/hooks, so it can't locate the
+// config relative to itself.
+function loadMuriSaverConfig() {
+  for (const p of [process.env.MURI_SAVER_CONFIG, path.join(os.homedir(), '.claude', 'muri-saver.json')].filter(Boolean)) {
+    try {
+      return JSON.parse(fs.readFileSync(p, 'utf8'));
+    } catch {
+      // try the next candidate
+    }
+  }
+  return {};
+}
+
+function validTimezone(tz) {
+  try {
+    return Boolean(tz) && Boolean(new Intl.DateTimeFormat('en-US', { timeZone: tz }));
+  } catch {
+    return false;
+  }
+}
+
+const muriConfig = loadMuriSaverConfig();
+const vault = process.env.OBSIDIAN_VAULT || muriConfig.vault || path.join(os.homedir(), 'Documents', 'Obsidian Vault');
+const timeZone = [process.env.MURI_SAVER_TZ, muriConfig.timezone, Intl.DateTimeFormat().resolvedOptions().timeZone]
+  .find(validTimezone) || 'UTC';
+const now = process.env.MURI_SAVER_NOW && !Number.isNaN(Date.parse(process.env.MURI_SAVER_NOW))
+  ? new Date(process.env.MURI_SAVER_NOW)
+  : new Date();
 
 function brtParts() {
   const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+    timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
-  }).formatToParts(new Date());
+  }).formatToParts(now);
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return {
     date: `${values.year}-${values.month}-${values.day}`,
     time: `${values.hour}h${values.minute}`,
-    timestamp: `${values.year}-${values.month}-${values.day} ${values.hour}:${values.minute}:${values.second} BRT`,
+    timestamp: `${values.year}-${values.month}-${values.day} ${values.hour}:${values.minute}:${values.second} (${timeZone})`,
   };
 }
 

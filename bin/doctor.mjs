@@ -17,6 +17,8 @@ import os from 'node:os';
 import net from 'node:net';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { configPath, readConfig, resolveVault, sha256File, readPackageVersion } from '../lib/config.mjs';
+import { loadSqlite } from '../lib/parsers.mjs';
 
 const PLATFORM = process.platform; // 'darwin' | 'linux' | 'win32'
 const HOME = os.homedir();
@@ -136,13 +138,18 @@ async function main() {
   const args = process.argv.slice(2);
   const vaultIdx = args.indexOf('--vault');
   const vaultArg = vaultIdx >= 0 ? args[vaultIdx + 1] : null;
-  const vaultPath = vaultArg || join(HOME, 'Documents', 'Obsidian Vault');
+  const cfgPath = configPath();
+  const config = readConfig(cfgPath);
+  const vaultPath = resolveVault({ cliVault: vaultArg, config });
 
   console.log(`muri-saver doctor — SO detectado: ${platformLabel()} (${PLATFORM}/${os.arch()})`);
 
   section('Runtimes');
-  if (cmdExists('node', '--version')) ok('Node.js', execSync('node --version').toString().trim());
-  else fail('Node.js não encontrado no PATH', 'necessário pros hooks (.mjs) e pro install.mjs/doctor.mjs');
+  const nodeMajor = Number(process.versions.node.split('.')[0]);
+  if (nodeMajor >= 18) ok('Node.js', `v${process.versions.node}`);
+  else fail(`Node.js v${process.versions.node} é antigo demais`, 'o muri-saver precisa de Node >= 18');
+  if (await loadSqlite()) ok('node:sqlite disponível', 'o ingestor também lê o histórico SQLite do Codex');
+  else warn('node:sqlite indisponível neste Node', 'opcional — só o SQLite do Codex fica de fora do ingestor (precisa de Node >= 22.5)');
 
   if (cmdExists('python3', '--version')) ok('Python 3', execSync('python3 --version').toString().trim());
   else if (cmdExists('python', '--version')) warn('Python 3 não encontrado como "python3"', 'encontrado como "python" — ajuste statusLine/comandos se necessário (comum no Windows)');
@@ -163,6 +170,23 @@ async function main() {
   const serverUp = await tcpUp('127.0.0.1', 49374);
   if (serverUp) ok('servidor ai-memory respondendo', 'http://127.0.0.1:49374');
   else warn('servidor ai-memory não está de pé agora', 'normal se nenhuma sessão do Claude Code rodou ainda — o hook SessionStart sobe sozinho');
+
+  section('Configuração do muri-saver (muri-saver.json)');
+  if (!config) {
+    warn(`${cfgPath} não encontrado`, 'instalação anterior à v2, ou ainda não instalado — rode node bin/install.mjs (registra o que já existe)');
+  } else {
+    ok('config encontrada', cfgPath);
+    ok('versão instalada', `${config.version}${config.version !== readPackageVersion(REPO_ROOT) ? ` (este repositório está na ${readPackageVersion(REPO_ROOT)} — rode node bin/install.mjs --update)` : ''}`);
+    ok('alias', config.alias === 'muri-saver' ? 'muri-saver (padrão)' : `${config.alias} (muri-saver continua como alternativo)`);
+    ok('fuso horário', config.timezone);
+    ok('agentes configurados', (config.agents || []).join(', '));
+    const manifest = config.manifest || [];
+    const missing = manifest.filter((e) => !existsSync(e.path));
+    const edited = manifest.filter((e) => existsSync(e.path) && sha256File(e.path) !== e.sha256);
+    if (!missing.length && !edited.length) ok('arquivos instalados íntegros', `${manifest.length} arquivo(s) conferidos por sha256`);
+    if (missing.length) warn(`${missing.length} arquivo(s) instalado(s) sumiram`, `${missing.slice(0, 3).map((e) => e.path).join(', ')}${missing.length > 3 ? '...' : ''} — rode node bin/install.mjs --update`);
+    if (edited.length) warn(`${edited.length} arquivo(s) editado(s) desde a instalação`, `${edited.slice(0, 3).map((e) => e.path).join(', ')}${edited.length > 3 ? '...' : ''} — normal se foi você; o --update/--uninstall preserva esses`);
+  }
 
   section('Config do Claude Code');
   const claudeDir = join(HOME, '.claude');
@@ -204,8 +228,8 @@ async function main() {
   if (existsSync(join(claudeDir, 'hooks', 'ai-memory-ensure-server.mjs'))) ok('arquivo hooks/ai-memory-ensure-server.mjs presente em ~/.claude/hooks');
   else fail('~/.claude/hooks/ai-memory-ensure-server.mjs não encontrado');
 
-  const skillsDir = join(HOME, '.agents', 'skills');
-  const detectedAlias = detectAlias(skillsDir);
+  const skillsDir = config?.paths?.skillsDir || join(HOME, '.agents', 'skills');
+  const detectedAlias = config?.alias && existsSync(join(skillsDir, config.alias, 'SKILL.md')) ? config.alias : detectAlias(skillsDir);
   if (detectedAlias && detectedAlias === 'muri-saver') ok('skill muri-saver instalada em ~/.agents/skills (alias padrão)');
   else if (detectedAlias) ok(`skill muri-saver instalada em ~/.agents/skills sob alias customizado "${detectedAlias}"`, 'muri-saver/muri saver continuam funcionando como alias alternativo');
   else fail('nenhuma skill muri-saver (padrão ou alias customizado) encontrada em ~/.agents/skills', 'rode node install.mjs [--alias <nome>]');
