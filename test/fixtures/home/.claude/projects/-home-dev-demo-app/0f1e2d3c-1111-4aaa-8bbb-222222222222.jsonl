@@ -1,0 +1,8 @@
+{"type":"summary","summary":"demo"}
+{"type":"user","message":{"role":"user","content":"<command-name>/clear</command-name>"},"timestamp":"2026-09-20T13:00:00.000Z","cwd":"/home/dev/demo-app","sessionId":"0f1e2d3c-1111-4aaa-8bbb-222222222222"}
+{"type":"user","message":{"role":"user","content":"O botão de login quebra no mobile. Minha chave de teste é sk-ant-api03-FAKEKEYFAKEKEYFAKEKEY123 e o componente é <button className=\"login\">Entrar</button>"},"timestamp":"2026-09-20T13:01:00.000Z","cwd":"/home/dev/demo-app","sessionId":"0f1e2d3c-1111-4aaa-8bbb-222222222222"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Achei: o botão usa largura fixa de 420px. Vou trocar por max-width e testar no viewport de 375px."},{"type":"tool_use","id":"t1","name":"Edit","input":{"file_path":"/home/dev/demo-app/src/Login.tsx"}}]},"timestamp":"2026-09-20T13:03:00.000Z","cwd":"/home/dev/demo-app"}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":"ok"}]},"timestamp":"2026-09-20T13:03:10.000Z","cwd":"/home/dev/demo-app"}
+{"type":"assistant","isSidechain":true,"message":{"role":"assistant","content":[{"type":"text","text":"(subagente interno — não deve aparecer)"}]},"timestamp":"2026-09-20T13:03:30.000Z"}
+{"type":"user","message":{"role":"user","content":"Funcionou. Anota como decisão: nada de largura fixa em componentes de formulário."},"timestamp":"2026-09-20T13:06:00.000Z","cwd":"/home/dev/demo-app"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Anotado. Corrigi o Login.tsx e registrei a regra: formulários usam max-width responsivo, nunca largura fixa."}]},"timestamp":"2026-09-20T13:07:00.000Z","cwd":"/home/dev/demo-app"}

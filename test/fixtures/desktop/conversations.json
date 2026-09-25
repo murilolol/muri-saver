@@ -1,0 +1,21 @@
+[
+  {
+    "uuid": "d1d1d1d1-4444-4ddd-8eee-555555555555",
+    "name": "Plano de estudos de Rust",
+    "created_at": "2026-09-19T10:00:00.000Z",
+    "chat_messages": [
+      { "sender": "human", "text": "Monta um plano de 4 semanas pra aprender Rust vindo de TypeScript.", "created_at": "2026-09-19T10:00:00.000Z" },
+      { "sender": "assistant", "text": "Semana 1: ownership e borrowing. Semana 2: enums e pattern matching. Semana 3: traits e generics. Semana 4: um CLI pequeno com clap.", "created_at": "2026-09-19T10:00:20.000Z" }
+    ]
+  },
+  {
+    "uuid": "e2e2e2e2-5555-4eee-8fff-666666666666",
+    "name": "",
+    "created_at": "2026-09-18T09:00:00.000Z",
+    "chat_messages": [
+      { "sender": "human", "content": [{ "type": "text", "text": "Qual a diferença entre Box e Rc?" }], "created_at": "2026-09-18T09:00:00.000Z" },
+      { "sender": "assistant", "content": [{ "type": "text", "text": "Box tem um único dono; Rc conta referências e permite vários donos, só em single-thread." }], "created_at": "2026-09-18T09:00:10.000Z" }
+    ]
+  },
+  { "uuid": "empty-conversation", "name": "vazia", "chat_messages": [] }
+]
