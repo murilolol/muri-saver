@@ -1,28 +1,68 @@
 {
   "name": "muri-saver",
-  "version": "1.0.0",
-  "description": "Governanca de tokens, memoria persistente (ai-memory) e registro em Obsidian para Claude Code, Codex e Antigravity.",
-  "private": true,
+  "version": "2.0.0",
+  "description": "Governança de tokens, memória persistente (ai-memory) e registro em Obsidian para Claude Code, Codex e Antigravity.",
   "type": "module",
   "license": "MIT",
   "author": "Murilo Silva <https://github.com/murilolol>",
+  "homepage": "https://github.com/murilolol/muri-saver#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/murilolol/muri-saver.git"
+    "url": "git+https://github.com/murilolol/muri-saver.git"
   },
+  "bugs": {
+    "url": "https://github.com/murilolol/muri-saver/issues"
+  },
+  "keywords": [
+    "claude-code",
+    "codex",
+    "antigravity",
+    "gemini",
+    "ai-memory",
+    "obsidian",
+    "tokens",
+    "hooks",
+    "skills",
+    "llm",
+    "agents"
+  ],
   "bin": {
+    "muri-saver": "./bin/cli.mjs",
     "muri-saver-install": "./bin/install.mjs",
     "muri-saver-doctor": "./bin/doctor.mjs",
     "muri-saver-ingest": "./bin/ingest-sessions.mjs"
   },
+  "files": [
+    "bin/",
+    "lib/",
+    "hooks/",
+    "scripts/",
+    "skills/",
+    "claude-config/",
+    "antigravity-config/",
+    "codex-config/",
+    "mcp/",
+    "docs/",
+    "examples/",
+    "README.md",
+    "README.en.md",
+    "INSTALL.md",
+    "INSTALL-AI.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "scripts": {
+    "test": "node --test",
     "install-config": "node bin/install.mjs",
     "install-config:dry-run": "node bin/install.mjs --dry-run",
     "install:all": "node bin/install.mjs --with-all",
+    "update-config": "node bin/install.mjs --update",
+    "uninstall-config": "node bin/install.mjs --uninstall",
     "doctor": "node bin/doctor.mjs",
     "ingest": "node bin/ingest-sessions.mjs",
     "ingest:dry-run": "node bin/ingest-sessions.mjs --all --dry-run",
-    "sync-all": "node bin/install.mjs --with-all && node bin/ingest-sessions.mjs --all"
+    "sync-all": "node bin/install.mjs --with-all && node bin/ingest-sessions.mjs --all",
+    "assets": "node tools/build-assets.mjs"
   },
   "engines": {
     "node": ">=18"
