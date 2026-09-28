@@ -251,28 +251,32 @@ async function main() {
   }
 
   section('Obsidian (app)');
-  const obsidianAppCandidates = {
+  if (!vaultPath) {
+    ok('Obsidian opcional não configurado', 'use --vault <caminho> no instalador para ativar');
+  } else {
+    const obsidianAppCandidates = {
     darwin: ['/Applications/Obsidian.app'],
     win32: [
       join(HOME, 'AppData', 'Local', 'Obsidian', 'Obsidian.exe'),
       'C:\\Program Files\\Obsidian\\Obsidian.exe',
     ],
     linux: ['/usr/bin/obsidian', '/opt/Obsidian/obsidian', join(HOME, '.local', 'share', 'flatpak', 'app', 'md.obsidian.Obsidian')],
-  }[PLATFORM] || [];
-  const obsidianFound = obsidianAppCandidates.find(existsSync);
-  if (obsidianFound) ok('app Obsidian encontrado', obsidianFound);
-  else warn('app Obsidian não encontrado nos caminhos comuns', `baixe em https://obsidian.md — checados: ${obsidianAppCandidates.join(', ') || '(nenhum caminho conhecido pra este SO)'}`);
+    }[PLATFORM] || [];
+    const obsidianFound = obsidianAppCandidates.find(existsSync);
+    if (obsidianFound) ok('app Obsidian encontrado', obsidianFound);
+    else warn('app Obsidian não encontrado nos caminhos comuns', `baixe em https://obsidian.md — checados: ${obsidianAppCandidates.join(', ') || '(nenhum caminho conhecido pra este SO)'}`);
 
-  section('Vault');
-  if (existsSync(vaultPath)) {
-    ok('pasta do vault existe', vaultPath);
-    for (const sub of ['dailies', join('claude', 'sessions'), join('antigravity', 'sessions'), join('codex', 'sessions'), 'overview', 'projects']) {
-      const p = join(vaultPath, sub);
-      if (existsSync(p)) ok(`  vault/${sub}`);
-      else warn(`  vault/${sub} não existe ainda`, 'roda node install.mjs --vault "<caminho>" pra criar');
+    section('Vault');
+    if (existsSync(vaultPath)) {
+      ok('pasta do vault existe', vaultPath);
+      for (const sub of ['dailies', join('claude', 'sessions'), join('antigravity', 'sessions'), join('codex', 'sessions'), 'overview', 'projects']) {
+        const p = join(vaultPath, sub);
+        if (existsSync(p)) ok(`  vault/${sub}`);
+        else warn(`  vault/${sub} não existe ainda`, 'roda node install.mjs --vault "<caminho>" pra criar');
+      }
+    } else {
+      warn('pasta do vault não encontrada', `${vaultPath} — passe --vault "<caminho>" se o seu vault estiver em outro lugar`);
     }
-  } else {
-    warn('pasta do vault não encontrada', `${vaultPath} — passe --vault "<caminho>" se o seu vault estiver em outro lugar`);
   }
 
   section('Multi-agente — governança e sessões brutas de cada IA');

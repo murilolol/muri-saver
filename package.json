@@ -48,7 +48,6 @@
     "README.en.md",
     "INSTALL.md",
     "INSTALL-AI.md",
-    "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {

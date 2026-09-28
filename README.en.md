@@ -18,8 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/murilolol/muri-saver/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/murilolol/muri-saver/ci.yml?branch=main&style=flat-square&label=CI%20macOS%20%C2%B7%20Linux%20%C2%B7%20Windows" alt="CI" /></a>
-  <a href="./CHANGELOG.md"><img src="https://img.shields.io/github/v/tag/murilolol/muri-saver?style=flat-square&label=version&color=blue" alt="Version" /></a>
+  <a href="https://github.com/murilolol/muri-saver/releases"><img src="https://img.shields.io/github/v/tag/murilolol/muri-saver?style=flat-square&label=version&color=blue" alt="Version" /></a>
   <a href="https://github.com/murilolol/muri-saver/stargazers"><img src="https://img.shields.io/github/stars/murilolol/muri-saver?style=flat-square&color=gold&label=stars" alt="GitHub stars" /></a>
   <a href="https://github.com/murilolol/muri-saver/commits/main"><img src="https://img.shields.io/github/last-commit/murilolol/muri-saver?style=flat-square&color=blue" alt="Last commit" /></a>
   <img src="https://img.shields.io/badge/dependencies-zero-brightgreen?style=flat-square" alt="Zero dependencies" />
@@ -60,6 +59,10 @@ node bin/install.mjs --with-all  # Claude Code + Antigravity + Codex all at once
 node bin/doctor.mjs              # checks everything automatically
 ```
 
+Obsidian is optional for new installs: without `--vault`, vault hooks stay
+inactive. Enable it later with `node bin/install.mjs --update --vault "<path>"`.
+Existing vault configurations continue to work.
+
 No clone needed: `npx github:murilolol/muri-saver install --with-all`.
 Want your own name instead of `muri-saver`? `--alias mendes-saver`.
 Old sessions from one of these agents? `node bin/ingest-sessions.mjs --all --dry-run`.
@@ -68,8 +71,54 @@ Update later: `node bin/install.mjs --update`. Remove: `--uninstall`.
 
 <br>
 
+## Choose your setup
+
+The installer sets up agent skills and hooks. `ai-memory` is a separate
+program: install it using [`INSTALL.md`](./INSTALL.md) before relying on
+cross-session memory and handoffs. Obsidian is an optional layer for reading
+the Markdown notes; my personal Mac setup keeps both integrations enabled.
+
+| You want | Install command | Result |
+|---|---|---|
+| Start with Claude Code | `node bin/install.mjs` | Claude Code skill, governance, status line and hooks; other existing agents are detected |
+| Configure all three agents | `node bin/install.mjs --with-all` | Adds Codex and Antigravity even if their directories do not exist yet |
+| Record notes in Obsidian too | `node bin/install.mjs --with-all --vault "<absolute-path>"` | Creates the chosen vault structure and enables hook logging |
+
+After installation, run `node bin/doctor.mjs`. It reports missing pieces,
+including the `ai-memory` binary and MCP connection. Preview old-session
+imports with `node bin/ingest-sessions.mjs --all --dry-run`. On Windows,
+quote the vault path, for example `"C:\Users\you\Documents\Vault"`.
+
+The installer writes `~/.claude/muri-saver.json` and managed files under
+`~/.agents/skills/`, `~/.claude/` and, depending on the selected agents,
+`~/.codex/` and `~/.gemini/`. It merges existing settings and backs up
+replaced files. `--update` reuses saved choices; `--uninstall` removes
+managed files without deleting your vault or `ai-memory` data.
+
+### First use, with visible checks
+
+1. Open a new agent session after installation and say
+   `muri-saver: review this project while using less context`. The mode stays
+   active in that conversation until you ask to leave it.
+2. Ask the agent to `check this project's memory before proposing a change`
+   once `ai-memory` is connected. The installer creates no fictional memory:
+   content comes from your real sessions and decisions.
+3. Run `node bin/doctor.mjs` if a hook, MCP server or script seems missing.
+   The diagnostic separates required and optional pieces.
+4. To recover earlier sessions, start with
+   `node bin/ingest-sessions.mjs --all --dry-run`; then use `--limit 20`
+   for your first real import.
+
+The visuals in this README use demo data. Terminal captures come from the
+repository's scripts; note images render files from
+[`examples/vault/`](./examples/vault/) in an Obsidian-like theme. No personal
+session is included in those images.
+
+<br>
+
 ## Table of contents
 
+- [Choose your setup](#choose-your-setup)
 - [What's new in v2](#whats-new-in-v2)
 - [About](#about)
 - [How it works](#how-it-works)
@@ -104,11 +153,11 @@ Update later: `node bin/install.mjs --update`. Remove: `--uninstall`.
 | 🧹 **Subagents** | Subagent transcripts turned into stray sessions | Skipped by default (`--include-subagents` includes them) |
 | ✨ **Opt-in enrichment** | Ingestor only did a local dump | `--enrich` generates narrative + taxonomy via Haiku, with a cap per round and per call |
 | 🪟 **Windows** | Codex's `C:\...` path turned into the wrong project; `<HOME>` broke the JSON | Both fixed and covered by tests |
-| ✅ **Tests / CI** | None | 42 tests (`node --test`) + CI on macOS, Linux and Windows × Node 18/22/24 |
+| ✅ **Tests / CI** | None | 44 tests (`node --test`) + CI on macOS, Linux and Windows × Node 18/22/24 |
 | 📦 **Distribution** | Just `git clone` | Single command `muri-saver <install\|update\|uninstall\|doctor\|ingest>`, ready for npm |
-| 📸 **Documentation** | Just text | Real screenshots, [`examples/vault/`](./examples/vault/), troubleshooting, CHANGELOG, English README |
+| 📸 **Documentation** | Just text | Terminal captures, [`examples/vault/`](./examples/vault/), troubleshooting, English README |
 
-Details in [`CHANGELOG.md`](./CHANGELOG.md) and the full plan (done + next steps) in [`ROADMAP.md`](./ROADMAP.md).
+Share problems and ideas in [issues](https://github.com/murilolol/muri-saver/issues).
 
 <br>
 
@@ -404,8 +453,10 @@ Every install writes `~/.claude/muri-saver.json`:
 
 - **Hooks and the ingestor read the vault and timezone from here.** Vault
   precedence: `--vault` flag > `OBSIDIAN_VAULT` variable >
-  `muri-saver.json` > `~/Documents/Obsidian Vault`. Timezone:
-  `--timezone` > `MURI_SAVER_TZ` > `muri-saver.json` > system timezone.
+  `muri-saver.json`. When an install saves `"vault": null`, Obsidian logging
+  is inactive. Without a config file, older installs still use
+  `~/Documents/Obsidian Vault`. Timezone: `--timezone` > `MURI_SAVER_TZ` >
+  `muri-saver.json` > system timezone.
 - **`node bin/install.mjs --update`** reinstalls using the saved config
   (no need to repeat flags). Governance files the installer created that
   you haven't edited get updated; the ones you edited stay as they are.
@@ -530,11 +581,11 @@ muri-saver/
 ├── examples/vault/                    # real output from the hook and the ingestor on fictional sessions
 ├── assets/                            # README diagram and screenshots (generated by tools/)
 ├── docs/                              # architecture, setup, ingestor, skills, troubleshooting
-├── test/                              # 42 node:test tests + fixtures for each agent
+├── test/                              # 44 node:test tests + fixtures for each agent
 ├── tools/                             # build-assets.mjs, ansi-to-svg.mjs, render-note.mjs
 ├── .github/                           # CI (macOS/Linux/Windows) + issue template
 ├── README.md · README.en.md · INSTALL.md · INSTALL-AI.md
-├── CHANGELOG.md · ROADMAP.md · CONTRIBUTING.md · LICENSE
+├── LICENSE
 └── package.json
 ```
 
@@ -555,8 +606,9 @@ The test suite (`npm test`, just `node:test`, zero dependencies) covers
 sanitization, aliasing, each agent's parsers (including Windows paths and
 Codex's SQLite), the install → update → uninstall cycle, the ingestor
 (dry-run, export, vault, idempotency, `--enrich` with a fake `claude`),
-and the hooks. [CI](./.github/workflows/ci.yml) runs everything on
-**macOS, Linux, and Windows × Node 18, 22, and 24** on every push.
+and the hooks. The [CI](./.github/workflows/ci.yml) workflow (**macOS,
+Linux, and Windows × Node 18, 22, and 24**) is ready to run on forks; in
+this repository the tests run locally with `npm test`.
 
 <br>
 
@@ -646,9 +698,6 @@ problems that have come up and how to fix each one.
 | 🩹 | [`docs/troubleshooting.md`](./docs/troubleshooting.md) | Known issues and how to fix them |
 | 👤 | [`INSTALL.md`](./INSTALL.md) | Step-by-step install guide for humans |
 | 🤖 | [`INSTALL-AI.md`](./INSTALL-AI.md) | Runbook for an AI to install on its own, with `/grill-me` onboarding |
-| 📜 | [`CHANGELOG.md`](./CHANGELOG.md) | What changed in each version |
-| 🗺️ | [`ROADMAP.md`](./ROADMAP.md) | Improvements made and coming up |
-| 🤝 | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | How to run the tests, regenerate the images, and send a PR |
 
 _These documents are in Portuguese (pt-BR)._
 

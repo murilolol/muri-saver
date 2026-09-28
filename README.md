@@ -18,8 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/murilolol/muri-saver/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/murilolol/muri-saver/ci.yml?branch=main&style=flat-square&label=CI%20macOS%20%C2%B7%20Linux%20%C2%B7%20Windows" alt="CI" /></a>
-  <a href="./CHANGELOG.md"><img src="https://img.shields.io/github/v/tag/murilolol/muri-saver?style=flat-square&label=vers%C3%A3o&color=blue" alt="Versão" /></a>
+  <a href="https://github.com/murilolol/muri-saver/releases"><img src="https://img.shields.io/github/v/tag/murilolol/muri-saver?style=flat-square&label=vers%C3%A3o&color=blue" alt="Versão" /></a>
   <a href="https://github.com/murilolol/muri-saver/stargazers"><img src="https://img.shields.io/github/stars/murilolol/muri-saver?style=flat-square&color=gold&label=stars" alt="GitHub stars" /></a>
   <a href="https://github.com/murilolol/muri-saver/commits/main"><img src="https://img.shields.io/github/last-commit/murilolol/muri-saver?style=flat-square&color=blue" alt="Last commit" /></a>
   <img src="https://img.shields.io/badge/depend%C3%AAncias-zero-brightgreen?style=flat-square" alt="Zero dependências" />
@@ -60,6 +59,10 @@ node bin/install.mjs --with-all  # Claude Code + Antigravity + Codex de uma vez
 node bin/doctor.mjs              # verifica tudo automaticamente
 ```
 
+Obsidian é opcional para novas instalações: sem `--vault`, os hooks do vault
+ficam inativos. Para ativar, rode `node bin/install.mjs --update --vault "<caminho>"`.
+Quem já tem um vault configurado continua usando-o normalmente.
+
 Sem clonar: `npx github:murilolol/muri-saver install --with-all`.
 Seu próprio nome em vez de `muri-saver`? `--alias mendes-saver`.
 Sessões antigas de algum desses agentes? `node bin/ingest-sessions.mjs --all --dry-run`.
@@ -68,8 +71,57 @@ Atualizar depois: `node bin/install.mjs --update`. Remover: `--uninstall`.
 
 <br>
 
+## Escolha seu setup
+
+O instalador configura a skill e os hooks dos agentes. O `ai-memory` é um
+programa separado: instale-o seguindo [`INSTALL.md`](./INSTALL.md) antes de
+depender de memória e handoff entre sessões. Obsidian é uma camada opcional
+para ler as notas em Markdown; no meu Mac pessoal, mantenho as duas
+integrações ativas.
+
+| Você quer | Comando de instalação | Resultado |
+|---|---|---|
+| Começar com Claude Code | `node bin/install.mjs` | Skill, governança, status line e hooks do Claude Code; outros agentes existentes são detectados |
+| Configurar os três agentes | `node bin/install.mjs --with-all` | Acrescenta Codex e Antigravity mesmo se ainda não houver pastas deles |
+| Registrar também no Obsidian | `node bin/install.mjs --with-all --vault "<caminho-absoluto>"` | Cria a estrutura do vault escolhido e ativa a gravação dos hooks |
+
+Depois da instalação, rode `node bin/doctor.mjs`. Ele indica o que falta no
+ambiente, inclusive o binário e o MCP do `ai-memory`. Para ver o que o
+ingestor faria com sessões antigas antes de importar, use
+`node bin/ingest-sessions.mjs --all --dry-run`. No Windows, passe o caminho
+do vault entre aspas, por exemplo `"C:\Users\voce\Documents\Vault"`.
+
+O instalador grava `~/.claude/muri-saver.json`, instala arquivos gerenciados
+em `~/.agents/skills/`, `~/.claude/` e, conforme os agentes escolhidos,
+`~/.codex/` e `~/.gemini/`. Configurações existentes são mescladas e arquivos
+substituídos recebem backup. `--update` reaproveita as escolhas salvas;
+`--uninstall` remove os arquivos gerenciados sem apagar o vault ou os dados
+do `ai-memory`.
+
+### Primeiro uso, sem adivinhar o que aconteceu
+
+1. Abra uma nova sessão do agente depois da instalação e diga
+   `muri-saver: revise este projeto gastando menos contexto`. O modo fica
+   ativo nessa conversa até você pedir para sair.
+2. Peça `consulte a memória deste projeto antes de propor a mudança` para
+   usar o `ai-memory` já conectado. O instalador não cria memórias fictícias:
+   o conteúdo vem das suas sessões e decisões reais.
+3. Rode `node bin/doctor.mjs` se um hook, MCP ou script não aparecer. O
+   diagnóstico aponta separadamente o que é necessário e o que é opcional.
+4. Para recuperar histórico anterior, comece com
+   `node bin/ingest-sessions.mjs --all --dry-run`; depois use `--limit 20`
+   na primeira importação real.
+
+As imagens deste README usam dados de demonstração. As saídas de terminal
+vieram dos scripts do repositório; as imagens de notas são renderizações dos
+arquivos em [`examples/vault/`](./examples/vault/) com aparência de Obsidian.
+Nenhuma sessão pessoal foi incluída nas capturas.
+
+<br>
+
 ## Índice
 
+- [Escolha seu setup](#escolha-seu-setup)
 - [Novidades da v2](#novidades-da-v2)
 - [Sobre](#sobre)
 - [Como funciona](#como-funciona)
@@ -104,11 +156,11 @@ Atualizar depois: `node bin/install.mjs --update`. Remover: `--uninstall`.
 | 🧹 **Subagentes** | Transcrições de subagentes viravam sessões avulsas | Puladas por padrão (`--include-subagents` inclui) |
 | ✨ **Enriquecimento opt-in** | Ingestor só fazia dump local | `--enrich` gera narrativa + taxonomia via Haiku, com teto por rodada e por chamada |
 | 🪟 **Windows** | Caminho `C:\...` do Codex virava projeto errado; `<HOME>` quebrava o JSON | Os dois corrigidos e cobertos por teste |
-| ✅ **Testes / CI** | Nenhum | 42 testes (`node --test`) + CI em macOS, Linux e Windows × Node 18/22/24 |
+| ✅ **Testes / CI** | Nenhum | 44 testes (`node --test`) + CI em macOS, Linux e Windows × Node 18/22/24 |
 | 📦 **Distribuição** | Só `git clone` | Comando único `muri-saver <install\|update\|uninstall\|doctor\|ingest>`, pronto pro npm |
-| 📸 **Documentação** | Só texto | Screenshots reais, [`examples/vault/`](./examples/vault/), troubleshooting, CHANGELOG, README em inglês |
+| 📸 **Documentação** | Só texto | Capturas de terminal, [`examples/vault/`](./examples/vault/), solução de problemas e README em inglês |
 
-Detalhes em [`CHANGELOG.md`](./CHANGELOG.md) e o plano completo (feito + próximos passos) em [`ROADMAP.md`](./ROADMAP.md).
+Sugestões e problemas podem ser abertos em [issues](https://github.com/murilolol/muri-saver/issues).
 
 <br>
 
@@ -397,7 +449,9 @@ Toda instalação grava `~/.claude/muri-saver.json`:
 ```
 
 - **Hooks e ingestor leem vault e fuso daqui.** Precedência do vault:
-  flag `--vault` > variável `OBSIDIAN_VAULT` > `muri-saver.json` >
+  flag `--vault` > variável `OBSIDIAN_VAULT` > `muri-saver.json`.
+  Quando a instalação salva `"vault": null`, o registro no Obsidian fica
+  inativo. Sem arquivo de configuração, instalações antigas ainda usam
   `~/Documents/Obsidian Vault`. Fuso: `--timezone` > `MURI_SAVER_TZ` >
   `muri-saver.json` > fuso do sistema.
 - **`node bin/install.mjs --update`** reinstala usando a config salva (sem
@@ -520,11 +574,11 @@ muri-saver/
 ├── examples/vault/                    # saída real do hook e do ingestor sobre sessões fictícias
 ├── assets/                            # diagrama e screenshots do README (gerados por tools/)
 ├── docs/                              # arquitetura, setup, ingestor, skills, troubleshooting
-├── test/                              # 42 testes node:test + fixtures de cada agente
+├── test/                              # 44 testes node:test + fixtures de cada agente
 ├── tools/                             # build-assets.mjs, ansi-to-svg.mjs, render-note.mjs
 ├── .github/                           # CI (macOS/Linux/Windows) + template de issue
 ├── README.md · README.en.md · INSTALL.md · INSTALL-AI.md
-├── CHANGELOG.md · ROADMAP.md · CONTRIBUTING.md · LICENSE
+├── LICENSE
 └── package.json
 ```
 
@@ -544,8 +598,9 @@ A suíte de testes (`npm test`, só `node:test`, zero dependências) cobre
 sanitização, alias, os parsers de cada agente (inclusive caminho Windows e o
 SQLite do Codex), o ciclo install → update → uninstall, o ingestor (dry-run,
 export, vault, idempotência, `--enrich` com um `claude` falso) e os hooks. O
-[CI](./.github/workflows/ci.yml) roda tudo em **macOS, Linux e Windows ×
-Node 18, 22 e 24** a cada push.
+workflow de [CI](./.github/workflows/ci.yml) (**macOS, Linux e Windows ×
+Node 18, 22 e 24**) vem pronto pra quem fizer fork; neste repositório os
+testes rodam localmente com `npm test`.
 
 <br>
 
@@ -634,9 +689,6 @@ reais que já apareceram e como resolver cada um.
 | 🩹 | [`docs/troubleshooting.md`](./docs/troubleshooting.md) | Problemas conhecidos e como resolver |
 | 👤 | [`INSTALL.md`](./INSTALL.md) | Guia de instalação passo a passo pra humano |
 | 🤖 | [`INSTALL-AI.md`](./INSTALL-AI.md) | Runbook pra uma IA instalar sozinha, com onboarding `/grill-me` |
-| 📜 | [`CHANGELOG.md`](./CHANGELOG.md) | O que mudou em cada versão |
-| 🗺️ | [`ROADMAP.md`](./ROADMAP.md) | Melhorias feitas e próximas |
-| 🤝 | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Como rodar os testes, regenerar as imagens e mandar PR |
 
 <br>
 

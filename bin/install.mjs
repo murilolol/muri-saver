@@ -502,7 +502,9 @@ function main() {
   log(`Pronto: ${written} arquivo(s) criado(s)/atualizado(s), ${unchanged} já em dia, ${backups} backup(s), ${moved} antigo(s) movido(s). Config: ${cfgPath}`);
   log('Próximos passos (detalhes em INSTALL-AI.md):');
   log('  1. ai-memory: instalar o binário e rodar `ai-memory install-hooks --client claude-code`.');
-  log('  2. MCP: mesclar mcp/mcp-servers.example.json no ~/.claude.json com o caminho real do vault.');
+  log(vault
+    ? '  2. Obsidian: configure o MCP do vault se quiser comandos de leitura/escrita no app.'
+    : '  2. Obsidian opcional: para ativar depois, rode --update --vault <caminho>.');
   log('  3. Reiniciar Claude Code/Antigravity/Codex pra carregar skill, hooks e governança.');
   log('  4. `node bin/doctor.mjs` pra conferir tudo.');
   log('  5. Opcional: `node bin/ingest-sessions.mjs --all --dry-run` pra importar sessões antigas.');

@@ -43,6 +43,7 @@ test('vault precedence: flag > OBSIDIAN_VAULT > config > default', () => {
   assert.equal(resolveVault({ cliVault: '/flag', env: { OBSIDIAN_VAULT: '/env' }, config: { vault: '/cfg' }, home }), '/flag');
   assert.equal(resolveVault({ env: { OBSIDIAN_VAULT: '/env' }, config: { vault: '/cfg' }, home }), '/env');
   assert.equal(resolveVault({ env: {}, config: { vault: '/cfg' }, home }), '/cfg');
+  assert.equal(resolveVault({ env: {}, config: { vault: null }, home }), null);
   assert.equal(resolveVault({ env: {}, config: null, home }), join('/h', 'Documents', 'Obsidian Vault'));
 });
 

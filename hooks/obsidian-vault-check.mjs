@@ -47,7 +47,7 @@ function validTimezone(tz) {
 }
 
 const MURI_CONFIG = loadMuriSaverConfig();
-const VAULT = process.env.OBSIDIAN_VAULT || MURI_CONFIG.vault || join(os.homedir(), 'Documents', 'Obsidian Vault');
+const VAULT = process.env.OBSIDIAN_VAULT || (Object.hasOwn(MURI_CONFIG, 'vault') ? MURI_CONFIG.vault : join(os.homedir(), 'Documents', 'Obsidian Vault'));
 const TIMEZONE = [process.env.MURI_SAVER_TZ, MURI_CONFIG.timezone, Intl.DateTimeFormat().resolvedOptions().timeZone]
   .find(validTimezone) || 'UTC';
 const NOW = process.env.MURI_SAVER_NOW && !Number.isNaN(Date.parse(process.env.MURI_SAVER_NOW))
@@ -1021,6 +1021,7 @@ function appendDailyEntry(dailyPath, dateStr, agentTag, entryMarkdown) {
 }
 
 function main() {
+  if (!VAULT) return allow();
   // Guarda anti-recursão: se esta invocação do `claude -p` (chamada pelo próprio
   // hook) disparar seu Stop hook, aborta sem gerar nada de novo.
   if (process.env.MURI_SAVER_OBSIDIAN_GEN === '1') return allow();

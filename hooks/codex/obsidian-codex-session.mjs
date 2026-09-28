@@ -94,7 +94,7 @@ function validTimezone(tz) {
 }
 
 const muriConfig = loadMuriSaverConfig();
-const vault = process.env.OBSIDIAN_VAULT || muriConfig.vault || path.join(os.homedir(), 'Documents', 'Obsidian Vault');
+const vault = process.env.OBSIDIAN_VAULT || (Object.hasOwn(muriConfig, 'vault') ? muriConfig.vault : path.join(os.homedir(), 'Documents', 'Obsidian Vault'));
 const timeZone = [process.env.MURI_SAVER_TZ, muriConfig.timezone, Intl.DateTimeFormat().resolvedOptions().timeZone]
   .find(validTimezone) || 'UTC';
 const now = process.env.MURI_SAVER_NOW && !Number.isNaN(Date.parse(process.env.MURI_SAVER_NOW))
@@ -119,6 +119,7 @@ function firstString(...values) {
 }
 
 try {
+  if (!vault) process.exit(0);
   const raw = fs.readFileSync(0, 'utf8').trim();
   let payload = {};
   try { payload = raw ? JSON.parse(raw) : {}; } catch { payload = {}; }

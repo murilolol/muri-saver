@@ -38,6 +38,21 @@ test('OBSIDIAN_VAULT env wins over the config for the Codex hook', () => {
   assert.equal(existsSync(join(home, 'cfg-vault')), false);
 });
 
+test('install without a vault keeps Obsidian disabled across hooks and ingestor', () => {
+  const home = tempDir();
+  assert.equal(run('bin/install.mjs', [], { home }).status, 0);
+  const cfg = JSON.parse(readFileSync(join(home, '.claude', 'muri-saver.json'), 'utf8'));
+  assert.equal(cfg.vault, null);
+  const claude = run('hooks/obsidian-vault-check.mjs', [], { home, input: JSON.stringify({ session_id: 'abc-123', transcript_path: TRANSCRIPT, cwd: home }), env: { MURI_SAVER: '1' } });
+  const codex = run('hooks/codex/obsidian-codex-session.mjs', [], { home, input: JSON.stringify({ session_id: 'abc-123', cwd: home }) });
+  assert.equal(claude.status, 0, claude.out);
+  assert.equal(codex.status, 0, codex.out);
+  assert.equal(existsSync(join(home, 'Documents', 'Obsidian Vault')), false);
+  const ingest = run('bin/ingest-sessions.mjs', ['--all', '--dry-run'], { home });
+  assert.equal(ingest.status, 0, ingest.out);
+  assert.doesNotMatch(ingest.out, /vault: \/|vault: [A-Z]:/);
+});
+
 test('doctor reports the saved config after an install', () => {
   const home = fixtureHome();
   run('bin/install.mjs', ['--alias', 'mendes-saver', '--timezone', 'UTC'], { home });
@@ -46,6 +61,14 @@ test('doctor reports the saved config after an install', () => {
   assert.match(r.out, /alias — mendes-saver/);
   assert.match(r.out, /arquivos instalados íntegros/);
   assert.match(r.out, /Resumo: \d+ falha/);
+});
+
+test('doctor accepts an installation without Obsidian', () => {
+  const home = fixtureHome();
+  run('bin/install.mjs', [], { home });
+  const r = run('bin/doctor.mjs', [], { home });
+  assert.match(r.out, /Obsidian opcional não configurado/);
+  assert.doesNotMatch(r.out, /pasta do vault não encontrada/);
 });
 
 test('cli dispatches subcommands and reports its version', () => {
