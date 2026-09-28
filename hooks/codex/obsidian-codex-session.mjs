@@ -149,6 +149,7 @@ try {
   const entry = `- [[codex/sessions/${filename.replace(/\.md$/, '')}|Sessão Codex ${id}]] (${time}) — [[ai-memory]]\n`;
   const previous = fs.existsSync(dailyPath) ? fs.readFileSync(dailyPath, 'utf8') : `# Diário Codex — ${date}\n\n`;
   if (!previous.includes(filename.replace(/\.md$/, ''))) fs.writeFileSync(dailyPath, previous + entry, 'utf8');
-} catch {
-  // Never turn a vault-write failure into a failed Codex Stop hook.
+} catch (err) {
+  // Keep Stop non-blocking, but leave a short diagnostic for recovery.
+  process.stderr.write(`muri-saver: falha ao gravar no vault (${err?.code || 'ERRO'}); rode node bin/doctor.mjs --vault <caminho>.\n`);
 }

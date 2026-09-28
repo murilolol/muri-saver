@@ -156,7 +156,7 @@ Nenhuma sessão pessoal foi incluída nas capturas.
 | 🧹 **Subagentes** | Transcrições de subagentes viravam sessões avulsas | Puladas por padrão (`--include-subagents` inclui) |
 | ✨ **Enriquecimento opt-in** | Ingestor só fazia dump local | `--enrich` gera narrativa + taxonomia via Haiku, com teto por rodada e por chamada |
 | 🪟 **Windows** | Caminho `C:\...` do Codex virava projeto errado; `<HOME>` quebrava o JSON | Os dois corrigidos e cobertos por teste |
-| ✅ **Testes / CI** | Nenhum | 44 testes (`node --test`) + CI em macOS, Linux e Windows × Node 18/22/24 |
+| ✅ **Testes / CI** | Nenhum | 45 testes (`node --test`) + CI em macOS, Linux e Windows × Node 18/22/24 |
 | 📦 **Distribuição** | Só `git clone` | Comando único `muri-saver <install\|update\|uninstall\|doctor\|ingest>`, pronto pro npm |
 | 📸 **Documentação** | Só texto | Capturas de terminal, [`examples/vault/`](./examples/vault/), solução de problemas e README em inglês |
 
@@ -570,11 +570,11 @@ muri-saver/
 ├── antigravity-config/                # GEMINI.md.template + hooks.snippet.json
 ├── codex-config/                      # AGENTS.md.template + hooks.snippet.json
 ├── scripts/                           # statusline.py, usage-status.py, ai-memory-llm-mode.*, smoke test
-├── mcp/mcp-servers.example.json       # entradas MCP (ai-memory + Obsidian)
+├── mcp/                              # exemplo ai-memory + complemento Obsidian opcional
 ├── examples/vault/                    # saída real do hook e do ingestor sobre sessões fictícias
 ├── assets/                            # diagrama e screenshots do README (gerados por tools/)
 ├── docs/                              # arquitetura, setup, ingestor, skills, troubleshooting
-├── test/                              # 44 testes node:test + fixtures de cada agente
+├── test/                              # 45 testes node:test + fixtures de cada agente
 ├── tools/                             # build-assets.mjs, ansi-to-svg.mjs, render-note.mjs
 ├── .github/                           # CI (macOS/Linux/Windows) + template de issue
 ├── README.md · README.en.md · INSTALL.md · INSTALL-AI.md
@@ -683,6 +683,7 @@ reais que já apareceram e como resolver cada um.
 | | Documento | Conteúdo |
 |---|---|---|
 | 🧭 | [`docs/architecture.md`](./docs/architecture.md) | Por que cada peça existe, como se encaixam |
+| 🧪 | [`examples/flow.md`](./examples/flow.md) | Instalação, sessão, handoff e importação num projeto fictício |
 | 🧠 | [`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md) | Instalação detalhada do `ai-memory` + Obsidian + MCP session-aware |
 | 📥 | [`docs/session-ingestor.md`](./docs/session-ingestor.md) | Como o ingestor lê cada agente, sanitiza e evita duplicar |
 | 🧩 | [`docs/skills-companion.md`](./docs/skills-companion.md) | Skills de terceiros que uso, com créditos e comando de instalação |

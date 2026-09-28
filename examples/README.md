@@ -1,5 +1,8 @@
 # Exemplos
 
+Comece pelo [fluxo fictício completo](./flow.md): instalação, sessão,
+handoff e importação em um projeto de demonstração.
+
 [`vault/`](./vault/) é a saída **real** do muri-saver — nada aqui foi escrito
 à mão. Foi gerada por [`tools/build-assets.mjs`](../tools/build-assets.mjs) a
 partir das sessões fictícias em [`test/fixtures/`](../test/fixtures/) (um

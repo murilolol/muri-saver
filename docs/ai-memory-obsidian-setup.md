@@ -112,9 +112,11 @@ antes de reportar "nada encontrado" — ver seção 1 de qualquer um dos três.
 ## 4. MCP do Obsidian (`@bitbonsai/mcpvault`)
 
 Não precisa instalar nada antecipadamente — `npx -y @bitbonsai/mcpvault
-<caminho-do-vault>` baixa e roda sob demanda na primeira chamada MCP. Só
-registre em `mcpServers` (ver `mcp/mcp-servers.example.json`) com o caminho
-absoluto real do seu vault.
+<caminho-do-vault>` baixa e roda sob demanda na primeira chamada MCP. Se
+quiser esta integração opcional, mescle apenas a entrada em
+[`mcp/obsidian.optional.example.json`](../mcp/obsidian.optional.example.json)
+com o caminho absoluto real do seu vault. Preserve a ponte session-aware do
+`ai-memory` configurada no passo 2.
 
 <br>
 

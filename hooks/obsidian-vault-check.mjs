@@ -1155,4 +1155,9 @@ function main() {
   return allow();
 }
 
-main();
+try {
+  main();
+} catch (err) {
+  process.stderr.write(`muri-saver: falha ao gravar no vault (${err?.code || 'ERRO'}); rode node bin/doctor.mjs --vault <caminho>.\n`);
+  allow();
+}

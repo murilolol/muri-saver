@@ -67,7 +67,7 @@ tokens explicitamente). Governa modelo/effort, verbosidade, tool calls e
 gestão de sessão de forma muito mais agressiva do que a governança global
 teria espaço pra cobrir sem inflar toda sessão. Nasceu de auditorias reais
 de uso (não é uma lista genérica de boas práticas) — os achados e números
-que justificam cada regra estão documentados dentro do próprio arquivo.
+ficam no README; a skill instalada contém apenas instruções de uso.
 Renomeável via `--alias` no instalador (ver `bin/install.mjs`), sem perder
 compatibilidade com o gatilho original.
 
@@ -166,8 +166,9 @@ instalação:
 | `bin/install.mjs --uninstall` | Remover exatamente o que foi instalado, e só se o hash ainda bater |
 | `bin/doctor.mjs` | Mostrar a config e conferir a integridade dos arquivos instalados |
 
-Precedência do vault em todos eles: flag `--vault` > `OBSIDIAN_VAULT` >
-`muri-saver.json` > `~/Documents/Obsidian Vault`.
+Precedência do vault: flag `--vault` > `OBSIDIAN_VAULT` >
+`muri-saver.json`. O valor salvo `"vault": null` desativa o Obsidian;
+instalações antigas sem configuração ainda usam `~/Documents/Obsidian Vault`.
 
 <br>
 

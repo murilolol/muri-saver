@@ -139,10 +139,14 @@ instalar o binário, registrar os hooks oficiais dele
 
 ## Passo 3 — Conectar o MCP (`ai-memory` + Obsidian)
 
-Abra [`mcp/mcp-servers.example.json`](./mcp/mcp-servers.example.json) e mescle
-a entrada `ai-memory` em `mcpServers` do seu `~/.claude.json`, sem sobrescrever
-o arquivo inteiro. Se escolheu Obsidian, troque `<CAMINHO_DO_SEU_VAULT>` pelo
-caminho real e mescle também a entrada `obsidian`.
+No Claude Code, prefira `ai-memory install-mcp --client claude-code
+--session-aware --apply`: ele configura a ponte MCP que identifica a sessão
+correta. Para outros clientes sem essa ponte, há um exemplo HTTP em
+[`mcp/mcp-servers.example.json`](./mcp/mcp-servers.example.json).
+Se escolheu Obsidian, troque `<CAMINHO_ABSOLUTO_DO_VAULT>` em
+[`mcp/obsidian.optional.example.json`](./mcp/obsidian.optional.example.json)
+e mescle apenas a entrada `obsidian` em `mcpServers`. Preserve as demais
+entradas do seu arquivo de configuração.
 
 <br>
 

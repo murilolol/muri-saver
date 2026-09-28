@@ -190,15 +190,21 @@ na íntegra. Resumo do que você vai fazer lá:
 
 ## 4. MCP servers (`ai-memory` + Obsidian)
 
-Se a pessoa não escolheu Obsidian, configure somente o MCP do `ai-memory`.
-Se escolheu, abra [`mcp/mcp-servers.example.json`](./mcp/mcp-servers.example.json). Troque
-`<CAMINHO_DO_SEU_VAULT>` pelo caminho absoluto real do vault Obsidian do
-usuário (a resposta da pergunta 4 do Passo 0). Depois:
+O `ai-memory install-mcp --client claude-code --session-aware --apply` do passo
+anterior já configura o MCP do Claude Code. Não substitua essa ponte por
+HTTP estático. O exemplo HTTP em
+[`mcp/mcp-servers.example.json`](./mcp/mcp-servers.example.json) serve a
+outros clientes sem ponte session-aware.
+
+Se a pessoa escolheu Obsidian, abra
+[`mcp/obsidian.optional.example.json`](./mcp/obsidian.optional.example.json)
+e troque `<CAMINHO_ABSOLUTO_DO_VAULT>` pelo caminho absoluto real (resposta
+da pergunta 4). Depois:
 
 1. Leia `~/.claude.json` inteiro.
 2. Localize (ou crie) a chave `mcpServers`.
-3. Adicione as entradas `ai-memory` e `obsidian` do exemplo **sem tocar em
-   nenhuma outra entrada existente**.
+3. Adicione apenas a entrada `obsidian` do exemplo **sem tocar em nenhuma
+   outra entrada existente**, inclusive a ponte `ai-memory` já configurada.
 4. Escreva o arquivo de volta.
 
 > [!CAUTION]
