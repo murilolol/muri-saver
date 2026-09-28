@@ -71,6 +71,23 @@ test('doctor accepts an installation without Obsidian', () => {
   assert.doesNotMatch(r.out, /pasta do vault não encontrada/);
 });
 
+test('Stop hooks report a blocked vault path without blocking the agent', () => {
+  const home = tempDir();
+  const blockedVault = join(home, 'blocked-vault');
+  writeFileSync(blockedVault, 'not a directory');
+  mkdirSync(join(home, '.claude'), { recursive: true });
+  writeFileSync(join(home, '.claude', 'muri-saver.json'), JSON.stringify({ vault: blockedVault }));
+  for (const [script, payload] of [
+    ['hooks/obsidian-vault-check.mjs', { session_id: 'abc-123', transcript_path: TRANSCRIPT, cwd: home }],
+    ['hooks/codex/obsidian-codex-session.mjs', { session_id: 'abc-123', cwd: home }],
+  ]) {
+    const r = run(script, [], { home, input: JSON.stringify(payload), env: { MURI_SAVER: '1' } });
+    assert.equal(r.status, 0, r.out);
+    assert.match(r.stderr, /muri-saver: falha ao gravar no vault \(ENOTDIR\).*doctor/);
+    assert.doesNotMatch(r.stderr, /\n\s+at /, 'diagnostic must not dump a stack trace');
+  }
+});
+
 test('cli dispatches subcommands and reports its version', () => {
   const home = tempDir();
   const pkg = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8'));

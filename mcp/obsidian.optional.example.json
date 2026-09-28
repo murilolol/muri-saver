@@ -1,0 +1,9 @@
+{
+  "_comment": "Opcional: mescle apenas a entrada obsidian em mcpServers depois de configurar --vault no instalador. Nunca substitua a configuracao MCP inteira.",
+  "obsidian": {
+    "type": "stdio",
+    "command": "npx",
+    "args": ["-y", "@bitbonsai/mcpvault", "<CAMINHO_ABSOLUTO_DO_VAULT>"],
+    "_comment": "Use um caminho absoluto literal, como /Users/voce/Documents/Vault ou C:\\Users\\voce\\Documents\\Vault."
+  }
+}

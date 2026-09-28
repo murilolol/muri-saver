@@ -153,7 +153,7 @@ escrevem no cache.
 
 | Destino | Ativo por padrão? | Comportamento |
 |---|---|---|
-| **Obsidian Vault** | Sim (`--skip-vault` desativa) | Vault de `--vault` > `OBSIDIAN_VAULT` > `muri-saver.json` > `~/Documents/Obsidian Vault`. Mesma convenção de pasta dos hooks: `dailies/` raiz pra Claude/Antigravity/Desktop, `codex/dailies/` própria pro Codex. Sessão em `<agente>/sessions/Session-AAAA-MM-DD_HHhMM-<Tag>-<id8>.md`; entrada no diário dentro de "Sessões do Dia" |
+| **Obsidian Vault** | Apenas se configurado (`--skip-vault` desativa) | Vault de `--vault` > `OBSIDIAN_VAULT` > `muri-saver.json`. `"vault": null` desativa o destino; instalações antigas sem configuração ainda usam `~/Documents/Obsidian Vault`. Mesma convenção de pasta dos hooks: `dailies/` raiz pra Claude/Antigravity/Desktop, `codex/dailies/` própria pro Codex. Sessão em `<agente>/sessions/Session-AAAA-MM-DD_HHhMM-<Tag>-<id8>.md`; entrada no diário dentro de "Sessões do Dia" |
 | **`ai-memory`** | Sim (`--skip-ai-memory` desativa) | Via CLI: `ai-memory write-page --path sessions/imported-<agente>-<data>-<id8>.md --body - --tier episodic -t session -t <agente> -t muri-saver -t imported [-t <projeto>] [--project <projeto>]`. Sem o binário, avisa e segue |
 | **`--export-dir <pasta>`** | Não (opt-in, ignora os dois acima) | Um `.md` avulso por sessão em `<pasta>/<agente>-<data>_<hora>-<id8>.md` — pra quem não tem vault nem `ai-memory`, ou quer revisar antes |
 
