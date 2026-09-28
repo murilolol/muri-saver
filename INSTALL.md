@@ -49,6 +49,11 @@ node bin/install.mjs --dry-run   # revise o que seria feito, nada é escrito ain
 node bin/install.mjs --vault "$HOME/Documents/Obsidian Vault"   # instala (nunca sobrescreve sem backup)
 ```
 
+Se não quiser Obsidian agora, use `node bin/install.mjs` sem `--vault`.
+O registro no vault ficará inativo; você pode ativá-lo depois com
+`node bin/install.mjs --update --vault "<caminho>"`. Se já instalou com um
+vault, `--update` preserva essa configuração.
+
 Sem clonar: `npx github:murilolol/muri-saver install --vault "..."` faz o
 mesmo direto do GitHub.
 
@@ -134,17 +139,17 @@ instalar o binário, registrar os hooks oficiais dele
 
 ## Passo 3 — Conectar o MCP (`ai-memory` + Obsidian)
 
-Abra [`mcp/mcp-servers.example.json`](./mcp/mcp-servers.example.json), troque
-`<CAMINHO_DO_SEU_VAULT>` pelo caminho real do seu vault, e mescle as duas
-entradas dentro da chave `mcpServers` do seu `~/.claude.json` — sem
-sobrescrever o arquivo inteiro (ele guarda outras coisas suas).
+Abra [`mcp/mcp-servers.example.json`](./mcp/mcp-servers.example.json) e mescle
+a entrada `ai-memory` em `mcpServers` do seu `~/.claude.json`, sem sobrescrever
+o arquivo inteiro. Se escolheu Obsidian, troque `<CAMINHO_DO_SEU_VAULT>` pelo
+caminho real e mescle também a entrada `obsidian`.
 
 <br>
 
 ## Passo 4 — Verificar tudo
 
 ```bash
-node bin/doctor.mjs --vault "<caminho-do-seu-vault>"
+node bin/doctor.mjs   # use --vault "<caminho-do-seu-vault>" se configurado
 ```
 
 Confere Node, Python, Claude Code CLI, binário e servidor do `ai-memory`,

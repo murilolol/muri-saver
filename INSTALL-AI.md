@@ -65,9 +65,9 @@ primeira opção como recomendada quando aplicável):
    opções: importar sem LLM (Recomendado, grátis, com `--dry-run` primeiro) /
    importar e enriquecer as N sessões mais recentes com narrativa via Haiku
    (`--enrich`, custa centavos por sessão da cota do usuário) / não importar.
-4. **Caminho do Obsidian Vault**: "Qual o caminho do seu vault?" (padrão
-   sugerido: `~/Documents/Obsidian Vault` — pergunte se ele já tem um vault
-   em outro lugar).
+4. **Obsidian opcional**: "Quer registrar sessões num vault do Obsidian?"
+   Se sim, pergunte o caminho do vault existente ou sugira
+   `~/Documents/Obsidian Vault`. Se não, instale sem `--vault`.
 5. **Skills companheiras**: "Quer instalar também as skills companheiras
    recomendadas (`find-skills`, `tdd`, `prototype`, `grill-with-docs`)?" —
    (Recomendado: sim, elas ajudam com descoberta de skills, TDD e
@@ -121,19 +121,17 @@ Leia a saída do `--dry-run` (lista cada arquivo que seria copiado/mesclado —
 nada é escrito ainda). Depois rode de verdade, **traduzindo as respostas do
 Passo 0 em flags**:
 
-```bash
-node bin/install.mjs \
-  [--alias "<nome-da-pergunta-1>"] [--author-name "<nome-do-usuário>"] \
-  [--with-antigravity] [--with-codex]   # conforme a pergunta 2 (pode combinar os dois, ou usar --with-all) \
-  --vault "<caminho-da-pergunta-4>" \
-  --timezone "<fuso-da-pergunta-6>" \
-  [--with-companion-skills]             # se a resposta da pergunta 5 foi sim
-```
+Comece com `node bin/install.mjs --timezone "<fuso-da-pergunta-6>"` e acrescente
+somente as flags escolhidas: `--alias`, `--author-name`, `--with-antigravity`,
+`--with-codex`, `--vault` e `--with-companion-skills`. Use `--with-all` para
+Claude Code, Antigravity e Codex juntos. O mesmo comando em uma linha funciona
+em bash, zsh e PowerShell.
 
 > [!IMPORTANT]
-> Sempre passe `--vault` explicitamente: é esse caminho que vai pro
-> `~/.claude/muri-saver.json`, e é dali que os hooks e o ingestor leem onde
-> gravar. Se o `doctor` disser que o `muri-saver.json` não existe mas o resto
+> Se a pessoa escolher Obsidian, passe `--vault` explicitamente: é esse caminho
+> que vai pro `~/.claude/muri-saver.json`. Sem ele, os hooks do vault ficam
+> inativos; `--update --vault "<caminho>"` ativa depois. Se o `doctor` disser
+> que o `muri-saver.json` não existe mas o resto
 > do muri-saver já está instalado (instalação anterior à v2), rodar este
 > comando uma vez registra tudo — nas próximas vezes, `node bin/install.mjs --update`
 > basta.
@@ -192,7 +190,8 @@ na íntegra. Resumo do que você vai fazer lá:
 
 ## 4. MCP servers (`ai-memory` + Obsidian)
 
-Abra [`mcp/mcp-servers.example.json`](./mcp/mcp-servers.example.json). Troque
+Se a pessoa não escolheu Obsidian, configure somente o MCP do `ai-memory`.
+Se escolheu, abra [`mcp/mcp-servers.example.json`](./mcp/mcp-servers.example.json). Troque
 `<CAMINHO_DO_SEU_VAULT>` pelo caminho absoluto real do vault Obsidian do
 usuário (a resposta da pergunta 4 do Passo 0). Depois:
 
@@ -221,9 +220,9 @@ Dá os comandos `/wiki`, `/save`, canvas, etc. dentro do Claude Code. Se
 use `/plugin` sem argumento pra abrir o menu interativo e procure por
 "claude-obsidian".)
 
-## 6. App Obsidian
+## 6. App Obsidian (se escolhido)
 
-Se `bin/doctor.mjs` reportar que o app não foi encontrado, baixe em
+Se a pessoa escolheu Obsidian e `bin/doctor.mjs` reportar que o app não foi encontrado, baixe em
 <https://obsidian.md> — instalador nativo pra macOS/Windows/Linux. Depois de
 instalado, abra o app pelo menos uma vez e aponte pro vault que você criou no
 Passo 2 (`--vault`) ou pro vault existente do usuário.
@@ -231,7 +230,7 @@ Passo 2 (`--vault`) ou pro vault existente do usuário.
 ## 7. Verificação automática
 
 ```bash
-node bin/doctor.mjs --vault "<caminho-do-vault>"
+node bin/doctor.mjs          # ou: --vault "<caminho-do-vault>" se configurado
 ```
 
 Isso substitui checar item por item manualmente — o script já detecta o SO e

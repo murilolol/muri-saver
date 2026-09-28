@@ -70,7 +70,7 @@ Fontes
   --limit <N>                 Só as N sessões mais recentes por agente.
 
 Destinos
-  --vault <caminho>           Obsidian Vault (padrão: o do muri-saver.json, senão ~/Documents/Obsidian Vault).
+  --vault <caminho>           Obsidian Vault (usa o da config; sem vault configurado, grava só no ai-memory).
   --skip-vault                Não grava no Obsidian.
   --skip-ai-memory            Não grava no ai-memory.
   --export-dir <caminho>      Só exporta Markdown avulso pra essa pasta (ignora vault e ai-memory).
@@ -190,7 +190,7 @@ async function main() {
   const vault = resolveVault({ cliVault: args.vault, config });
   const timeZone = resolveTimezone({ cliTimezone: args.timezone, config });
   const doExport = Boolean(args.exportDir);
-  const doVault = !doExport && !args.skipVault;
+  const doVault = !doExport && !args.skipVault && Boolean(vault);
   const doAiMemory = !doExport && !args.skipAiMemory;
 
   log(`SO: ${process.platform} — fuso: ${timeZone}${doVault ? ` — vault: ${vault}` : ''}`);
