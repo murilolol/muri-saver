@@ -148,7 +148,9 @@ function moveToBackup(ctx, file) {
     unlinkSync(file);
   }
   try {
-    rmdirSync(dirname(file));
+    const parent = dirname(file);
+    rmdirSync(parent);
+    if (parent === join(dirname(parent), 'references')) rmdirSync(dirname(parent));
   } catch {
     // parent not empty — fine
   }
@@ -249,6 +251,16 @@ function installSkills(ctx, skillsDir, alias) {
   copyManaged(ctx, join(REPO_ROOT, 'skills', 'muri-saver', 'SKILL.md'), join(skillsDir, alias, 'SKILL.md'), 'skill',
     (c) => renderWithAlias(c, alias));
   copyManaged(ctx, join(REPO_ROOT, 'skills', 'grill-me', 'SKILL.md'), join(skillsDir, 'grill-me', 'SKILL.md'), 'skill');
+  function installReferences(source, destination) {
+    for (const entry of readdirSync(source, { withFileTypes: true })) {
+      const src = join(source, entry.name);
+      const dest = join(destination, entry.name);
+      if (entry.isDirectory()) installReferences(src, dest);
+      else if (entry.isFile()) copyManaged(ctx, src, dest, 'skill', (c) => renderWithAlias(c, alias));
+    }
+  }
+  const refs = join(REPO_ROOT, 'skills', 'muri-saver', 'references');
+  if (existsSync(refs)) installReferences(refs, join(skillsDir, alias, 'references'));
 }
 
 function installFlatDir(ctx, srcDir, destDir, kind) {

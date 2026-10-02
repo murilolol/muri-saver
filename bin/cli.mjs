@@ -13,6 +13,7 @@ const COMMANDS = {
   update: { script: 'install.mjs', args: ['--update'], help: 'reinstala reaproveitando o muri-saver.json salvo' },
   uninstall: { script: 'install.mjs', args: ['--uninstall'], help: 'remove o que foi instalado (mantém o que você editou)' },
   doctor: { script: 'doctor.mjs', args: [], help: 'verifica o ambiente inteiro (100% leitura)' },
+  audit: { script: 'audit.mjs', args: [], help: 'audita consumo observado e repetição de ferramentas, localmente' },
   ingest: { script: 'ingest-sessions.mjs', args: [], help: 'importa sessões antigas de cada agente pro vault/ai-memory' },
 };
 

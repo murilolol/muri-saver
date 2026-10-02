@@ -16,3 +16,6 @@ node_modules/
 .ai-memory
 .impeccable
 *.tgz
+dist/
+.local/
+*.zip

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="861" height="524" viewBox="0 0 861 524" role="img" aria-label="Local audit · synthetic demo data">
+  <rect width="861" height="524" rx="10" fill="#0d1117"/>
+  <rect x="0.5" y="0.5" width="860" height="523" rx="10" fill="none" stroke="#30363d"/>
+  <circle cx="20" cy="17" r="6" fill="#ff5f57"/><circle cx="40" cy="17" r="6" fill="#febc2e"/><circle cx="60" cy="17" r="6" fill="#28c840"/>
+  <text x="430.5" y="21" fill="#8b949e" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" text-anchor="middle">Local audit · synthetic demo data</text>
+  <line x1="0" y1="34" x2="861" y2="34" stroke="#21262d"/>
+  <g font-family="ui-monospace,'SF Mono','SFMono-Regular',Menlo,Consolas,'Liberation Mono',monospace" font-size="13">
+  <text x="18" y="65" xml:space="preserve"><tspan fill="#c9d1d9">$ muri-saver audit --file demo-session.jsonl --agent claude</tspan></text>
+  <text x="18" y="85" xml:space="preserve"></text>
+  <text x="18" y="105" xml:space="preserve"><tspan fill="#c9d1d9">muri-saver audit — 1 session(s), local and read-only</tspan></text>
+  <text x="18" y="125" xml:space="preserve"><tspan fill="#c9d1d9">Bytes and words measure instruction size, not tokens. Loading depends on the agent and scope; files</tspan></text>
+  <text x="18" y="145" xml:space="preserve"><tspan fill="#c9d1d9">listed here are not necessarily loaded together.</tspan></text>
+  <text x="18" y="165" xml:space="preserve"></text>
+  <text x="18" y="185" xml:space="preserve"><tspan fill="#c9d1d9">claude: &lt;HOME&gt;/demo-session.jsonl</tspan></text>
+  <text x="18" y="205" xml:space="preserve"><tspan fill="#c9d1d9">  Observed tokens: 250 input (50 cached), 50 output; 300 total</tspan></text>
+  <text x="18" y="225" xml:space="preserve"><tspan fill="#c9d1d9">  Tools: 2; malformed lines: 0</tspan></text>
+  <text x="18" y="245" xml:space="preserve"><tspan fill="#c9d1d9">  Review: Read ×2, lines 1, 2; signature 1530e03737a0</tspan></text>
+  <text x="18" y="265" xml:space="preserve"></text>
+  <text x="18" y="285" xml:space="preserve"><tspan fill="#c9d1d9">Observed usage only; missing counters are unknown, not zero. No price or account-quota estimate is made.</tspan></text>
+  <text x="18" y="305" xml:space="preserve"></text>
+  <text x="18" y="325" xml:space="preserve"><tspan fill="#c9d1d9">Cached input is included in input. Claude cache creation is also included in input; Codex reasoning is</tspan></text>
+  <text x="18" y="345" xml:space="preserve"><tspan fill="#c9d1d9">included in output.</tspan></text>
+  <text x="18" y="365" xml:space="preserve"></text>
+  <text x="18" y="385" xml:space="preserve"><tspan fill="#c9d1d9">If Claude cache counters are missing, inputComplete=false and observed input/total are partial.</tspan></text>
+  <text x="18" y="405" xml:space="preserve"></text>
+  <text x="18" y="425" xml:space="preserve"><tspan fill="#c9d1d9">Identical tool arguments within an edit-free interval are review signals, not proof of waste. Arguments</tspan></text>
+  <text x="18" y="445" xml:space="preserve"><tspan fill="#c9d1d9">are hashed and never printed.</tspan></text>
+  <text x="18" y="465" xml:space="preserve"></text>
+  <text x="18" y="485" xml:space="preserve"><tspan fill="#c9d1d9">No prompt text, tool arguments, instruction content or credentials are exported. Report paths and tool</tspan></text>
+  <text x="18" y="505" xml:space="preserve"><tspan fill="#c9d1d9">names may still be private; review before sharing.</tspan></text>
+  </g>
+</svg>

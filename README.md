@@ -122,6 +122,7 @@ Nenhuma sessão pessoal foi incluída nas capturas.
 ## Índice
 
 - [Escolha seu setup](#escolha-seu-setup)
+- [Novidades da 2.1](#novidades-da-21-instruções-menores-e-auditoria-local)
 - [Novidades da v2](#novidades-da-v2)
 - [Sobre](#sobre)
 - [Como funciona](#como-funciona)
@@ -143,6 +144,26 @@ Nenhuma sessão pessoal foi incluída nas capturas.
 
 <br>
 
+## Novidades da 2.1: instruções menores e auditoria local
+
+- Skills em inglês, com núcleo curto e referências carregadas apenas para memória, agentes ou auditoria.
+- Templates globais reduzidos de aproximadamente 59 KB para 8 KB no total. São tamanhos de arquivos, não uma medição de economia de tokens.
+- Comando `audit` somente leitura: tokens observados, tamanho das instruções e assinaturas de chamadas repetidas, sem LLM nem rede.
+- Escopo explícito do ai-memory, fallback histórico configurado e reutilização de handoff já entregue pelo SessionStart.
+- ZIPs gratuitos reproduzíveis para demonstração em marketplaces, com licença e manifesto SHA-256.
+
+```bash
+node bin/cli.mjs audit --instructions-only
+node bin/cli.mjs audit --agent claude --limit 3
+node bin/cli.mjs audit --file ./session.jsonl --json
+python3 tools/package-skills.py --output-dir ./dist
+```
+
+Veja o [guia de auditoria](./docs/audit.md) e a [preparação dos pacotes](./docs/marketplace.md).
+![Saída real do audit usando dados fictícios; tokens observados e leituras repetidas](./assets/terminal-audit.svg)
+
+Arquivos globais editados pelo usuário continuam protegidos pelo instalador; compare os novos templates antes de aplicá-los. Obsidian segue opcional na distribuição pública.
+
 ## Novidades da v2
 
 | | Antes (v1.x) | Agora (v2.0) |
@@ -156,7 +177,7 @@ Nenhuma sessão pessoal foi incluída nas capturas.
 | 🧹 **Subagentes** | Transcrições de subagentes viravam sessões avulsas | Puladas por padrão (`--include-subagents` inclui) |
 | ✨ **Enriquecimento opt-in** | Ingestor só fazia dump local | `--enrich` gera narrativa + taxonomia via Haiku, com teto por rodada e por chamada |
 | 🪟 **Windows** | Caminho `C:\...` do Codex virava projeto errado; `<HOME>` quebrava o JSON | Os dois corrigidos e cobertos por teste |
-| ✅ **Testes / CI** | Nenhum | 45 testes (`node --test`) + CI em macOS, Linux e Windows × Node 18/22/24 |
+| ✅ **Testes / CI** | Nenhum | Suíte `node --test` e workflow CI macOS/Linux/Windows; estado de execução descrito abaixo |
 | 📦 **Distribuição** | Só `git clone` | Comando único `muri-saver <install\|update\|uninstall\|doctor\|ingest>`, pronto pro npm |
 | 📸 **Documentação** | Só texto | Capturas de terminal, [`examples/vault/`](./examples/vault/), solução de problemas e README em inglês |
 
@@ -210,8 +231,8 @@ plano:
 
 | Peça | Arquivo(s) | Quando roda | Resolve |
 |---|---|---|---|
-| **Governança global** | `CLAUDE.md` / `GEMINI.md` / `AGENTS.md` (um por agente) | Toda sessão, todo projeto | Regras curtas e universais: consultar memória antes de reler arquivo, alocação de modelo por subagente, proteções de git, mapa de palavras-chave pra não varrer diretório às cegas |
-| **Skill `muri-saver`** | `skills/muri-saver/SKILL.md` | Sob demanda ("muri saver" ou pedido explícito de economia) | Lista longa e agressiva de regras por tipo de tarefa (backend, frontend, browser automation, git, debug...) — cara demais pra deixar sempre carregada |
+| **Governança global** | `CLAUDE.md` / `GEMINI.md` / `AGENTS.md` (um por agente) | Toda sessão, todo projeto | Regras curtas para leituras direcionadas, escopo confirmado de memória, verificação proporcional e preservação de dados |
+| **Skill `muri-saver`** | `skills/muri-saver/SKILL.md` | Sob demanda ("muri saver" ou pedido explícito de economia) | Núcleo curto para concluir tarefas com menos repetição; referências de memória, agente e auditoria carregam sob demanda |
 | **Hooks de ciclo de vida** | `hooks/*.mjs` | `SessionStart` / `Stop`, automático | Memória e registro acontecem **sempre**, sem depender do agente lembrar — a versão anterior dependia de uma regra escrita e parava de ser seguida depois de alguns dias |
 | **Ingestor de sessões** | `bin/ingest-sessions.mjs` | Sob demanda | Importa o histórico que cada agente já tinha antes da instalação — sem LLM por padrão |
 | **`ai-memory` + Obsidian Vault** | daemon externo + `<vault>/` | Gravados pelos hooks e pelo ingestor | Banco SQLite/FTS5 via MCP como fonte de verdade durável, e vault Markdown como vitrine legível por humano — gerado, nunca escrito à mão |
@@ -337,7 +358,7 @@ paredes:
   tool calls e limites de sessão, sanitizados, sem cerimônia de "lembra
   disso". O caminho padrão usa **zero chamadas de LLM**.
 
-Instalação completa (binário, MCP session-aware, marker file por projeto,
+Instalação completa (binário, MCP session-aware, identidade de projeto e marker opcional,
 provedor de LLM opcional) em
 [`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md).
 
@@ -350,12 +371,12 @@ provedor de LLM opcional) em
 | **Início de sessão** | Reexplicar contexto do projeto do zero | Hook `SessionStart` injeta handoff da sessão anterior via `ai-memory` |
 | **Fim de sessão** | Nada registrado, ou registro manual esquecido | Hook `Stop` grava sozinho em `ai-memory` + Obsidian Vault |
 | **Histórico de antes da instalação** | Perdido em transcripts JSON | `ingest-sessions.mjs` importa tudo, com segredos mascarados |
-| **Reler arquivo grande** | Toda vez que a dúvida aparece de novo | `memory_query` primeiro — arquivo lido 30-54x vira 1x |
+| **Reler arquivo grande** | Toda vez que a dúvida aparece de novo | Reutilize leituras; consulte memória antes de releitura extensa; atualize trechos alterados |
 | **Automação de browser** | Screenshot pra tudo, mesmo pra "cliquei certo?" | Texto (`get_page_text`) por padrão; screenshot só quando é visual de verdade |
-| **Effort do modelo** | `xhigh` fixo pra tudo, inclusive tarefa mecânica | Escalonado por tipo de tarefa/subagente |
+| **Effort do modelo** | `xhigh` fixo pra tudo, inclusive tarefa mecânica | Recomendação de configuração disponível; sem prometer troca automática de modelo |
 | **`/loop` dinâmico** | Roda sozinho indefinidamente | Confirmação explícita antes de deixar reagendar sozinho |
 | **Histórico do projeto** | Preso em transcripts JSON ilegíveis | Vault Obsidian navegável, taxonomia por categoria |
-| **Sessão longa demais** | Vira maratona de horas/dias sem perceber | Status line avisa + sugestão ativa de `/compact`/`/clear` + handoff automático |
+| **Sessão longa demais** | Vira maratona de horas/dias sem perceber | Dados observados e controles do agente em um ponto natural de retomada |
 
 <br>
 
@@ -372,6 +393,8 @@ suposição) alimentam a skill `muri-saver` e a governança global:
 | Effort alto (`xhigh`) aplicado por padrão a tudo | Inclusive tarefas mecânicas/triviais que não precisavam |
 | Loop dinâmico sem confirmação | 4 loops dinâmicos consumiram **~28,2 milhões de tokens** juntos num único `/usage` |
 | Ferramentas de browser recarregadas à toa | Até 8-9 recargas do mesmo conjunto de tool schemas numa única sessão longa |
+
+Esses números motivam as regras; não são um benchmark controlado de economia.
 
 Cada linha virou uma regra específica e testável na skill
 (`skills/muri-saver/SKILL.md`) ou na governança global. Se **sua** rotina
@@ -509,7 +532,7 @@ repositório:
 | Skill | Descrição |
 |---|---|
 | [`muri-saver`](./skills/muri-saver/SKILL.md) | Modo de economia agressiva de tokens/custo/limites — a skill central deste repositório, nascida de auditoria real de uso |
-| [`grill-me`](./skills/grill-me/SKILL.md) | Minha reescrita completa do protocolo de entrevista de requisitos, forçando o modal nativo `AskUserQuestion`/`ask_question` em vez de texto cru no chat |
+| [`grill-me`](./skills/grill-me/SKILL.md) | Minha reescrita completa do protocolo de entrevista de requisitos, usando a interface nativa disponível, inclusive no Codex, com perguntas proporcionais às decisões pendentes |
 
 ### Skills companheiras (de terceiros)
 
@@ -574,7 +597,7 @@ muri-saver/
 ├── examples/vault/                    # saída real do hook e do ingestor sobre sessões fictícias
 ├── assets/                            # diagrama e screenshots do README (gerados por tools/)
 ├── docs/                              # arquitetura, setup, ingestor, skills, troubleshooting
-├── test/                              # 45 testes node:test + fixtures de cada agente
+├── test/                              # suíte node:test + fixtures de cada agente
 ├── tools/                             # build-assets.mjs, ansi-to-svg.mjs, render-note.mjs
 ├── .github/                           # CI (macOS/Linux/Windows) + template de issue
 ├── README.md · README.en.md · INSTALL.md · INSTALL-AI.md

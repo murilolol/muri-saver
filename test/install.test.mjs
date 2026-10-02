@@ -13,6 +13,19 @@ function freshHome() {
 
 const readJson = (p) => JSON.parse(readFileSync(p, 'utf8'));
 
+test('installed skill references stay usable through aliasing, update and uninstall', () => {
+  const home = freshHome();
+  const r = run('bin/install.mjs', ['--alias', 'lucas'], { home });
+  assert.equal(r.status, 0, r.out);
+  const reference = join(home, '.agents', 'skills', 'lucas', 'references', 'memory.md');
+  assert.ok(existsSync(reference), 'installed SKILL.md must have its referenced memory adapter');
+  const content = readFileSync(reference, 'utf8');
+  assert.equal(run('bin/install.mjs', ['--update'], { home }).status, 0);
+  assert.equal(readFileSync(reference, 'utf8'), content);
+  assert.equal(run('bin/install.mjs', ['--uninstall'], { home }).status, 0);
+  assert.equal(existsSync(reference), false);
+});
+
 test('install writes files, config with manifest, and merged hooks for all agents', () => {
   const home = freshHome();
   const vault = join(home, 'vault');

@@ -1,190 +1,133 @@
-# Configurando `ai-memory` + Obsidian
+# ai-memory + Obsidian
 
-<p>
-  <img src="https://img.shields.io/badge/depend%C3%AAncia-externa-lightgrey?style=flat-square" alt="Dependência externa" />
-  <img src="https://img.shields.io/badge/ai--memory-akitaonrails-6E56CF?style=flat-square" alt="ai-memory by akitaonrails" />
-  <img src="https://img.shields.io/badge/leitura-~5min-blue?style=flat-square" alt="~5 minutos de leitura" />
-</p>
+O [ai-memory de AkitaOnRails](https://github.com/akitaonrails/ai-memory) é uma
+dependência externa. Captura, busca e handoff podem funcionar sem provedor de
+LLM. O muri-saver acrescenta governança, instalação dos próprios hooks e
+registro opcional em um vault; não instala nem substitui o daemon.
 
-Este repositório não inclui o binário do `ai-memory` nem o Obsidian — são
-dependências externas. Este doc cobre como instalar e ligar as duas coisas
-pro resto do muri-saver (skill, hooks, governança global) funcionar de
-verdade.
+## 1. Instalar e conferir os comandos
 
-**Passos:** [1. Instalar](#1-instalar-o-ai-memory) ·
-[2. MCP session-aware](#2-mcp-session-aware-evita-ambiguidade-de-projeto) ·
-[3. Marker file](#3-marker-file-por-projeto-ai-memorytoml) ·
-[4. MCP Obsidian](#4-mcp-do-obsidian-bitbonsaimcpvault) ·
-[5. Estrutura do vault](#5-estrutura-do-vault) ·
-[6. Provedor de LLM](#6-llm-provider-pra-consolidação-opcional-mas-recomendado) ·
-[7. Verificação](#7-verificação)
-
-```mermaid
-graph TD
-    Bin["Binario ai-memory instalado"]
-    Hooks["ai-memory install-hooks"]
-    MCP["ai-memory install-mcp session-aware"]
-    Marker["ai-memory toml por projeto"]
-    Obs["MCP mcpvault do Obsidian"]
-    Vault["Vault dailies sessions projects"]
-
-    Bin --> Hooks
-    Hooks --> MCP
-    MCP --> Marker
-    Marker --> Obs
-    Obs --> Vault
-```
-
-<br>
-
-## 1. Instalar o `ai-memory`
-
-Projeto: <https://github.com/akitaonrails/ai-memory>. Siga a instalação
-oficial do binário pra sua plataforma (o hook `ai-memory-ensure-server.mjs`
-deste repo espera encontrá-lo em `~/.local/bin/ai-memory` no macOS/Linux ou
-`~/.cargo/bin/ai-memory.exe` no Windows — se o seu instalador colocar em outro
-lugar, ajuste essas duas linhas no hook ou garanta que `ai-memory` esteja no
-`PATH`).
-
-Depois de instalado, registre os hooks oficiais do `ai-memory` (captura de
-prompts, tool calls, handoff automático entre sessões — isso é gerado e
-mantido pelo próprio `ai-memory`, não pelo muri-saver):
+Siga a [instalação oficial](https://github.com/akitaonrails/ai-memory/blob/main/docs/install.md)
+para sua plataforma. Antes de alterar a configuração existente:
 
 ```bash
-ai-memory install-hooks --client claude-code
+ai-memory --version
+ai-memory install-hooks --help
+ai-memory install-mcp --help
 ```
 
-<br>
+Para registrar os hooks oficiais do Claude Code:
 
-## 2. MCP session-aware (evita ambiguidade de projeto)
+```bash
+ai-memory install-hooks --agent claude-code --apply
+```
 
-Por padrão o `ai-memory` roda como um único daemon HTTP compartilhado por
-todas as sessões da máquina. Isso é ambíguo quando você tem múltiplos
-projetos/sessões abertos ao mesmo tempo: o servidor não sabe de qual sessão
-veio cada chamada MCP. Corrija com:
+Escolha o agente real conforme o help instalado para outros clientes.
+Os hooks do ai-memory capturam observações sanitizadas e limitadas; não são
+uma cópia integral do transcript. Os hooks de Obsidian deste projeto são
+independentes. Preserve ambos quando sua configuração usar os dois.
+
+## 2. MCP e identidade da sessão
+
+Para o Claude Code, a ponte documentada encaminha o session ID real:
 
 ```bash
 ai-memory install-mcp --client claude-code --session-aware --apply
 ```
 
-Isso troca o registro MCP direto por uma ponte stdio (`ai-memory mcp-bridge`)
-que injeta o session id real em cada chamada. É idempotente e faz backup do
-seu `.claude.json` antes de mexer.
+Consulte [auto-scope](https://github.com/akitaonrails/ai-memory/blob/main/docs/auto-scope.md)
+para os modos suportados; não substitua um modo existente apenas por seguir
+um exemplo antigo. Instalar hooks, sozinho, não torna o MCP session-aware.
 
-Adicione também no `config.toml` do `ai-memory`:
+| Cliente | Escopo nas chamadas |
+|---|---|
+| Session-aware com ID real encaminhado | Pode omitir workspace/project do repositório atual conforme o contrato da ferramenta |
+| MCP estático sem essa ponte | Deve passar workspace e project juntos, com nomes explicitamente confirmados |
 
-```toml
-[auto_scope]
-mode = "per_session"
-```
+Clientes estáticos nunca devem adivinhar nomes pela pasta nem usar o último
+projeto ativo do servidor. A ponte acima é do Claude Code; confirme o suporte
+real antes de aplicar a outro agente.
 
-<br>
+## 3. Identidade explícita e histórico
 
-## 3. Marker file por projeto (`.ai-memory.toml`)
-
-Sem um marker file, o roteamento por `project_strategy = repo-root` depende
-do `cwd` do processo estar dentro de um repositório git — abrir o Claude Code
-na pasta home e usar `/add-dir` **não** muda o `cwd` real, e tudo cai num
-projeto genérico. Na primeira vez que for trabalhar de verdade num projeto
-(não só explorar), crie:
+Um marker é opcional. Se quiser usá-lo, declare os dois nomes reais:
 
 ```toml
-# <repo>/.ai-memory.toml
-project = "<nome-do-repo>"
-project_strategy = "repo-root"
+# .ai-memory.toml — substitua por identidades confirmadas
+workspace = "meu-workspace"
+project = "meu-projeto"
 
 [capture]
-ignore_paths = ["node_modules/**", ".env", "**/.env", ".git/**", "dist/**", "build/**"]
+ignore_paths = ["node_modules/**", ".env", "**/.env", ".git/**", "dist/**"]
 ```
 
-> [!IMPORTANT]
-> As chaves `project`/`project_strategy` são **top-level**, não dentro de
-> `[capture]`. Fixar `project =` explicitamente é o que garante que toda
-> sessão nesse repo (hook, CLI, MCP) caia sempre no mesmo bucket.
+Veja [marker-file](https://github.com/akitaonrails/ai-memory/blob/main/docs/marker-file.md).
+Com project explícito, project_strategy não escolhe outro nome. O marker
+orienta a resolução dos hooks/CLI; clientes MCP estáticos ainda precisam
+enviar o par na chamada.
 
-Se preferir não usar marker file (o que exige `cd <projeto> && claude`
-sempre, nunca abrir da home + `/add-dir`), a governança global (`CLAUDE.md`/
-`GEMINI.md`/`AGENTS.md`) já inclui a regra de fallback pro bucket genérico
-antes de reportar "nada encontrado" — ver seção 1 de qualquer um dos três.
+Sem marker, o destino depende da estratégia/configuração real. Uma consulta
+vazia não prova que existe um bucket genérico. Busque um histórico antigo
+somente em um par workspace/project confirmado e com termos do assunto.
+Quando apropriado, uma busca global pode descobrir o escopo; omita
+workspace/project/scopes nessa chamada. O nome `muri` não é um padrão público.
 
-<br>
+## 4. Roteamento curto, detalhes sob demanda
 
-## 4. MCP do Obsidian (`@bitbonsai/mcpvault`)
-
-Não precisa instalar nada antecipadamente — `npx -y @bitbonsai/mcpvault
-<caminho-do-vault>` baixa e roda sob demanda na primeira chamada MCP. Se
-quiser esta integração opcional, mescle apenas a entrada em
-[`mcp/obsidian.optional.example.json`](../mcp/obsidian.optional.example.json)
-com o caminho absoluto real do seu vault. Preserve a ponte session-aware do
-`ai-memory` configurada no passo 2.
-
-<br>
-
-## 5. Estrutura do vault
-
-O `bin/install.mjs` deste repo, com `--vault <caminho>`, cria o esqueleto
-completo pros três agentes **e grava esse caminho em
-`~/.claude/muri-saver.json`** — é dali que os hooks e o ingestor leem onde
-gravar (com `OBSIDIAN_VAULT` como override). Instalou antes da v2? O hook
-daquela versão ignorava o `--vault`; rode `node bin/install.mjs --vault "<caminho>"`
-de novo.
-
-```
-<vault>/
-├── dailies/              # diário de bordo cross-agente (Claude Code + Antigravity)
-├── claude/sessions/      # sessões do Claude Code
-├── antigravity/sessions/ # sessões do Antigravity
-├── codex/sessions/       # sessões do Codex
-├── codex/dailies/        # diário próprio do Codex (pasta separada, não compete com a raiz)
-├── overview/             # índices e dashboards
-└── projects/             # taxonomia por projeto (bugs/pedidos/melhorias/...)
-```
-
-Já usava algum desses agentes antes de instalar? Depois de configurar tudo
-aqui, veja [`docs/session-ingestor.md`](./session-ingestor.md) pra importar
-o histórico antigo pro vault retroativamente — sem chamar LLM nenhuma.
-
-<br>
-
-## 6. LLM provider pra consolidação (opcional, mas recomendado)
-
-Se quiser que o `ai-memory` gere narrativa rica em vez de heurística crua,
-configure um provedor de LLM pra consolidação. Usando a própria assinatura
-Claude via `claude setup-token`:
+A versão local 2.4.0 oferece preview das instruções compactas e das skills
+gerenciadas; confirme as flags no help da sua versão:
 
 ```bash
-ai-memory llm-test   # confirma quais nomes de env var o binário aceita
+ai-memory install-instructions --compact --print
+ai-memory install-skills --print
 ```
 
-> [!CAUTION]
-> Use `ANTHROPIC_OAUTH_TOKEN`, **nunca** `CLAUDE_CODE_OAUTH_TOKEN` — essa
-> segunda variável é a mesma que o próprio binário `claude` (Claude Code
-> CLI) lê pra decidir seu modo de autenticação, e setá-la globalmente quebra
-> o login normal do Claude Code (status vira "Claude API" em vez de "Claude
-> Pro/Max", erro 401 em "remote managed settings"). `ANTHROPIC_OAUTH_TOKEN` é
-> exclusiva do `ai-memory` e não colide.
+Revise o preview antes de aplicar. Atualize somente o bloco com markers e
+arquivos gerenciados pelo ai-memory; preserve regras pessoais e skills de
+terceiros. O muri-saver não reimplementa esses schemas dentro dos templates.
+
+## 5. Obsidian opcional
+
+Ative o vault escolhido depois de revisar a instalação:
 
 ```bash
-# macOS/Linux (adicione no seu shell rc)
-export AI_MEMORY_LLM_PROVIDER=anthropic-oauth
-export AI_MEMORY_LLM_MODEL=claude-haiku-4-5-20251001
-export ANTHROPIC_OAUTH_TOKEN=<token-de-claude-setup-token>
+node bin/install.mjs --dry-run --with-all --vault "/caminho/absoluto/Vault"
+node bin/install.mjs --with-all --vault "/caminho/absoluto/Vault"
+node bin/doctor.mjs
 ```
 
-Ou use os scripts inclusos (`scripts/ai-memory-llm-mode.sh` /
-`scripts/ai-memory-llm-mode.ps1`) pra alternar entre modo "premium"
-(Claude via OAuth) e um modo mais barato — veja o `--help` de cada um.
+O caminho/fuso ficam em `~/.claude/muri-saver.json`; hooks e ingestor os
+respeitam. Sem vault configurado na instalação pública, essa camada fica
+inativa. Uma configuração pessoal que exige Obsidian deve continuar ativa.
 
-<br>
+O MCP Obsidian também é opcional: mescle só a entrada de
+[mcp/obsidian.optional.example.json](../mcp/obsidian.optional.example.json),
+com seu caminho real. Preserve as demais entradas e a ponte do ai-memory.
 
-## 7. Verificação
+## 6. LLM e verificação
+
+Consolidação/enriquecimento por modelo é opcional e pode gerar custos.
+Configure provedores e credenciais conforme a documentação oficial da
+versão instalada. Evite carregar tokens na documentação ou no repositório.
 
 ```bash
-curl -s "http://127.0.0.1:49374/api/v1/projects?workspace=default"
+ai-memory llm-test --help
+node bin/doctor.mjs
+node bin/cli.mjs audit --instructions-only
 ```
 
-Deve listar seus projetos por nome real. Se a lista vier vazia mesmo depois
-de uma sessão, confira o aviso de "sessão começou na home dir" que o hook
-`ai-memory-ensure-server.mjs` injeta — é o sintoma mais comum. `node
-bin/doctor.mjs` também confere binário, servidor e MCP numa única passada —
-ver [`INSTALL.md`](../INSTALL.md#passo-4--verificar-tudo).
+`llm-test` executa uma chamada quando recebe provider/model/prompt; não é
+um comando para descobrir variáveis de ambiente. Comece pelo help.
+
+Se SessionStart já entregou um handoff, use esse conteúdo: ele normalmente
+já foi consumido. Sem esse bloco, liste os handoffs no escopo confirmado e
+aceite o ID exato. Grave páginas duráveis manualmente só sob pedido explícito.
+
+## English quick reference
+
+Use official ai-memory installation and the current CLI help. Lifecycle hooks
+do not make a static MCP client session-aware. Static calls require an explicit
+workspace/project pair; never hardcode a historical bucket. The Claude Code
+session-aware bridge forwards the real lifecycle ID. Preview compact managed
+instructions and skills before applying them. Obsidian and model enrichment
+are optional for public installs; preserve existing personal integrations.

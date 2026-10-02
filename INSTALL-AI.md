@@ -29,17 +29,17 @@
 
 ## 0. Onboarding interativo (`/grill-me`) — sempre o primeiro passo
 
-Antes de rodar qualquer comando, alinhe as decisões que só o usuário pode
-tomar. **Não pergunte item por item em texto corrido** — dispare uma única
+Antes de alterar a instalação, alinhe decisões ainda pendentes. Reutilize
+respostas e autorização já fornecidas. **Não pergunte item por item em texto corrido** — dispare uma
 bateria de perguntas usando a ferramenta nativa de formulário/modal do seu
 harness:
 
 - No **Claude Code**: `AskUserQuestion`.
 - No **Antigravity**: `ask_question`.
-- Em qualquer outro harness sem tool nativa de formulário confirmada (ex:
-  Codex CLI hoje): apresente a mesma lista como perguntas numeradas e claras
-  no terminal, aguardando a resposta antes de seguir — nunca invente as
-  respostas por conta própria.
+- No **Codex**: use a ferramenta nativa de perguntas disponível, respeitando
+  o modo e o schema; use a interface assíncrona quando exposta.
+- Sem uma interface nativa, faça perguntas claras no formato suportado.
+  Reutilize respostas e autorização já dadas; não invente preferências.
 
 Antes de perguntar, descubra o fuso do sistema (vai virar a opção
 recomendada da pergunta 6):
@@ -181,12 +181,12 @@ externo com seu próprio instalador. Siga
 na íntegra. Resumo do que você vai fazer lá:
 
 1. Instalar o binário `ai-memory` (<https://github.com/akitaonrails/ai-memory>).
-2. `ai-memory install-hooks --client claude-code`
+2. `ai-memory install-hooks --agent claude-code --apply`
 3. `ai-memory install-mcp --client claude-code --session-aware --apply`
-4. Opcional: configurar um provedor de LLM pra consolidação rica (não
-   heurística) — **preste atenção especial à nota sobre
-   `ANTHROPIC_OAUTH_TOKEN` vs `CLAUDE_CODE_OAUTH_TOKEN`** no doc, setar a
-   errada quebra o login do Claude Code inteiro.
+4. Opcional: configurar um provedor de LLM pra consolidação rica.
+   Consulte a documentação da versão instalada e `ai-memory llm-test --help`
+   antes de configurar o provedor. Preserve as credenciais existentes e não
+   publique tokens ou chaves.
 
 ## 4. MCP servers (`ai-memory` + Obsidian)
 

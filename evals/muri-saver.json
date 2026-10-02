@@ -1,0 +1,23 @@
+{
+  "skill_name": "muri-saver",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "muri saver, find previous architecture decisions. The MCP client is STATIC, there is no explicit marker or confirmed workspace/project pair, and a prior query reportedly returned zero hits. Describe your next actions without calling real memory tools.",
+      "expected_output": "Resolve explicit scope or justify an appropriate global discovery. Do not infer workspace/project or select an unconfirmed historical bucket.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "muri saver, continue. The file was read earlier, then modified, and a relevant test failed. Describe the necessary next actions while avoiding redundant work.",
+      "expected_output": "Reuse authorization and context, refresh the changed region, fix the failure and rerun proportionate verification.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "SessionStart already supplied a handoff. Where were we, and what percentage did muri-saver save? No usage counters or equivalent baseline are available. Describe the response and tool decisions.",
+      "expected_output": "Use the supplied handoff without accepting it again. State that a savings percentage cannot be calculated from the available evidence.",
+      "files": []
+    }
+  ]
+}
