@@ -119,6 +119,7 @@ session is included in those images.
 ## Table of contents
 
 - [Choose your setup](#choose-your-setup)
+- [New in 2.1](#new-in-21-smaller-instructions-and-a-local-audit)
 - [What's new in v2](#whats-new-in-v2)
 - [About](#about)
 - [How it works](#how-it-works)
@@ -140,6 +141,26 @@ session is included in those images.
 
 <br>
 
+## New in 2.1: smaller instructions and a local audit
+
+- Short English skills with references loaded only for memory, agent setup or usage auditing.
+- Global governance templates reduced from about 59 KB to 8 KB combined. These are file sizes, not measured token savings.
+- A read-only `audit` command: observed tokens, instruction sizes and repeated tool-call signatures, without LLM/network calls.
+- Explicit ai-memory scope, configured historical fallbacks and reuse of handoffs already delivered by SessionStart.
+- Reproducible free marketplace ZIPs with licenses and SHA-256 manifests.
+
+```bash
+node bin/cli.mjs audit --instructions-only
+node bin/cli.mjs audit --agent claude --limit 3
+node bin/cli.mjs audit --file ./session.jsonl --json
+python3 tools/package-skills.py --output-dir ./dist
+```
+
+See the [audit guide](./docs/audit.en.md) and [demo packaging](./docs/marketplace.md).
+![Real audit output from synthetic data; observed tokens and repeated reads](./assets/terminal-audit.svg)
+
+Current global files edited by the user stay protected by the installer; compare the new templates before applying them. Obsidian remains optional for public installs.
+
 ## What's new in v2
 
 | | Before (v1.x) | Now (v2.0) |
@@ -153,7 +174,7 @@ session is included in those images.
 | 🧹 **Subagents** | Subagent transcripts turned into stray sessions | Skipped by default (`--include-subagents` includes them) |
 | ✨ **Opt-in enrichment** | Ingestor only did a local dump | `--enrich` generates narrative + taxonomy via Haiku, with a cap per round and per call |
 | 🪟 **Windows** | Codex's `C:\...` path turned into the wrong project; `<HOME>` broke the JSON | Both fixed and covered by tests |
-| ✅ **Tests / CI** | None | 45 tests (`node --test`) + CI on macOS, Linux and Windows × Node 18/22/24 |
+| ✅ **Tests / CI** | None | `node --test` suite and a macOS/Linux/Windows CI workflow; execution status described below |
 | 📦 **Distribution** | Just `git clone` | Single command `muri-saver <install\|update\|uninstall\|doctor\|ingest>`, ready for npm |
 | 📸 **Documentation** | Just text | Terminal captures, [`examples/vault/`](./examples/vault/), troubleshooting, English README |
 
@@ -209,8 +230,8 @@ background:
 
 | Piece | File(s) | When it runs | Solves |
 |---|---|---|---|
-| **Global governance** | `CLAUDE.md` / `GEMINI.md` / `AGENTS.md` (one per agent) | Every session, every project | Short, universal rules: check memory before rereading a file, model allocation per subagent, git protections, a keyword map so you don't blindly scan directories |
-| **`muri-saver` skill** | `skills/muri-saver/SKILL.md` | On demand ("muri saver" or an explicit request to save) | A long, aggressive list of rules by task type (backend, frontend, browser automation, git, debugging...) — too expensive to keep loaded all the time |
+| **Global governance** | `CLAUDE.md` / `GEMINI.md` / `AGENTS.md` (one per agent) | Every session, every project | Short rules for targeted reads, verified memory scope, proportional verification and preserving user data |
+| **`muri-saver` skill** | `skills/muri-saver/SKILL.md` | On demand ("muri saver" or an explicit request to save) | A concise core for completing work with less repetition; memory, host and audit references load only when needed |
 | **Lifecycle hooks** | `hooks/*.mjs` | `SessionStart` / `Stop`, automatic | Memory and logging happen **always**, without depending on the agent remembering — the previous version relied on a written rule and stopped being followed after a few days |
 | **Session ingestor** | `bin/ingest-sessions.mjs` | On demand | Imports the history each agent already had before installation — no LLM by default |
 | **`ai-memory` + Obsidian Vault** | external daemon + `<vault>/` | Written by the hooks and the ingestor | SQLite/FTS5 database via MCP as the durable source of truth, and a Markdown vault as a human-readable showcase — generated, never handwritten |
@@ -336,7 +357,7 @@ you switch tools. ai-memory sits on the other side of those walls:
   tool calls, and session boundaries, sanitized, with no "remember this"
   ceremony. The default path uses **zero LLM calls**.
 
-Full installation (binary, session-aware MCP, per-project marker file,
+Full installation (binary, session-aware MCP, project identity and optional marker,
 optional LLM provider) in
 [`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md).
 
@@ -349,12 +370,12 @@ optional LLM provider) in
 | **Session start** | Re-explain project context from scratch | `SessionStart` hook injects the previous session's handoff via `ai-memory` |
 | **Session end** | Nothing recorded, or a manual record forgotten | `Stop` hook records on its own into `ai-memory` + Obsidian Vault |
 | **History from before installation** | Lost in JSON transcripts | `ingest-sessions.mjs` imports everything, with secrets masked |
-| **Rereading a large file** | Every time the question comes up again | `memory_query` first — a file read 30-54x becomes 1x |
+| **Rereading a large file** | Every time the question comes up again | Reuse prior reads; query relevant memory before a large reread; refresh changed regions |
 | **Browser automation** | Screenshot for everything, even for "did I click the right spot?" | Text (`get_page_text`) by default; screenshot only when it's genuinely visual |
-| **Model effort** | `xhigh` fixed for everything, including mechanical tasks | Scaled by task/subagent type |
+| **Model effort** | `xhigh` fixed for everything, including mechanical tasks | Recommend appropriate available settings; no automatic model switch is promised |
 | **Dynamic `/loop`** | Runs on its own indefinitely | Explicit confirmation before letting it reschedule itself |
 | **Project history** | Stuck in unreadable JSON transcripts | Browsable Obsidian vault, taxonomy by category |
-| **Session running too long** | Turns into an hours/days-long marathon without you noticing | Status line warns you + actively suggests `/compact`/`/clear` + automatic handoff |
+| **Session running too long** | Turns into an hours/days-long marathon without you noticing | Use observed context and host-supported session controls at a natural checkpoint |
 
 <br>
 
@@ -371,6 +392,8 @@ the `muri-saver` skill and the global governance:
 | High effort (`xhigh`) applied by default to everything | Including mechanical/trivial tasks that didn't need it |
 | Dynamic loop without confirmation | 4 dynamic loops consumed **~28.2 million tokens** together in a single `/usage` |
 | Browser tools reloaded for no reason | Up to 8-9 reloads of the same set of tool schemas in a single long session |
+
+These observations motivate the rules; they are not a controlled savings benchmark.
 
 Each line became a specific, testable rule in the skill
 (`skills/muri-saver/SKILL.md`) or in the global governance. If **your**
@@ -514,7 +537,7 @@ Full source vendored here, under this repository's same MIT license:
 | Skill | Description |
 |---|---|
 | [`muri-saver`](./skills/muri-saver/SKILL.md) | Aggressive token/cost/limit savings mode — the central skill of this repository, born from a real usage audit |
-| [`grill-me`](./skills/grill-me/SKILL.md) | My complete rewrite of the requirements-interview protocol, forcing the native `AskUserQuestion`/`ask_question` modal instead of raw text in chat |
+| [`grill-me`](./skills/grill-me/SKILL.md) | My complete rewrite of the requirements-interview protocol, using the available native question interface, including Codex, with questions proportional to unresolved choices |
 
 ### Companion skills (third-party)
 
@@ -581,7 +604,7 @@ muri-saver/
 ├── examples/vault/                    # real output from the hook and the ingestor on fictional sessions
 ├── assets/                            # README diagram and screenshots (generated by tools/)
 ├── docs/                              # architecture, setup, ingestor, skills, troubleshooting
-├── test/                              # 44 node:test tests + fixtures for each agent
+├── test/                              # node:test suite + fixtures for each agent
 ├── tools/                             # build-assets.mjs, ansi-to-svg.mjs, render-note.mjs
 ├── .github/                           # CI (macOS/Linux/Windows) + issue template
 ├── README.md · README.en.md · INSTALL.md · INSTALL-AI.md

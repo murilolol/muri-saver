@@ -68,8 +68,9 @@ Na prática: `grill-me` é o padrão do dia a dia (por isso é minha, vendorizad
 sempre presente); `grill-with-docs` é o upgrade opcional pra quando o
 resultado da entrevista precisa virar documentação que sobrevive à
 conversa. A própria [`skills/muri-saver/SKILL.md`](../skills/muri-saver/SKILL.md)
-já decide qual oferecer em cada situação, na tabela "Orquestração de skills
-favoritas".
+orienta usar `grill-me` para decisões pendentes. Escolha `grill-with-docs`
+quando o usuário pedir documentação persistente; não crie artefatos só para
+economizar contexto.
 
 ### Por que `grill-me` é vendorizada e `grill-with-docs` não
 

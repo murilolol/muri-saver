@@ -50,22 +50,22 @@ graph TD
 **Governança global** (`claude-config/CLAUDE.md.template`,
 `antigravity-config/GEMINI.md.template`, `codex-config/AGENTS.md.template`)
 Um arquivo por agente, carregado no início de toda sessão, todo projeto —
-mesmas 12 diretrizes nos três, adaptadas às tools/modelos reais de cada um
-(`AskUserQuestion` vs `ask_question`, `haiku`/`opus` vs `flash`/`pro`, e a
-realidade do Codex CLI de não ter uma tool nativa de formulário ainda).
-Definem regras que valem sempre: consultar a memória antes de reler arquivo,
-alocação de modelo por tipo de subagente, proteções de git, convenções de
-Markdown pro Obsidian, e o mapa de palavras-chave que evita varredura cega
-de diretório. Curtos de propósito — são lidos em toda sessão, então só entra
+um núcleo curto comum e uma introdução específica para cada host. Perguntas,
+modelos e controles de sessão dependem das capacidades realmente expostas;
+o Codex usa sua interface nativa de perguntas quando disponível.
+Definem regras de leituras direcionadas, memória com escopo confirmado,
+capacidades reais do host, proteção de git e integridade de notas. Curtos
+de propósito — são lidos em toda sessão, então só entra
 aqui o que vale a pena pagar esse custo fixo (nada de badge/imagem/diagrama
 decorativo — isso é fora de escopo pra um arquivo que entra no contexto de
 todo agente, todo dia).
 
 **Skill `muri-saver`** (`skills/muri-saver/SKILL.md`)
 Carregada sob demanda (quando você digita "muri saver" ou pede economia de
-tokens explicitamente). Governa modelo/effort, verbosidade, tool calls e
-gestão de sessão de forma muito mais agressiva do que a governança global
-teria espaço pra cobrir sem inflar toda sessão. Nasceu de auditorias reais
+tokens explicitamente). Mantém um núcleo curto em inglês; referências de
+memória, adaptações dos agentes e auditoria carregam só quando necessárias.
+Recomenda configurações disponíveis, sem trocar o modelo automaticamente.
+Nasceu de auditorias reais
 de uso (não é uma lista genérica de boas práticas) — os achados e números
 ficam no README; a skill instalada contém apenas instruções de uso.
 Renomeável via `--alias` no instalador (ver `bin/install.mjs`), sem perder
@@ -184,7 +184,8 @@ leitura de config em vez de importar de `lib/`.
 Os testes (`test/`) usam fixtures de cada agente (sessões fictícias com um
 segredo falso, HTML solto e tags de sistema de propósito) e rodam cada
 script num `HOME` temporário. O CI roda em macOS, Linux e Windows × Node
-18/22/24. `tools/build-assets.mjs` usa os mesmos fixtures pra gerar
+18/22/24 quando habilitado; neste repositório a suíte é executada localmente.
+`tools/build-assets.mjs` usa os mesmos fixtures pra gerar
 [`examples/vault/`](../examples/vault/) e as imagens do README.
 
 <br>
@@ -214,3 +215,14 @@ script num `HOME` temporário. O CI roda em macOS, Linux e Windows × Node
   sessões não pode — por isso o ingestor é um script deliberadamente mais
   simples (sem narrativa de LLM, sem categorização automática por projeto),
   não uma reexecução do hook em lote.
+
+## Auditoria e distribuição
+
+`bin/audit.mjs` lê JSONL em streaming e usa `lib/audit.mjs` para contar usage
+observada e assinaturas de ferramentas. Não faz chamadas de modelo/rede nem
+grava no vault ou no ai-memory. Contadores ausentes ficam desconhecidos;
+chamadas repetidas são sinais para revisão. Veja [audit.md](./audit.md).
+
+`tools/package-skills.py` usa uma lista explícita de arquivos para produzir
+ZIPs reproduzíveis das duas skills, com licença e manifesto. O auditor no ZIP
+carrega seus módulos locais. Serviços e hooks dependem da instalação completa.
