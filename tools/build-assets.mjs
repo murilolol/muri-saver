@@ -5,6 +5,7 @@
 //   node tools/build-assets.mjs                 examples + terminal SVGs + screenshots
 //   node tools/build-assets.mjs --with-llm      also enrich one example session via a real `claude -p` (Haiku)
 //   node tools/build-assets.mjs --with-doctor   also render doctor output (needs a real local setup)
+//   node tools/build-assets.mjs --only-screenshots  re-render only the PNGs from the current examples/
 //
 // Screenshots need Google Chrome/Chromium (headless). Missing Chrome = skipped.
 
@@ -26,11 +27,18 @@ const TZ = 'America/Sao_Paulo';
 const args = new Set(process.argv.slice(2));
 
 const tmp = (p = 'muri-assets-') => mkdtempSync(join(os.tmpdir(), p));
+// Logs, estado e cooldowns dos hooks ficam aqui, nunca no ~/.claude real de quem roda o build.
+const RUNTIME = tmp('muri-assets-runtime-');
 
 function run(cmd, cmdArgs, { env = {}, input, cwd } = {}) {
   const base = { ...process.env };
   for (const k of ['OBSIDIAN_VAULT', 'MURI_SAVER_CONFIG', 'MURI_SAVER_TZ', 'MURI_SAVER_NOW', 'MURI_SAVER']) delete base[k];
-  const r = spawnSync(cmd, cmdArgs, { env: { ...base, ...env }, input, cwd, encoding: 'utf8', timeout: 180000 });
+  // Nunca chama um modelo de verdade nem registra job: a narrativa de exemplo usa o agy falso.
+  const hermetic = {
+    MURI_SAVER_NARRATIVE_CHAIN: 'off', MURI_SAVER_SCHEDULER: 'dry', MURI_AIM_BRIDGE: '0',
+    MURI_SAVER_RUNTIME_DIR: RUNTIME, MURI_SAVER_RUNTIME_SCRIPTS_DIR: RUNTIME,
+  };
+  const r = spawnSync(cmd, cmdArgs, { env: { ...base, ...hermetic, ...env }, input, cwd, encoding: 'utf8', timeout: 180000 });
   return `${r.stdout || ''}${r.stderr || ''}`;
 }
 
@@ -57,10 +65,31 @@ function buildExamples() {
 
   const hookTranscript = join(FIXTURE_HOME, '.claude', 'projects', '-home-dev-demo-app', '0f1e2d3c-1111-4aaa-8bbb-222222222222.jsonl');
   const hookOut = run(process.execPath, [join(REPO, 'hooks', 'obsidian-vault-check.mjs')], {
-    input: JSON.stringify({ session_id: 'b7e4c2a1-9d3f-4e5a-8b6c-1d2e3f4a5b6c', transcript_path: hookTranscript, cwd: tmp() }),
+    input: JSON.stringify({ session_id: 'b7e4c2a1-9d3f-4e5a-8b6c-1d2e3f4a5b6c', transcript_path: hookTranscript, cwd: '/home/dev/demo-app' }),
     env: { OBSIDIAN_VAULT: vault, MURI_SAVER: '1', MURI_SAVER_NOW: '2026-09-20T16:30:00Z', MURI_SAVER_TZ: TZ },
   });
   log(`hook Stop: ${hookOut.trim() || 'ok'}`);
+
+  // Nota viva v2 completa: Stop (dump) + worker da narrativa, com o agy falso.
+  const liveId = '3a3a3a3a-5555-4eee-8fff-666666666666';
+  const liveTranscript = join(tmp(), `${liveId}.jsonl`);
+  writeFileSync(liveTranscript, readFileSync(join(FIXTURE_HOME, '.claude', 'projects', '-home-dev-demo-app', '0f1e2d3c-1111-4aaa-8bbb-222222222222.jsonl'), 'utf8')
+    .replaceAll('0f1e2d3c-1111-4aaa-8bbb-222222222222', liveId));
+  const liveEnv = { OBSIDIAN_VAULT: vault, MURI_SAVER_TZ: 'UTC' };
+  node('hooks/obsidian-vault-check.mjs', [], {
+    input: JSON.stringify({ session_id: liveId, transcript_path: liveTranscript, cwd: '/home/dev/demo-app' }),
+    env: { ...liveEnv, MURI_SAVER_NOW: '2026-10-03T14:00:00Z' },
+  });
+  const liveNote = join(vault, 'claude', 'sessions', readdirSync(join(vault, 'claude', 'sessions')).find((n) => n.includes('3a3a3a3a') && n.endsWith('.md')));
+  const workerInput = join(tmp(), 'worker.json');
+  writeFileSync(workerInput, JSON.stringify({ session_id: liveId, transcript_path: liveTranscript, cwd: '/home/dev/demo-app', vault_session_path: liveNote, hook_event_name: 'SessionEnd' }));
+  node('hooks/obsidian-vault-check.mjs', [workerInput], {
+    env: {
+      ...liveEnv, MURI_SAVER_NOW: '2026-10-03T14:20:00Z', MURI_VAULT_WORKER: '1',
+      MURI_SAVER_NARRATIVE_CHAIN: 'agy:gemini-3.1-pro-high', MURI_SAVER_AGY_BIN: join(REPO, 'tools', 'test-bin', 'fake-agy.mjs'),
+    },
+  });
+  log('nota viva v2 de exemplo (agy falso)');
 
   const llm = args.has('--with-llm');
   const claudeBin = join(os.homedir(), '.local', 'bin', 'claude');
@@ -189,7 +218,10 @@ function buildScreenshots() {
 
   const sessionsDir = join(EXAMPLES, 'claude', 'sessions');
   const notes = readdirSync(sessionsDir).filter((f) => f.endsWith('.md'));
-  const enriched = notes.find((f) => readFileSync(join(sessionsDir, f), 'utf8').includes('ingest-sessions-enriched')) || notes.find((f) => f.includes('0f1e2d3c'));
+  // A nota viva v2 (narrativa + dump) é o formato atual; a enriquecida pelo ingestor fica de reserva.
+  const hasLive = (f) => { const c = readFileSync(join(sessionsDir, f), 'utf8'); return c.includes('<!-- auto-narrativa:start -->') && !c.includes('_Narrativa pendente'); };
+  const enriched = notes.find(hasLive)
+    || notes.find((f) => readFileSync(join(sessionsDir, f), 'utf8').includes('ingest-sessions-enriched')) || notes.find((f) => f.includes('0f1e2d3c'));
   const sessionHtml = join(dir, 'session.html');
   writeFileSync(sessionHtml, renderNote(readFileSync(join(sessionsDir, enriched), 'utf8'), { title: enriched }));
   screenshot(chrome, sessionHtml, join(ASSETS, 'vault-session.png'), 1280, 1500);
@@ -200,9 +232,13 @@ function buildScreenshots() {
   screenshot(chrome, dailyHtml, join(ASSETS, 'vault-daily.png'), 1280, 820);
 }
 
-const ingestOut = buildExamples();
-buildStatuslineSvg();
-const installHome = buildInstallSvg();
-buildIngestSvg(ingestOut);
-if (args.has('--with-doctor')) buildDoctorSvg(installHome);
-if (!args.has('--skip-screenshots')) buildScreenshots();
+if (args.has('--only-screenshots')) {
+  buildScreenshots();
+} else {
+  const ingestOut = buildExamples();
+  buildStatuslineSvg();
+  const installHome = buildInstallSvg();
+  buildIngestSvg(ingestOut);
+  if (args.has('--with-doctor')) buildDoctorSvg(installHome);
+  if (!args.has('--skip-screenshots')) buildScreenshots();
+}

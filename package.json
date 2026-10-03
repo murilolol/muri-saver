@@ -1,7 +1,7 @@
 {
   "name": "muri-saver",
-  "version": "2.1.0",
-  "description": "Governança de tokens, memória persistente (ai-memory) e registro em Obsidian para Claude Code, Codex e Antigravity.",
+  "version": "3.1.0",
+  "description": "Governança de tokens, memória persistente (ai-memory), cadeia de LLMs com fallback e nota viva no Obsidian para Claude Code, Codex e Antigravity. macOS, Linux e Windows.",
   "type": "module",
   "license": "MIT",
   "author": "Murilo Silva <https://github.com/murilolol>",
@@ -24,7 +24,12 @@
     "hooks",
     "skills",
     "llm",
-    "agents"
+    "agents",
+    "background-jobs",
+    "launchd",
+    "systemd",
+    "task-scheduler",
+    "fallback"
   ],
   "bin": {
     "muri-saver": "./bin/cli.mjs",
@@ -49,7 +54,9 @@
     "README.en.md",
     "INSTALL.md",
     "INSTALL-AI.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md"
   ],
   "scripts": {
     "test": "node --test",

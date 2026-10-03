@@ -19,3 +19,7 @@ node_modules/
 dist/
 .local/
 *.zip
+
+# Gerados ao rodar os scripts Python
+__pycache__/
+*.pyc

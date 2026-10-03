@@ -144,12 +144,12 @@ demanda. Se continuar fora, confira se o binário está em `~/.local/bin`
 ## Hooks
 
 <details>
-<summary><strong>O <code>/exit</code> demora</strong></summary>
+<summary><strong>O <code>/exit</code> ou o fim do turno demora</strong></summary>
 
-O hook `Stop` tem teto de ~8s pra chamada `claude -p`; se estourar, cai no
-fallback local e marca rate-limit por 15 minutos (as próximas saídas ficam
-instantâneas). Erros ficam em `~/.claude/hooks/.generate-summary-error.log`.
-Com o modo muri-saver ativo, o encerramento é sempre local e instantâneo.
+Desde a 3.1 o hook do vault nunca espera um modelo: ele grava o dump local em
+milissegundos e entrega a narrativa a um processo destacado. Se ainda demora,
+confira com `muri-saver doctor` se o servidor do ai-memory responde (o
+SessionStart tenta subi-lo) e se não há outro hook pesado no `settings.json`.
 </details>
 
 <details>
@@ -191,6 +191,61 @@ títulos, `cwd` confiável e threads cujo `.jsonl` foi apagado.
 A chamada `claude -p` falhou (não logado, cota da janela de 5h, timeout) —
 o ingestor cai no dump local e mostra o motivo. A sessão fica no cache;
 pra tentar enriquecer de novo, rode com `--force`.
+</details>
+
+<br>
+
+## Narrativa, cadeia de LLMs e jobs
+
+<details>
+<summary><strong>A nota ficou só com o dump, sem narrativa</strong></summary>
+
+Normal em sessão curta (menos de 2 mensagens, menos de 2 minutos, ou sem edição
+e com menos de 4 mensagens). Em sessão longa, veja
+`~/.claude/hooks/.generate-summary-error.log`: "nenhum modelo respondeu" com
+`=cooldown`/`=quota` em todos significa cota esgotada; `=indisponivel` significa
+sem chave ou CLI. `muri-saver doctor` mostra a cadeia. A nota ganha a narrativa
+no próximo intervalo, no `SessionEnd` ou pelo `muri-saver backfill`.
+</details>
+
+<details>
+<summary><strong>O shim não sobe ou o ai-memory não consolida nada</strong></summary>
+
+`muri-saver llm status` mostra o provedor do `config.toml` e cada modelo da
+cadeia. Sem provedor, o ai-memory só captura. `curl -s 127.0.0.1:49380/health`
+responde quando o shim está de pé. Rodando como serviço, ele não lê o seu
+`~/.zprofile`/`~/.bashrc`: aponte `llm.apiKeyFile` para um arquivo com a
+`GEMINI_API_KEY`. Variáveis `AI_MEMORY_LLM_*` no ambiente do servidor ganham do
+`config.toml`.
+</details>
+
+<details>
+<summary><strong>Sessões "estacionadas" que nunca viram página</strong></summary>
+
+Quando a cadeia inteira esgota, o ai-memory marca a sessão como `parked` e não
+tenta de novo. `muri-saver reprocess --scan --dry-run` lista as que estão nos
+logs; o job `reprocess-parked` (ou `muri-saver reprocess`) refaz uma por vez,
+só com modelo livre. Log em `~/.claude/hooks/.ai-memory-reprocess.log`.
+</details>
+
+<details>
+<summary><strong>O ai-memory está cheio de sessões vazias com cwd temporário</strong></summary>
+
+São chamadas headless do `agy` (narrativa, shim, delegate) capturadas pelos
+hooks do ai-memory no Antigravity. O instalador embrulha esses hooks com o
+`aim-guard`. Se você rodar `ai-memory install-hooks --agent antigravity-cli` de
+novo, ele reescreve o `hooks.json`: rode `node bin/install.mjs --update` em
+seguida. As sessões já criadas saem com `ai-memory purge-session`.
+</details>
+
+<details>
+<summary><strong>Um job não roda, ou roda depois de eu ter removido</strong></summary>
+
+`muri-saver jobs status` mostra o estado no agendador. No macOS, um job de
+fila que terminou fica como `.disabled` em `~/Library/LaunchAgents/` (de
+propósito, pra não voltar no reboot); `muri-saver jobs install <job>` reativa.
+Instalações manuais antigas com LaunchAgents `com.muri.*` não são removidas pelo
+instalador: `launchctl bootout gui/$(id -u)/com.muri.<nome>`.
 </details>
 
 <br>

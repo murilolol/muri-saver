@@ -29,18 +29,25 @@ Versão simplificada, em Mermaid:
 
 ```mermaid
 graph TD
-    Gov["Governanca CLAUDE.md GEMINI.md AGENTS.md"]
-    Skill["Skill muri-saver Modo de economia"]
-    Hooks["Hooks de ciclo de vida"]
-    AiMemory["ai-memory Banco SQLite FTS5"]
-    Vault["Obsidian Vault Notas legiveis"]
+    Gov["🛡️ Governanca CLAUDE.md GEMINI.md AGENTS.md"]
+    Skill["🛡️ Skill muri-saver e delegacao"]
+    Hooks["🟧 Hooks Stop SessionEnd SessionStart"]
+    Worker["🤖 Worker da narrativa"]
+    Chain["🤖 Cadeia de LLMs com cooldown"]
+    Jobs["🚀 Jobs de fundo por SO"]
+    AiMemory["🧠 ai-memory SQLite FTS5"]
+    Vault["📚 Obsidian Vault nota viva"]
 
     Gov --> Skill
     Gov --> Hooks
-    Skill --> AiMemory
-    Hooks --> AiMemory
     Hooks --> Vault
-    AiMemory --> Vault
+    Hooks --> Worker
+    Worker --> Chain
+    Worker --> Vault
+    Chain --> AiMemory
+    Jobs --> AiMemory
+    Jobs --> Vault
+    Skill --> AiMemory
 ```
 
 <br>
@@ -77,17 +84,33 @@ Scripts Node chamados pelo ciclo de vida de cada agente:
   garante que o daemon HTTP do `ai-memory` está de pé antes da sessão pedir
   um handoff, e avisa se a sessão começou na home dir em vez de dentro de um
   projeto (o que quebraria o roteamento de projeto do `ai-memory`).
-- `obsidian-vault-check.mjs` (`Stop`, Claude Code **e** Antigravity — o
-  mesmo script detecta qual dos dois via `input.conversationId`): ao
-  encerrar a sessão, gera sozinho o registro em `dailies/` e
-  `<agente>/sessions/` do vault — narrativa rica via `claude -p` headless
-  quando a sessão foi substancial, ou um dump barato (zero custo de LLM)
-  quando não foi. Nunca depende do agente lembrar de escrever isso
-  manualmente.
-- `codex/obsidian-codex-session.mjs` (`Stop`, Codex CLI): equivalente,
-  100% local desde o início (sem chamada de LLM em nenhum caminho) — grava
-  em `codex/sessions/` e `codex/dailies/`, pastas próprias que não competem
-  com a `dailies/` raiz cross-agente.
+- `obsidian-vault-check.mjs` (`Stop` e `SessionEnd` do Claude Code, `Stop`
+  do Antigravity, e do Codex via repassador): a **nota viva v2**. Todo `Stop`
+  garante um dump local (sem LLM) em `<agente>/sessions/` e a linha no Daily;
+  em sessão substancial, dispara um worker destacado que escreve a narrativa
+  pela cadeia `llm.narrative` a cada 15 min de sessão e de novo no
+  `SessionEnd`. Só os blocos marcados são regerados. Ver
+  [vault-live-notes.md](./vault-live-notes.md).
+- `codex/obsidian-codex-session.mjs` (`Stop`/`SessionEnd`, Codex CLI): só
+  repassa o payload pro hook acima; o rollout do Codex é normalizado pro
+  formato do Claude Code.
+- `muri-common.mjs` e `muri-llm.mjs`: código compartilhado entre hooks e
+  scripts (config, fuso, máscara de segredos, resolução de binário em
+  qualquer SO, acesso ao ai-memory, cadeia de modelos com cooldown).
+- `aim-guard.mjs`: embrulha os hooks do ai-memory no Antigravity pra que as
+  chamadas headless do próprio muri-saver ao `agy` não virem sessões-lixo.
+
+**Scripts de fundo** (`scripts/`, instalados em `~/.claude/scripts`)
+O que não cabe num hook. `ai-memory-llm-shim.mjs` dá ao ai-memory a mesma
+cadeia de modelos ([llm-chain.md](./llm-chain.md));
+`ai-memory-finalize-idle.mjs` encerra sessões ociosas (o Antigravity não tem
+`SessionEnd`); `ai-memory-reprocess-parked.mjs` refaz as sessões que o
+ai-memory estacionou sem cota; `vault-backfill.mjs` dá narrativa às notas que
+ficaram só com o dump; `muri-delegate.mjs` delega tarefas pro Gemini e pro
+Codex ([delegation.md](./delegation.md)); `muri-economy-report.py` mede a
+economia ([economy-report.md](./economy-report.md)). `muri-jobs.mjs` registra
+os que rodam sozinhos no agendador de cada SO
+([background-jobs.md](./background-jobs.md)).
 
 **`ai-memory`** (dependência externa, não incluída aqui)
 O banco durável cross-sessão e cross-agente. Roda como um único daemon HTTP
@@ -160,7 +183,8 @@ instalação:
 | Quem lê | Pra quê |
 |---|---|
 | `hooks/obsidian-vault-check.mjs` | Vault e fuso onde gravar cada sessão (procura o arquivo uma pasta acima de `hooks/`, então funciona com `--claude-dir` também) |
-| `hooks/codex/obsidian-codex-session.mjs` | Idem, pro Codex (via `~/.claude/muri-saver.json` ou `MURI_SAVER_CONFIG`) |
+| `hooks/codex/obsidian-codex-session.mjs` | Repassa pro hook acima (o instalador grava nele o caminho real da pasta de hooks) |
+| `scripts/*.mjs`, `scripts/muri-economy-report.py` | Mesma config, via `hooks/muri-common.mjs` (Python lê o JSON direto) |
 | `bin/ingest-sessions.mjs` | Vault e fuso padrão quando não vêm por flag |
 | `bin/install.mjs --update` | Reinstalar sem repetir flags; saber quais arquivos de governança ele criou e ninguém editou |
 | `bin/install.mjs --uninstall` | Remover exatamente o que foi instalado, e só se o hash ainda bater |
@@ -184,7 +208,8 @@ leitura de config em vez de importar de `lib/`.
 Os testes (`test/`) usam fixtures de cada agente (sessões fictícias com um
 segredo falso, HTML solto e tags de sistema de propósito) e rodam cada
 script num `HOME` temporário. O CI roda em macOS, Linux e Windows × Node
-18/22/24 quando habilitado; neste repositório a suíte é executada localmente.
+18/22/24. Binários falsos de `agy` e `ai-memory` (`tools/test-bin/`) cobrem a
+narrativa, a cadeia e o reprocessamento sem chamar nada de verdade.
 `tools/build-assets.mjs` usa os mesmos fixtures pra gerar
 [`examples/vault/`](../examples/vault/) e as imagens do README.
 
@@ -210,11 +235,22 @@ script num `HOME` temporário. O CI roda em macOS, Linux e Windows × Node
   lê. Os dois nunca competem pelo mesmo dado — o hook decide o que replicar
   pra cada um.
 - **Ingestor separado dos hooks ao vivo, não integrado**: os hooks ao vivo
-  podem se dar ao luxo de uma chamada `claude -p` por sessão substancial
-  (poucas por dia). Uma varredura retroativa de possivelmente milhares de
-  sessões não pode — por isso o ingestor é um script deliberadamente mais
-  simples (sem narrativa de LLM, sem categorização automática por projeto),
-  não uma reexecução do hook em lote.
+  podem se dar ao luxo de uma narrativa por sessão substancial (poucas por
+  dia). Uma varredura retroativa de possivelmente milhares de sessões não
+  pode — por isso o ingestor é deliberadamente mais simples (sem narrativa
+  por padrão). Quem quiser narrativa nas sessões importadas usa o
+  `vault-backfill`, que respeita a cota e para no primeiro limite.
+- **Narrativa fora da cota do agente principal**: até a 3.0 a narrativa ia
+  pro Haiku, na cota do Claude. A cadeia de LLMs manda pro Google (API grátis
+  por modelo, depois `agy`) e troca sozinha quando um modelo bate no limite.
+- **Worker destacado em vez de chamada síncrona**: o `Stop` roda a cada turno;
+  esperar um modelo (minutos, às vezes) travaria o agente. O hook grava o dump
+  em milissegundos e entrega a narrativa a um processo à parte, com lock por
+  sessão.
+- **Jobs no agendador nativo, não um daemon próprio**: launchd, systemd e o
+  Agendador de Tarefas já sabem acordar no horário, sobreviver a reboot e
+  registrar saída. Os jobs de fila se desativam sozinhos, então nada fica
+  rodando à toa.
 
 ## Auditoria e distribuição
 

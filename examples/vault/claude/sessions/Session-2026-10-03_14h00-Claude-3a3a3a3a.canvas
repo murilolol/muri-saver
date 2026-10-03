@@ -1,0 +1,66 @@
+{
+  "nodes": [
+    {
+      "id": "agent-node",
+      "type": "text",
+      "text": "## Sessão Claude `3a3a3a3a`\n\n**Data:** 2026-10-03 às 14h20\n**Tema:** Botão de login corrigido no mobile",
+      "x": -400,
+      "y": -100,
+      "width": 340,
+      "height": 200,
+      "color": "1"
+    },
+    {
+      "id": "summary-node",
+      "type": "text",
+      "text": "### 📝 Síntese Executiva\n\nO botão de login quebrava em telas pequenas por causa de largura fixa; virou max-width.\n\n**🧭 Decisões:**\n• Nada de largura fixa em componentes de formulário, porque quebra viewports pequenos\n\n**⚡ Ações:**\n• Editado src/Login.tsx",
+      "x": 0,
+      "y": -150,
+      "width": 480,
+      "height": 380,
+      "color": "3"
+    },
+    {
+      "id": "session-file-node",
+      "type": "file",
+      "file": "claude/sessions/Session-2026-10-03_14h00-Claude-3a3a3a3a.md",
+      "x": 540,
+      "y": -200,
+      "width": 400,
+      "height": 420
+    },
+    {
+      "id": "cat-item-0",
+      "type": "text",
+      "x": -200,
+      "y": 260,
+      "width": 300,
+      "height": 220,
+      "color": "5",
+      "text": "#### 🧭 DECISAO: Sem largura fixa em formulários\n\n**Projeto:** demo-app\nUsar max-width."
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-agent-summary",
+      "fromNode": "agent-node",
+      "fromSide": "right",
+      "toNode": "summary-node",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-summary-file",
+      "fromNode": "summary-node",
+      "fromSide": "right",
+      "toNode": "session-file-node",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-summary-cat-item-0",
+      "fromNode": "summary-node",
+      "fromSide": "bottom",
+      "toNode": "cat-item-0",
+      "toSide": "top"
+    }
+  ]
+}

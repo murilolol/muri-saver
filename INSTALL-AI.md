@@ -48,7 +48,7 @@ recomendada da pergunta 6):
 node -e "console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)"
 ```
 
-Faça estas 6 perguntas (com as opções sugeridas entre parênteses; marque a
+Faça estas 8 perguntas (com as opções sugeridas entre parênteses; marque a
 primeira opção como recomendada quando aplicável):
 
 1. **Identidade da skill**: "Você quer manter o nome padrão `muri-saver` ou
@@ -75,9 +75,36 @@ primeira opção como recomendada quando aplicável):
 6. **Fuso horário**: "Os nomes de arquivo e os diários usam o fuso
    `<fuso detectado>`. Está certo?" — (Recomendado: o detectado; outra opção
    é o usuário informar um nome IANA como `America/Sao_Paulo`.)
+7. **Modelos para narrativa e memória** (só se houver vault ou ai-memory):
+   "Qual cota usar para escrever as narrativas e consolidar a memória?" —
+   opções: Google (Recomendado: `agy` e/ou `GEMINI_API_KEY`, nunca a cota do
+   Claude) / modelo local ou OpenRouter (`openai:` com `llm.openai.baseUrl`) /
+   Claude Haiku (gasta a cota do Claude) / nenhum (só dump local, sem
+   consolidação). Nunca peça para o usuário colar a chave na conversa: peça o
+   caminho de um arquivo `KEY=valor` (`--llm-key-file`) ou que ele exporte a
+   variável no próprio shell.
+8. **Jobs de fundo**: "Registro os jobs de fundo no agendador do sistema?"
+   (multi-seleção: recomendados (Recomendado) / shim do ai-memory como serviço /
+   nenhum). Explique em uma linha: encerram sessões ociosas, refazem sessões
+   que ficaram sem cota, dão narrativa a notas antigas e geram o relatório
+   semanal; os de fila se desativam sozinhos.
 
 Com as respostas em mãos, os passos abaixo já te dizem exatamente qual flag
 usar pra cada resposta — não precisa adivinhar.
+
+Mapeamento das perguntas 7 e 8 para comandos (depois do passo 2):
+
+| Resposta | Comando |
+|---|---|
+| Google | `npx muri-saver llm chain` e, se houver chave em arquivo, `node bin/install.mjs --update --llm-key-file <caminho>` |
+| Local/OpenRouter | editar `llm.openai` e `llm.narrative`/`llm.aiMemory` no `~/.claude/muri-saver.json` (ver docs/llm-chain.md), depois `npx muri-saver llm chain` |
+| Claude Haiku | `node bin/install.mjs --update --narrative-chain claude:claude-haiku-4-5` |
+| Nenhum | `node bin/install.mjs --update --narrative-chain off` |
+| Jobs recomendados | `node bin/install.mjs --update --with-jobs` |
+| Shim como serviço | `npx muri-saver jobs install llm-shim` |
+
+Depois rode `npx muri-saver llm tune` (com o OK do usuário: edita o
+`config.toml` do ai-memory, com backup) e confira tudo com `node bin/doctor.mjs`.
 
 ## 1. Detectar o ambiente (primeiro comando técnico, sempre)
 
