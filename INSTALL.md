@@ -118,6 +118,11 @@ node bin/install.mjs --with-all           # os três de uma vez
 | `--with-all` | Os dois acima de uma vez |
 | `--with-companion-skills` | Instala `find-skills`/`tdd`/`prototype`/`grill-with-docs` via `npx skills add` |
 | `--skip-claude-md` | Pula a criação do `CLAUDE.md` |
+| `--language <tag>` | Idioma das narrativas do vault (padrão `pt-BR`) |
+| `--narrative-chain <lista>` | Modelos da narrativa do vault (`off` = só dump local) — [docs/llm-chain.md](./docs/llm-chain.md) |
+| `--ai-memory-chain <lista>` | Modelos que o shim oferece ao ai-memory |
+| `--llm-key-file <caminho>` | Arquivo `KEY=valor` com a `GEMINI_API_KEY` (a chave nunca é copiada) |
+| `--with-jobs` / `--jobs <lista\|all>` / `--no-jobs` | Jobs de fundo no agendador do SO — [docs/background-jobs.md](./docs/background-jobs.md) |
 | `--claude-dir`, `--skills-dir`, `--codex-dir`, `--gemini-dir` | Sobrescrevem os diretórios de destino (raramente necessário) |
 
 Detalhes de uso de cada uma em
@@ -162,6 +167,23 @@ instalado, a estrutura de pastas do vault, o alias configurado (padrão ou
 customizado) e as sessões brutas/governança de cada agente (Claude
 Code/Antigravity/Codex) — tudo numa passada, com `OK`/`AVISO`/`FALHA` por
 item.
+
+<br>
+
+## Passo 4b — Cadeia de LLMs e jobs de fundo (opcional, recomendado)
+
+```bash
+npx muri-saver llm chain                    # ai-memory consolida pela cadeia de modelos
+npx muri-saver llm tune                     # limites recomendados do ai-memory
+node bin/install.mjs --update --with-jobs   # sessões ociosas, reprocesso, backfill, relatório
+npx muri-saver jobs status
+```
+
+A cadeia usa por padrão a API do Gemini (grátis, por modelo) e o `agy`
+(Antigravity, cota do plano Google), nunca a cota do Claude. Sem a chave e sem
+o `agy`, a narrativa do vault fica desligada sozinha e as notas ficam só com o
+dump local. Detalhes em [`docs/llm-chain.md`](./docs/llm-chain.md) e
+[`docs/background-jobs.md`](./docs/background-jobs.md).
 
 <br>
 

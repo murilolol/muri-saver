@@ -1,51 +1,33 @@
 #!/usr/bin/env node
-// SessionStart hook: makes sure the local ai-memory server is up before
-// Claude Code's own SessionStart hook (installed by `ai-memory install-hooks`)
-// tries to fetch a handoff from it. Started on demand per Claude Code
-// session instead of at Windows login, per user preference.
+// Hook SessionStart: garante o servidor local do ai-memory de pé antes que o
+// SessionStart do próprio ai-memory (instalado por `ai-memory install-hooks`)
+// busque o handoff. Sobe sob demanda, por sessão, em vez de no login.
 //
-// Never blocks/fails the session: any error here is swallowed and the hook
-// exits 0, same contract as the impeccable hook.
+// Se o muri-saver.json usa a cadeia de LLMs no ai-memory (llm.shim = true),
+// também garante o shim (scripts/ai-memory-llm-shim.mjs) de pé. É o caminho
+// que funciona em qualquer SO; onde existe agendador (launchd/systemd/Tarefas)
+// o `muri-saver jobs install` registra o shim como serviço também.
+//
+// Nunca bloqueia nem falha a sessão: qualquer erro aqui é engolido.
 
-import net from 'node:net';
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import os from 'node:os';
+import {
+  AI_MEMORY_HOST, AI_MEMORY_PORT, SCRIPTS_DIR, loadConfig, bin, tcpUp, shimPort,
+} from './muri-common.mjs';
 
-const HOST = '127.0.0.1';
-const PORT = 49374;
-const EXE = process.platform === 'win32'
-  ? join(os.homedir(), '.cargo', 'bin', 'ai-memory.exe')
-  : (existsSync(join(os.homedir(), '.local', 'bin', 'ai-memory'))
-      ? join(os.homedir(), '.local', 'bin', 'ai-memory')
-      : 'ai-memory');
-const ARGS = ['serve', '--transport', 'http', '--bind', `${HOST}:${PORT}`, '--enable-web'];
-
-function isServerUp(timeoutMs = 300) {
-  return new Promise((resolve) => {
-    const socket = new net.Socket();
-    let settled = false;
-    const done = (result) => {
-      if (settled) return;
-      settled = true;
-      socket.destroy();
-      resolve(result);
-    };
-    socket.setTimeout(timeoutMs);
-    socket.once('connect', () => done(true));
-    socket.once('timeout', () => done(false));
-    socket.once('error', () => done(false));
-    socket.connect(PORT, HOST);
-  });
+function startDetached(cmd, args) {
+  const child = spawn(cmd, args, { detached: true, stdio: 'ignore', windowsHide: true });
+  child.on('error', () => {});
+  child.unref();
 }
 
+// project_strategy=repo-root separa as observações pelo cwd. Abrir o agente
+// direto na home (e depois /add-dir num projeto) nunca muda o cwd do processo,
+// então tudo cai num projeto genérico. Avisa o agente pra ele avisar o usuário.
 function warnIfHomeDir() {
-  // ai-memory's project_strategy=repo-root buckets every observation by cwd.
-  // Opening Claude Code directly in the home dir (then /add-dir into a real
-  // project) never changes the process cwd, so everything lands in one
-  // generic project forever. Surface this to the agent via additionalContext
-  // so it can tell the user instead of failing silently.
   try {
     const cwd = process.cwd().replace(/[\\/]+$/, '').toLowerCase();
     const home = os.homedir().replace(/[\\/]+$/, '').toLowerCase();
@@ -54,33 +36,32 @@ function warnIfHomeDir() {
         hookSpecificOutput: {
           hookEventName: 'SessionStart',
           additionalContext:
-            'ai-memory warning: this session started in the home directory ' +
-            `(${os.homedir()}), not inside a project. project_strategy=repo-root ` +
-            'means every observation will land in one generic "muri" project ' +
-            'instead of the real project\'s bucket, even after /add-dir. Tell the ' +
-            'user to close this session and reopen with `cd <project> && claude` ' +
-            'instead.',
+            `ai-memory: esta sessão começou na home (${os.homedir()}), não dentro de um projeto. `
+            + 'Com project_strategy=repo-root, todas as observações vão para um projeto genérico em vez do '
+            + 'projeto real, mesmo depois de /add-dir. Sugira ao usuário reabrir com `cd <projeto>` antes de iniciar o agente.',
         },
       }));
     }
   } catch {
-    // Best-effort only.
+    // best-effort
   }
 }
 
 async function main() {
+  const cfg = loadConfig();
   try {
-    const up = await isServerUp();
-    if (!up) {
-      const child = spawn(EXE, ARGS, {
-        detached: true,
-        stdio: 'ignore',
-        windowsHide: true,
-      });
-      child.unref();
+    if (!(await tcpUp(AI_MEMORY_PORT, AI_MEMORY_HOST))) {
+      const aim = bin('ai-memory');
+      if (aim) startDetached(aim.cmd, [...aim.pre, 'serve', '--transport', 'http', '--bind', `${AI_MEMORY_HOST}:${AI_MEMORY_PORT}`, '--enable-web']);
     }
   } catch {
-    // Swallow: never break session start because of this.
+    // nunca quebra o início da sessão
+  }
+  try {
+    const shim = join(SCRIPTS_DIR, 'ai-memory-llm-shim.mjs');
+    if (cfg.llm?.shim && existsSync(shim) && !(await tcpUp(shimPort(cfg)))) startDetached(process.execPath, [shim]);
+  } catch {
+    // idem
   }
   warnIfHomeDir();
   process.exit(0);

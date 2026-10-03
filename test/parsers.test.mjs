@@ -52,7 +52,7 @@ test('desktop: tolerant parser handles text and content-block shapes, skips empt
 test('projectLabelFromCwd handles Windows paths and ignores home dirs', () => {
   assert.equal(projectLabelFromCwd('C:\\Users\\muri\\Documents\\site 2 com astra'), 'site 2 com astra');
   assert.equal(projectLabelFromCwd('/home/dev/demo-app/'), 'demo-app');
-  assert.equal(projectLabelFromCwd('/Users/murilodev'), null);
+  assert.equal(projectLabelFromCwd('/Users/voce'), null);
   assert.equal(projectLabelFromCwd('C:\\Users\\muri'), null);
   assert.equal(projectLabelFromCwd(null), null);
 });

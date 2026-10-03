@@ -1,155 +1,60 @@
-import fs from 'node:fs';
-import path from 'node:path';
+#!/usr/bin/env node
+// Hook Stop/SessionEnd do Codex CLI. O Codex usa o mesmo pipeline de nota viva
+// do Claude Code e do Antigravity (hooks/obsidian-vault-check.mjs): dump local
+// garantido, narrativa por LLM num worker destacado, Daily cross-agente e
+// taxonomia por projeto. Este arquivo só repassa o payload.
+//
+// Instalado em ~/.codex/hooks/; o instalador troca o marcador abaixo pela
+// pasta real dos hooks do muri-saver (normalmente ~/.claude/hooks).
+
+import { existsSync, readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import os from 'node:os';
-import { execFileSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 
-// Local-only (no LLM, no network): files touched in the session's cwd via
-// git status --porcelain (covers tracked-modified + untracked in one call).
-// Timeout + try/catch guarantee this never delays the Stop hook.
-function filesTouched(cwd) {
-  if (!cwd) return [];
-  try {
-    const out = execFileSync('git', ['-C', cwd, 'status', '--porcelain'], { encoding: 'utf8', timeout: 1500, stdio: ['ignore', 'pipe', 'ignore'] });
-    return out.split('\n').filter(Boolean).map((l) => l.slice(3).trim()).slice(0, 30);
-  } catch {
-    return [];
-  }
+const INSTALLED_HOOKS_DIR = '__MURI_SAVER_HOOKS_DIR__';
+
+// Execuções headless do próprio muri-saver (muri-delegate, narrativa) não são
+// sessões do usuário.
+if (process.env.MURI_DELEGATE === '1' || process.env.MURI_SAVER_OBSIDIAN_GEN === '1') process.exit(0);
+
+function vaultHookPath() {
+  const candidates = [
+    process.env.MURI_SAVER_VAULT_HOOK,
+    INSTALLED_HOOKS_DIR.startsWith('__') ? null : join(INSTALLED_HOOKS_DIR, 'obsidian-vault-check.mjs'),
+    join(dirname(dirname(fileURLToPath(import.meta.url))), 'obsidian-vault-check.mjs'), // layout do repo
+    join(os.homedir(), '.claude', 'hooks', 'obsidian-vault-check.mjs'),
+  ];
+  return candidates.find((p) => p && existsSync(p)) || null;
 }
 
-// Codex persiste o rollout completo da sessão em
-// ~/.codex/sessions/<ano>/<mes>/<dia>/rollout-<ts>-<session_id>.jsonl (achado
-// 2026-09-23, `codex migrate-rollouts`/`agents` confirmam o formato). Uma
-// varredura recursiva em JS (sem spawn de processo) é rápida o bastante nesse
-// volume (dezenas de arquivos) pra achar o rollout pelo session_id sem custo
-// de rede/LLM. Não extrai arquivos tocados daqui (os tipos de tool call do
-// Codex — exec/custom_tool_call/function_call — não têm um campo de path
-// estruturado confiável como o file_path do Claude Code; `git status` já
-// cobre isso com mais confiança) nem status de task (Codex não tem um
-// TaskCreate/TaskUpdate equivalente confirmado).
-function findRolloutPath(sessionId) {
-  if (!sessionId) return null;
-  const root = path.join(os.homedir(), '.codex', 'sessions');
-  const stack = [root];
-  while (stack.length) {
-    const dir = stack.pop();
-    let entries;
-    try {
-      entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      continue;
-    }
-    for (const e of entries) {
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) stack.push(full);
-      else if (e.isFile() && e.name.endsWith(`${sessionId}.jsonl`)) return full;
-    }
-  }
-  return null;
-}
-
-const MAX_ROLLOUT_BYTES = 30 * 1024 * 1024; // achado 2026-09-23: sessão real de ~7h gerou rollout de 125MB — sem teto, ler tudo síncrono travaria o /exit numa maratona
-
-function countCodexCommands(rolloutPath) {
-  try {
-    if (fs.statSync(rolloutPath).size > MAX_ROLLOUT_BYTES) return null;
-    const raw = fs.readFileSync(rolloutPath, 'utf8');
-    let count = 0;
-    for (const line of raw.split('\n')) {
-      if (!line.trim()) continue;
-      let obj;
-      try {
-        obj = JSON.parse(line);
-      } catch {
-        continue;
-      }
-      const pt = obj?.payload?.type;
-      if (pt === 'function_call' || pt === 'custom_tool_call') count++;
-    }
-    return count;
-  } catch {
-    return null;
-  }
-}
-
-// Same muri-saver.json the Claude Code hook reads (written by bin/install.mjs
-// under ~/.claude); this file lives in ~/.codex/hooks, so it can't locate the
-// config relative to itself.
-function loadMuriSaverConfig() {
-  for (const p of [process.env.MURI_SAVER_CONFIG, path.join(os.homedir(), '.claude', 'muri-saver.json')].filter(Boolean)) {
-    try {
-      return JSON.parse(fs.readFileSync(p, 'utf8'));
-    } catch {
-      // try the next candidate
-    }
-  }
-  return {};
-}
-
-function validTimezone(tz) {
-  try {
-    return Boolean(tz) && Boolean(new Intl.DateTimeFormat('en-US', { timeZone: tz }));
-  } catch {
-    return false;
-  }
-}
-
-const muriConfig = loadMuriSaverConfig();
-const vault = process.env.OBSIDIAN_VAULT || (Object.hasOwn(muriConfig, 'vault') ? muriConfig.vault : path.join(os.homedir(), 'Documents', 'Obsidian Vault'));
-const timeZone = [process.env.MURI_SAVER_TZ, muriConfig.timezone, Intl.DateTimeFormat().resolvedOptions().timeZone]
-  .find(validTimezone) || 'UTC';
-const now = process.env.MURI_SAVER_NOW && !Number.isNaN(Date.parse(process.env.MURI_SAVER_NOW))
-  ? new Date(process.env.MURI_SAVER_NOW)
-  : new Date();
-
-function brtParts() {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
-  }).formatToParts(now);
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return {
-    date: `${values.year}-${values.month}-${values.day}`,
-    time: `${values.hour}h${values.minute}`,
-    timestamp: `${values.year}-${values.month}-${values.day} ${values.hour}:${values.minute}:${values.second} (${timeZone})`,
-  };
-}
-
-function firstString(...values) {
-  return values.find((value) => typeof value === 'string' && value.trim()) || '';
-}
+const firstString = (...values) => values.find((v) => typeof v === 'string' && v.trim()) || '';
 
 try {
-  if (!vault) process.exit(0);
-  const raw = fs.readFileSync(0, 'utf8').trim();
+  const raw = readFileSync(0, 'utf8').trim();
   let payload = {};
   try { payload = raw ? JSON.parse(raw) : {}; } catch { payload = {}; }
-
-  const sessionId = firstString(payload.session_id, payload.sessionId, payload.thread_id, payload.threadId, payload.conversation_id, payload.conversationId);
-  const cwd = firstString(payload.cwd, payload.working_directory, payload.workingDirectory, payload.context?.cwd);
-  const id = (sessionId || `local-${process.pid}`).replace(/[^a-zA-Z0-9_-]/g, '').slice(-12) || 'local';
-  const { date, time, timestamp } = brtParts();
-  const sessionsDir = path.join(vault, 'codex', 'sessions');
-  const dailiesDir = path.join(vault, 'codex', 'dailies');
-  fs.mkdirSync(sessionsDir, { recursive: true });
-  fs.mkdirSync(dailiesDir, { recursive: true });
-
-  const filename = `Session-${date}_${time}-Codex-${id}.md`;
-  const sessionPath = path.join(sessionsDir, filename);
-  if (!fs.existsSync(sessionPath)) {
-    const touched = filesTouched(cwd);
-    const touchedLine = touched.length ? `- Arquivos tocados (${touched.length}): ${touched.map((f) => `\`${f}\``).join(', ')}\n` : '';
-    const rolloutPath = findRolloutPath(sessionId);
-    const commandCount = rolloutPath ? countCodexCommands(rolloutPath) : null;
-    const commandLine = commandCount !== null ? `- Comandos/ações executados: ${commandCount}\n` : '';
-    const body = `---\nagent: codex\nsession_id: ${sessionId || 'unavailable'}\ncwd: ${cwd || 'unavailable'}\ncaptured_at: ${timestamp}\n---\n\n# Sessão Codex ${id}\n\n- Registro criado pelo hook local do Codex.\n${commandLine}${touchedLine}- Memória persistente: [[ai-memory]].\n- Para detalhes e decisões duráveis, consulte as páginas do AI Memory.\n`;
-    fs.writeFileSync(sessionPath, body, 'utf8');
+  const sessionId = firstString(payload.session_id, payload.sessionId, payload.thread_id, payload.threadId, payload.conversation_id);
+  const hook = vaultHookPath();
+  if (sessionId && hook) {
+    const r = spawnSync(process.execPath, [hook], {
+      input: JSON.stringify({
+        agent: 'codex',
+        session_id: sessionId,
+        transcript_path: firstString(payload.transcript_path, payload.transcriptPath),
+        cwd: firstString(payload.cwd, payload.working_directory, payload.workingDirectory, payload.context?.cwd),
+        hook_event_name: firstString(payload.hook_event_name, process.argv[2]) || 'Stop',
+      }),
+      stdio: ['pipe', 'ignore', 'pipe'],
+      encoding: 'utf8',
+      timeout: 8000,
+      windowsHide: true,
+    });
+    // O hook do vault nunca falha a sessão; avisos dele (vault inacessível) são repassados.
+    if (r.stderr && r.stderr.trim()) process.stderr.write(`${r.stderr.trim()}\n`);
   }
-
-  const dailyPath = path.join(dailiesDir, `Daily-${date}.md`);
-  const entry = `- [[codex/sessions/${filename.replace(/\.md$/, '')}|Sessão Codex ${id}]] (${time}) — [[ai-memory]]\n`;
-  const previous = fs.existsSync(dailyPath) ? fs.readFileSync(dailyPath, 'utf8') : `# Diário Codex — ${date}\n\n`;
-  if (!previous.includes(filename.replace(/\.md$/, ''))) fs.writeFileSync(dailyPath, previous + entry, 'utf8');
-} catch (err) {
-  // Keep Stop non-blocking, but leave a short diagnostic for recovery.
-  process.stderr.write(`muri-saver: falha ao gravar no vault (${err?.code || 'ERRO'}); rode node bin/doctor.mjs --vault <caminho>.\n`);
+} catch {
+  // Nunca transforma falha do vault em falha do hook do Codex.
 }
+process.stdout.write('{}');

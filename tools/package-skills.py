@@ -13,7 +13,7 @@ def package(name, output):
     skill = ROOT / 'skills' / name
     allowed = ['SKILL.md']
     if name == 'muri-saver':
-        allowed += ['references/memory.md', 'references/agents.md', 'references/audit.md']
+        allowed += ['references/memory.md', 'references/agents.md', 'references/audit.md', 'references/delegation.md']
     files = {relative: (skill / relative).read_bytes() for relative in allowed}
     files['LICENSE'] = (ROOT / 'LICENSE').read_bytes()
     if name == 'muri-saver':

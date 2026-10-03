@@ -104,20 +104,44 @@ O MCP Obsidian também é opcional: mescle só a entrada de
 [mcp/obsidian.optional.example.json](../mcp/obsidian.optional.example.json),
 com seu caminho real. Preserve as demais entradas e a ponte do ai-memory.
 
-## 6. LLM e verificação
+## 6. LLM da consolidação
 
-Consolidação/enriquecimento por modelo é opcional e pode gerar custos.
-Configure provedores e credenciais conforme a documentação oficial da
-versão instalada. Evite carregar tokens na documentação ou no repositório.
+Sem provedor de LLM, o ai-memory **captura** as sessões mas nunca as
+consolida em páginas da wiki. O muri-saver oferece uma cadeia de modelos com
+troca automática em limite/erro, servida por um shim local:
+
+```bash
+npx muri-saver llm chain    # ai-memory → shim 127.0.0.1:49380 → cadeia llm.aiMemory
+npx muri-saver llm tune     # limites recomendados (entrada maior, scheduler sem rajada)
+npx muri-saver llm status   # provedor ativo e estado de cada modelo
+npx muri-saver jobs install llm-shim finalize-idle reprocess-parked
+```
+
+O guia completo (tipos de modelo, chave da API para serviços, tabela de
+limites) está em [llm-chain.md](./llm-chain.md). Pontos que mais pegam:
+
+- **Sessões abertas para sempre**: o auto-improve só consolida sessão
+  encerrada, e o Antigravity não emite `SessionEnd`. O job `finalize-idle`
+  encerra as ociosas há mais de 2h.
+- **Sessões estacionadas**: quando toda a cadeia esgota, o ai-memory desiste
+  da sessão (`parked=true`). O job `reprocess-parked` refaz depois.
+- **Conteúdo do Antigravity**: o ai-memory só vê eventos de ferramenta dele;
+  a narrativa do vault vira página `narratives/` (ponte vault → ai-memory).
+- **Sessões-lixo**: chamadas headless do `agy` disparam os hooks do ai-memory;
+  o instalador embrulha esses hooks com o `aim-guard`. Se você reinstalar os
+  hooks do ai-memory no Antigravity, rode `node bin/install.mjs --update`.
+- **Ver a wiki no Obsidian**: um link simbólico de `<vault>/ai-memory` para a
+  pasta `wiki/` do ai-memory (caminho em `ai-memory status --json`) mostra as
+  páginas ao vivo; editar no Obsidian edita a wiki. No Windows, use uma
+  junction (`mklink /J`).
+
+Verificação:
 
 ```bash
 ai-memory llm-test --help
 node bin/doctor.mjs
 node bin/cli.mjs audit --instructions-only
 ```
-
-`llm-test` executa uma chamada quando recebe provider/model/prompt; não é
-um comando para descobrir variáveis de ambiente. Comece pelo help.
 
 Se SessionStart já entregou um handoff, use esse conteúdo: ele normalmente
 já foi consumido. Sem esse bloco, liste os handoffs no escopo confirmado e

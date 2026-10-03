@@ -26,7 +26,7 @@ jobs:
 
       - name: Syntax check
         shell: bash
-        run: for f in bin/*.mjs lib/*.mjs hooks/*.mjs hooks/codex/*.mjs; do node --check "$f"; done
+        run: for f in bin/*.mjs lib/*.mjs hooks/*.mjs hooks/codex/*.mjs scripts/*.mjs tools/test-bin/*.mjs; do node --check "$f"; done
 
       - name: Tests
         run: npm test

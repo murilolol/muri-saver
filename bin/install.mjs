@@ -10,6 +10,10 @@
 // que foi instalado e não foi editado por você, movendo pra uma pasta de
 // backup em vez de apagar).
 //
+// Também registra, se pedido (--with-jobs/--jobs), os jobs de fundo no
+// agendador nativo do SO (launchd, systemd --user/crontab, Agendador de
+// Tarefas) via scripts/muri-jobs.mjs.
+//
 // Não instala o binário ai-memory nem o app Obsidian (ver
 // docs/ai-memory-obsidian-setup.md).
 
@@ -28,7 +32,10 @@ import {
 import { sanitizeAlias, renderWithAlias } from '../lib/alias.mjs';
 import {
   mergeHooks, removeHooks, mergeAntigravityHooks, removeAntigravityHooks, resolveHomePlaceholder, jsonEqual,
+  guardAiMemoryHooks, unguardAiMemoryHooks,
 } from '../lib/hooks-merge.mjs';
+import { JOBS, installJob, removeJob } from '../scripts/muri-jobs.mjs';
+import { parseEntry } from '../hooks/muri-llm.mjs';
 
 const REPO_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const VERSION = readPackageVersion(REPO_ROOT);
@@ -47,6 +54,18 @@ Instalação
   --with-all                Os dois acima
   --with-companion-skills   Instala find-skills/tdd/prototype/grill-with-docs via npx skills
   --skip-claude-md          Não cria o CLAUDE.md
+  --language <tag>          Idioma das narrativas do vault (padrão: pt-BR; ex: en, es)
+
+Modelos (cadeia de LLMs; ver docs/llm-chain.md)
+  --narrative-chain <lista> Modelos da narrativa do vault, ex: "agy:gemini-3.1-pro-high,gemini-api:gemini-2.5-flash"
+                            ("off" desliga: o vault fica só com o dump local)
+  --ai-memory-chain <lista> Modelos que o shim oferece ao ai-memory
+  --llm-key-file <caminho>  Arquivo KEY=valor de onde ler GEMINI_API_KEY etc. (a chave nunca é copiada)
+
+Jobs de fundo (ver docs/background-jobs.md)
+  --with-jobs               Registra os jobs recomendados no agendador do SO
+  --jobs <lista|all>        Escolhe os jobs: ${Object.keys(JOBS).join(', ')}
+  --no-jobs                 Remove todos os jobs registrados
 
 Ciclo de vida
   --update                  Reinstala usando o muri-saver.json salvo (flags passadas sobrescrevem)
@@ -62,10 +81,13 @@ function parseArgs(argv) {
   const takes = {
     '--claude-dir': 'claudeDir', '--skills-dir': 'skillsDir', '--codex-dir': 'codexDir', '--gemini-dir': 'geminiDir',
     '--vault': 'vault', '--alias': 'alias', '--skill-name': 'alias', '--author-name': 'authorName', '--timezone': 'timezone',
+    '--jobs': 'jobs', '--language': 'language', '--narrative-chain': 'narrativeChain', '--ai-memory-chain': 'aiMemoryChain',
+    '--llm-key-file': 'llmKeyFile',
   };
   const flags = {
     '--dry-run': 'dryRun', '--skip-claude-md': 'skipClaudeMd', '--with-codex': 'withCodex', '--with-antigravity': 'withAntigravity',
     '--with-companion-skills': 'withCompanionSkills', '--update': 'update', '--uninstall': 'uninstall', '--help': 'help', '-h': 'help',
+    '--with-jobs': 'withJobs', '--no-jobs': 'noJobs',
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -269,7 +291,7 @@ function installFlatDir(ctx, srcDir, destDir, kind) {
     if (statSync(full).isDirectory()) continue;
     const dest = join(destDir, f);
     const changed = copyManaged(ctx, full, dest, kind);
-    if (changed && !ctx.dryRun && /\.(sh|py)$/.test(f)) {
+    if (changed && !ctx.dryRun && /\.(sh|py|mjs)$/.test(f)) {
       try {
         chmodSync(dest, 0o755);
       } catch {
@@ -297,8 +319,11 @@ function installClaudeSettings(ctx, claudeDir, prevCfg) {
   return { hookTarget: { kind: 'claude-settings', path }, statusLineInstalled };
 }
 
-function installCodex(ctx, codexDir, alias) {
-  copyManaged(ctx, join(REPO_ROOT, 'hooks', 'codex', 'obsidian-codex-session.mjs'), join(codexDir, 'hooks', 'obsidian-codex-session.mjs'), 'hook');
+function installCodex(ctx, codexDir, alias, claudeDir) {
+  // O repassador do Codex fica em ~/.codex/hooks e precisa achar o hook do vault.
+  const hooksDir = JSON.stringify(join(claudeDir, 'hooks')).slice(1, -1).replace(/'/g, "\\'");
+  copyManaged(ctx, join(REPO_ROOT, 'hooks', 'codex', 'obsidian-codex-session.mjs'), join(codexDir, 'hooks', 'obsidian-codex-session.mjs'), 'hook',
+    (c) => c.replace("'__MURI_SAVER_HOOKS_DIR__'", `'${hooksDir}'`));
   writeGovernance(ctx, join(REPO_ROOT, 'codex-config', 'AGENTS.md.template'), join(codexDir, 'AGENTS.md'), alias);
   const snippet = loadSnippet(join('codex-config', 'hooks.snippet.json'));
   const path = join(codexDir, 'hooks.json');
@@ -308,14 +333,58 @@ function installCodex(ctx, codexDir, alias) {
   return { kind: 'codex-hooks', path };
 }
 
-function installAntigravity(ctx, geminiDir, alias) {
+function installAntigravity(ctx, geminiDir, alias, claudeDir) {
   const skillsDir = join(geminiDir, 'config', 'skills');
   installSkills(ctx, skillsDir, alias);
   writeGovernance(ctx, join(REPO_ROOT, 'antigravity-config', 'GEMINI.md.template'), join(geminiDir, 'GEMINI.md'), alias);
   const snippet = loadSnippet(join('antigravity-config', 'hooks.snippet.json'));
   const path = join(geminiDir, 'config', 'hooks.json');
-  mergeJsonFile(ctx, path, 'hook Stop do muri-saver pro Antigravity', (existing) => mergeAntigravityHooks(existing, snippet));
-  return { kind: 'gemini-hooks', path };
+  const guard = join(claudeDir, 'hooks', 'aim-guard.mjs');
+  mergeJsonFile(ctx, path, 'hook Stop do muri-saver + aim-guard nos hooks do ai-memory (Antigravity)',
+    (existing) => guardAiMemoryHooks(mergeAntigravityHooks(existing, snippet), guard));
+  return { kind: 'gemini-hooks', path, guard };
+}
+
+const RECOMMENDED_JOBS = ['finalize-idle', 'reprocess-parked', 'quota-snapshot', 'economy-report'];
+
+function desiredJobs(args, prevCfg, { vault, llm }) {
+  if (args.noJobs) return [];
+  if (args.jobs) {
+    const list = args.jobs === 'all' ? Object.keys(JOBS) : String(args.jobs).split(',').map((j) => j.trim()).filter(Boolean);
+    const unknown = list.filter((j) => !JOBS[j]);
+    if (unknown.length) log(`AVISO: job(s) desconhecido(s) ignorado(s): ${unknown.join(', ')}`);
+    return list.filter((j) => JOBS[j]);
+  }
+  if (args.withJobs) {
+    return [...RECOMMENDED_JOBS, ...(vault ? ['vault-backfill'] : []), ...(llm?.shim ? ['llm-shim'] : [])];
+  }
+  return Array.isArray(prevCfg?.jobs) ? prevCfg.jobs.filter((j) => JOBS[j]) : [];
+}
+
+// Registra os jobs pedidos e remove do agendador os que saíram da lista.
+function syncJobs(ctx, wanted, previous, claudeDir) {
+  const installed = [];
+  for (const job of previous.filter((j) => !wanted.includes(j))) {
+    log(`remover job ${job}`);
+    if (!ctx.dryRun) removeJob(job);
+  }
+  for (const job of wanted) {
+    log(`registrar job ${job} (${JOBS[job].desc})`);
+    if (ctx.dryRun) { installed.push(job); continue; }
+    const err = installJob(job, { scriptsDir: join(claudeDir, 'scripts'), hooksDir: join(claudeDir, 'hooks') });
+    if (err) log(`AVISO: job ${job} não foi registrado: ${err}`);
+    else installed.push(job);
+  }
+  return installed;
+}
+
+function chainFromFlag(value, label) {
+  if (value === undefined) return undefined;
+  if (/^(off|none)$/i.test(value)) return [];
+  const list = String(value).split(',').map((s) => s.trim()).filter(Boolean);
+  const bad = list.filter((e) => !parseEntry(e));
+  if (bad.length) log(`AVISO: entrada(s) inválida(s) em ${label} ignorada(s): ${bad.join(', ')} (formato tipo:modelo)`);
+  return list.filter((e) => parseEntry(e));
 }
 
 const COMPANION_SKILLS = [
@@ -394,13 +463,19 @@ function uninstall(args, claudeDir) {
     'gemini-hooks': loadSnippet(join('antigravity-config', 'hooks.snippet.json')),
   };
   let hookFiles = 0;
+  for (const job of Object.keys(JOBS)) {
+    if (!(cfg.jobs || []).includes(job)) continue;
+    log(`remover job ${job}`);
+    if (!ctx.dryRun) removeJob(job);
+  }
+
   for (const target of cfg.hookTargets || []) {
     const { data, invalid } = readJson(target.path);
     if (!data || invalid) continue;
     const snippet = snippets[target.kind];
     let after;
     if (target.kind === 'gemini-hooks') {
-      after = removeAntigravityHooks(data, snippet);
+      after = removeAntigravityHooks(target.guard ? unguardAiMemoryHooks(data, target.guard) : data, snippet);
     } else {
       after = { ...data, hooks: removeHooks(data.hooks, snippet.hooks) };
       if (Object.keys(after.hooks).length === 0) delete after.hooks;
@@ -458,6 +533,13 @@ function main() {
   const authorName = args.authorName ? String(args.authorName).trim() : (prevCfg?.authorName || null);
   const vault = args.vault || prevCfg?.vault || null;
   const timezone = args.timezone || prevCfg?.timezone || systemTimezone();
+  const language = args.language || prevCfg?.language || 'pt-BR';
+  const llm = { ...(prevCfg?.llm || {}) };
+  const narrativeChain = chainFromFlag(args.narrativeChain, '--narrative-chain');
+  const aiMemoryChain = chainFromFlag(args.aiMemoryChain, '--ai-memory-chain');
+  if (narrativeChain !== undefined) llm.narrative = narrativeChain;
+  if (aiMemoryChain !== undefined) llm.aiMemory = aiMemoryChain;
+  if (args.llmKeyFile) llm.apiKeyFile = args.llmKeyFile;
   const prevAgents = new Set(prevCfg?.agents || []);
   const wantCodex = args.withCodex || prevAgents.has('codex') || existsSync(paths.codexDir);
   const wantAntigravity = args.withAntigravity || prevAgents.has('antigravity') || existsSync(paths.geminiDir);
@@ -479,22 +561,26 @@ function main() {
 
   const agents = ['claude'];
   if (wantCodex) {
-    hookTargets.push(installCodex(ctx, paths.codexDir, alias));
+    hookTargets.push(installCodex(ctx, paths.codexDir, alias, claudeDir));
     agents.push('codex');
   } else {
     log('~/.codex não encontrado — Codex pulado (use --with-codex pra forçar).');
   }
   if (wantAntigravity) {
-    hookTargets.push(installAntigravity(ctx, paths.geminiDir, alias));
+    hookTargets.push(installAntigravity(ctx, paths.geminiDir, alias, claudeDir));
     agents.push('antigravity');
   } else {
     log('~/.gemini não encontrado — Antigravity pulado (use --with-antigravity pra forçar).');
   }
   if (args.withCompanionSkills) installCompanionSkills(ctx.dryRun);
   cleanupStale(ctx);
+  const jobs = syncJobs(ctx, desiredJobs(args, prevCfg, { vault, llm }), Array.isArray(prevCfg?.jobs) ? prevCfg.jobs : [], claudeDir);
 
+  // Chaves que o usuário editou à mão no muri-saver.json (narrative, economy,
+  // vaultIgnoreCwd...) sobrevivem ao --update.
   const now = new Date().toISOString();
   const config = {
+    ...(prevCfg || {}),
     version: VERSION,
     installedAt: prevCfg?.installedAt || now,
     updatedAt: now,
@@ -502,6 +588,9 @@ function main() {
     authorName,
     vault,
     timezone,
+    language,
+    llm,
+    jobs,
     agents,
     paths,
     statusLineInstalled: settings.statusLineInstalled,
@@ -520,6 +609,8 @@ function main() {
   log('  3. Reiniciar Claude Code/Antigravity/Codex pra carregar skill, hooks e governança.');
   log('  4. `node bin/doctor.mjs` pra conferir tudo.');
   log('  5. Opcional: `node bin/ingest-sessions.mjs --all --dry-run` pra importar sessões antigas.');
+  log('  6. Opcional: consolidação do ai-memory pela cadeia de modelos: `muri-saver llm chain` (docs/llm-chain.md).');
+  if (!jobs.length) log('  7. Opcional: jobs de fundo (sessões ociosas, reprocesso, backfill, relatório): `--update --with-jobs`.');
   log('  Atualizar depois: `node bin/install.mjs --update` · Remover: `node bin/install.mjs --uninstall`.');
 }
 

@@ -19,6 +19,9 @@ import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { configPath, readConfig, resolveVault, sha256File, readPackageVersion } from '../lib/config.mjs';
 import { loadSqlite } from '../lib/parsers.mjs';
+import { aiMemoryPaths, shimPort } from '../hooks/muri-common.mjs';
+import { resolveChain, chainStatus } from '../hooks/muri-llm.mjs';
+import { configuredJobs, jobStatus } from '../scripts/muri-jobs.mjs';
 
 const PLATFORM = process.platform; // 'darwin' | 'linux' | 'win32'
 const HOME = os.homedir();
@@ -134,6 +137,51 @@ function platformLabel() {
   return PLATFORM;
 }
 
+function chainLine(rows) {
+  return rows.map((r) => `${r.model} ${r.available ? '✓' : r.cooling_until ? `(cooldown até ${r.cooling_until})` : '(indisponível)'}`).join(' → ');
+}
+
+// Cadeia de LLMs (narrativa do vault e consolidação do ai-memory) e jobs de fundo.
+async function checkLlmAndJobs(config) {
+  section('Cadeia de LLMs e jobs de fundo');
+  const cfg = config || {};
+  const narrative = chainStatus(resolveChain('narrative', cfg), cfg);
+  if (!narrative.length) ok('narrativa do vault desligada', 'as notas ficam só com o dump local (llm.narrative = [] ou "off")');
+  else if (narrative.some((r) => r.installed)) ok('cadeia da narrativa', chainLine(narrative));
+  else warn('nenhum modelo da cadeia de narrativa está disponível', `${chainLine(narrative)} — instale o agy, exporte GEMINI_API_KEY (ou llm.apiKeyFile) ou ajuste llm.narrative; ver docs/llm-chain.md`);
+
+  const tomlPath = join(aiMemoryPaths().dataDir, 'config.toml');
+  const toml = existsSync(tomlPath) ? readFileSync(tomlPath, 'utf8') : '';
+  const provider = (toml.match(/^llm_provider\s*=\s*"?([^"\n]+)"?/m) || [])[1];
+  if (!toml) warn('config.toml do ai-memory não encontrado', `${tomlPath} — o servidor cria na primeira execução`);
+  else if (!provider) warn('ai-memory sem provedor de LLM', 'ele captura as sessões mas nunca as consolida em páginas — rode `muri-saver llm chain` (ou gemini)');
+  else ok('provedor de LLM do ai-memory', provider === 'openai-compat' && /49380/.test(toml) ? 'cadeia do muri-saver (shim local)' : provider);
+
+  if (cfg.llm?.shim || /127\.0\.0\.1:49380/.test(toml)) {
+    try {
+      const res = await fetch(`http://127.0.0.1:${shimPort(cfg)}/health`, { signal: AbortSignal.timeout(3000) });
+      const h = await res.json();
+      if (h.chain.some((c) => c.available)) ok('shim da cadeia respondendo', chainLine(h.chain));
+      else warn('shim de pé, mas todos os modelos estão em cooldown ou indisponíveis', chainLine(h.chain));
+    } catch {
+      warn('shim da cadeia fora do ar', 'abra uma sessão do agente (o SessionStart sobe) ou rode `muri-saver jobs install llm-shim`');
+    }
+  }
+
+  const jobs = configuredJobs(cfg);
+  if (!jobs.length) ok('jobs de fundo', 'nenhum registrado (opcional: node bin/install.mjs --update --with-jobs)');
+  for (const job of jobs) {
+    const st = jobStatus(job);
+    if (/não instalado|presente, não carregado/.test(st)) warn(`job ${job}`, `${st} — rode \`muri-saver jobs install ${job}\``);
+    else ok(`job ${job}`, st);
+  }
+  const queue = join(HOME, '.claude', 'scripts', '.ai-memory-parked-queue.tsv');
+  if (existsSync(queue)) {
+    const n = readFileSync(queue, 'utf8').split('\n').filter(Boolean).length;
+    if (n) ok('sessões estacionadas do ai-memory na fila', `${n} pendente(s) — o job reprocess-parked cuida delas`);
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const vaultIdx = args.indexOf('--vault');
@@ -187,6 +235,8 @@ async function main() {
     if (missing.length) warn(`${missing.length} arquivo(s) instalado(s) sumiram`, `${missing.slice(0, 3).map((e) => e.path).join(', ')}${missing.length > 3 ? '...' : ''} — rode node bin/install.mjs --update`);
     if (edited.length) warn(`${edited.length} arquivo(s) editado(s) desde a instalação`, `${edited.slice(0, 3).map((e) => e.path).join(', ')}${edited.length > 3 ? '...' : ''} — normal se foi você; o --update/--uninstall preserva esses`);
   }
+
+  await checkLlmAndJobs(config);
 
   section('Config do Claude Code');
   const claudeDir = join(HOME, '.claude');

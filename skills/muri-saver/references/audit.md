@@ -22,6 +22,19 @@ tool names can still be private; inspect reports before sharing.
 - Bytes/words are not tokens. Observed tokens are not subscription quota or
   dollars, and a long elapsed session is not necessarily active work.
 
+## Weekly economy report
+
+`node ~/.claude/scripts/muri-economy-report.py [--days N] [--cutoff ISO] [--save]`
+reads the Claude Code transcripts and estimates
+**tokens-eq** (a proxy for plan weight: input 1, cache write 1.25/2, cache
+read 0.1, output 5; Sonnet 0.6, Haiku 0.2). It calibrates "1% of the weekly
+quota ≈ X tokens-eq" from your own data, compares the first-turn fixed cost
+before/after a cutoff, and lists the work that ran outside the Claude quota
+(delegations, ai-memory shim calls, vault narratives, backfill). The
+`quota-snapshot` and `economy-report` jobs keep a history and save a weekly
+note in the vault. The formula is an estimate; the provider doesn't publish
+the quota math.
+
 For an A/B comparison, hold task, checkout, model/settings, tools and quality
 criteria constant; use fresh equivalent sessions and several repetitions.
 Compare correctness alongside tokens/time and disclose cache differences.

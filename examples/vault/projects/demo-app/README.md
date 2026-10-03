@@ -13,7 +13,7 @@ Projeto fictício usado nos fixtures de teste do muri-saver.
 | 💬 prompts | 0 |
 | ❓ duvidas | 0 |
 | 💡 ideias | 0 |
-| 🧭 decisoes | 1 |
+| 🧭 decisoes | 2 |
 | 🩹 divida-tecnica | 0 |
 | 🔍 pesquisa | 0 |
 | 🚀 releases | 0 |
