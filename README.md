@@ -7,7 +7,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/murilolol/muri-saver/actions/workflows/ci.yml"><img src="https://github.com/murilolol/muri-saver/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/murilolol/muri-saver/releases"><img src="https://img.shields.io/github/v/tag/murilolol/muri-saver?style=flat-square&label=vers%C3%A3o&color=blue" alt="Versão" /></a>
   <img src="https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-suportado-555?style=flat-square" alt="macOS, Linux e Windows" />
   <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 18+" />
@@ -16,7 +15,7 @@
 </p>
 
 <p align="center">
-  <img src="./assets/terminal-statusline.svg" alt="Status line do muri-saver: pasta, branch, ai-memory, duração, contexto com barra e dica de /compact, cotas de 5h e 7 dias e modelo" width="100%" />
+  <img src="./assets/terminal-statusline.svg" alt="Status line do muri-saver: pasta, branch, ai-memory, duração, contexto colorido por tokens, quanto falta pro cache esfriar, selo de cache frio, cotas de 5h e 7 dias e modelo" width="100%" />
 </p>
 
 Quem usa agente de código todo dia esbarra em três problemas: a **cota acaba**
@@ -32,6 +31,9 @@ screenshots contra 3 leituras de texto) e resolve os três com um sistema só:
   consolidada por uma cadeia de modelos que troca sozinha quando um bate no limite.
 - **Nota viva no Obsidian**: toda sessão vira uma nota, com narrativa gerada fora
   da cota do seu agente.
+- **Guarda de contexto** no Claude Code: segura o prompt que retomaria uma sessão
+  grande com o cache já frio e lembra a hora de abrir sessão nova. Em 30 dias de
+  uso real, turnos com mais de 250k de contexto foram 71% do gasto.
 
 ## Índice
 
@@ -103,7 +105,7 @@ O Obsidian é opcional.
 | `--timezone <IANA>` | fuso do sistema | Nomes de arquivo e Dailies (ex.: `America/Sao_Paulo`) |
 | `--language <tag>` | `pt-BR` | Idioma das narrativas |
 | `--alias <nome>` | `muri-saver` | Instala com o seu nome (`--alias mendes-saver`); o original continua funcionando |
-| `--narrative-chain <lista>` | `agy` Pro → `agy` Flash → Gemini API | Modelos da narrativa do vault; `off` deixa só o dump local |
+| `--narrative-chain <lista>` | `agy` Argon → `agy` Flash → Gemini API | Modelos da narrativa do vault; `off` deixa só o dump local |
 | `--ai-memory-chain <lista>` | Gemini API → `agy` | Modelos que o shim oferece ao ai-memory |
 | `--llm-key-file <caminho>` | — | Arquivo `KEY=valor` de onde ler a `GEMINI_API_KEY` (a chave nunca é copiada) |
 | `--with-jobs` / `--jobs <lista>` / `--no-jobs` | nenhum | Jobs de fundo no agendador do SO |
@@ -193,6 +195,9 @@ Registrados no **launchd** (macOS), **systemd --user** ou **crontab** (Linux) e
 **Agendador de Tarefas** (Windows). Sem modelo livre, os jobs de fila saem na
 hora sem gastar nada. Guia: [`docs/background-jobs.md`](./docs/background-jobs.md).
 
+Processo preso (`agy` headless, worker da nota viva)? `scripts/faxineiro.sh`
+(macOS/Linux) mata o que passou do tempo; `--dry-run` só lista.
+
 ## Comandos
 
 `npx muri-saver <comando>` (ou `node bin/cli.mjs <comando>` num clone):
@@ -232,6 +237,12 @@ Tudo fica em `~/.claude/muri-saver.json`. O `--update` preserva o que você edit
 `"vault": null` desliga o Obsidian. Precedência: flag > variável de ambiente
 (`OBSIDIAN_VAULT`, `MURI_SAVER_TZ`, `MURI_SAVER_NARRATIVE_CHAIN`...) > arquivo.
 
+No `~/.claude/settings.json`, o instalador mescla hooks e status line e mais
+nada. O bloco `_recomendado` de [`claude-config/settings.snippet.json`](./claude-config/settings.snippet.json)
+é o setup do autor pra copiar à mão: `autoCompactWindow` 250k,
+`askUserQuestionTimeout` 10m, attribution vazio e `permissions.ask` pra
+`git reset --hard`, `git push --force`, `git clean -f` e `rm -rf`.
+
 ## Multiplataforma
 
 | | macOS | Linux | Windows |
@@ -242,8 +253,7 @@ Tudo fica em `~/.claude/muri-saver.json`. O `--update` preserva o que você edit
 | Banco do ai-memory | `node:sqlite` (Node ≥ 22.5) ou `sqlite3` | idem | idem |
 | Dados do ai-memory | lidos de `ai-memory status --json` | idem | idem |
 
-Nada no código usa caminho fixo de usuário. O CI roda a suíte em macOS, Linux e
-Windows com Node 18, 22 e 24. O registro real de jobs foi exercitado no macOS;
+Nada no código usa caminho fixo de usuário. O registro real de jobs foi exercitado no macOS;
 no Linux e no Windows, a geração dos arquivos (`.timer`, XML da tarefa) é coberta
 por teste.
 
@@ -251,6 +261,7 @@ por teste.
 
 | Achado | Números reais |
 | --- | --- |
+| Contexto grande é onde a cota vai | 30 dias: turnos com **>250k** de contexto = **71%** do gasto; 64 retomadas com cache frio = **33,5M** tokens-eq |
 | Sessão maratona é o maior vilão, não a escolha de modelo | uma sessão: **2,1 bilhões de tokens de cache** em 42h / 7.059 mensagens |
 | Releitura do mesmo arquivo | **30 a 54 vezes** na mesma sessão |
 | Screenshot no lugar de texto | **501** screenshots contra **3** leituras de texto |
@@ -263,7 +274,7 @@ rotina com `muri-saver report` e `muri-saver audit`.
 ## Desenvolvimento local
 
 ```bash
-npm test                                      # 92 testes, node:test, < 2 s
+npm test                                      # 93 testes, node:test
 node bin/install.mjs --dry-run --with-all     # nada é escrito
 MURI_SAVER_SCHEDULER=dry node scripts/muri-jobs.mjs install --all   # gera os arquivos dos jobs sem registrar
 node scripts/muri-jobs.mjs list

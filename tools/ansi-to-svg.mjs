@@ -9,24 +9,43 @@ const DEFAULT_FG = '#c9d1d9';
 
 const escapeXml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+// xterm 256 cores (38;5;N / 48;5;N): 0-15 usam a paleta acima, 16-231 o cubo 6x6x6, 232-255 cinzas.
+function xterm256(n) {
+  if (n < 8) return FG[30 + n];
+  if (n < 16) return FG[90 + n - 8];
+  const hex = (v) => v.toString(16).padStart(2, '0');
+  if (n >= 232) { const g = 8 + 10 * (n - 232); return `#${hex(g)}${hex(g)}${hex(g)}`; }
+  const lv = [0, 95, 135, 175, 215, 255];
+  const i = n - 16;
+  return `#${hex(lv[Math.floor(i / 36)])}${hex(lv[Math.floor(i / 6) % 6])}${hex(lv[i % 6])}`;
+}
+
 function parseLine(line) {
   const segments = [];
   let color = DEFAULT_FG;
+  let bg = null;
   let bold = false;
   const re = /\x1b\[([0-9;]*)m/g;
   let last = 0;
   let m;
   while ((m = re.exec(line))) {
-    if (m.index > last) segments.push({ text: line.slice(last, m.index), color, bold });
-    for (const code of (m[1] || '0').split(';').map(Number)) {
-      if (code === 0) { color = DEFAULT_FG; bold = false; } else if (code === 1) bold = true;
+    if (m.index > last) segments.push({ text: line.slice(last, m.index), color, bg, bold });
+    const codes = (m[1] || '0').split(';').map(Number);
+    for (let i = 0; i < codes.length; i++) {
+      const code = codes[i];
+      if (code === 0) { color = DEFAULT_FG; bg = null; bold = false; } else if (code === 1) bold = true;
       else if (code === 22) bold = false;
       else if (code === 39) color = DEFAULT_FG;
-      else if (FG[code]) color = FG[code];
+      else if (code === 49) bg = null;
+      else if ((code === 38 || code === 48) && codes[i + 1] === 5) {
+        const c = xterm256(codes[i + 2]);
+        if (code === 38) color = c; else bg = c;
+        i += 2;
+      } else if (FG[code]) color = FG[code];
     }
     last = re.lastIndex;
   }
-  if (last < line.length) segments.push({ text: line.slice(last), color, bold });
+  if (last < line.length) segments.push({ text: line.slice(last), color, bg, bold });
   return segments;
 }
 
@@ -50,7 +69,8 @@ export function ansiToSvg(text, { title = '', fontSize = 13, maxWidth = null } =
 
   const body = parsed.map((segs, i) => {
     const y = bar + pad + i * lineH + fontSize;
-    const spans = segs.map((s) => `<tspan fill="${s.color}"${s.bold ? ' font-weight="700"' : ''}>${escapeXml(s.text)}</tspan>`).join('');
+    // Fundo (48;5;N) como contorno grosso atrás do glifo: segue a largura real da fonte, sem calcular coluna.
+    const spans = segs.map((s) => `<tspan fill="${s.color}"${s.bold ? ' font-weight="700"' : ''}${s.bg ? ` stroke="${s.bg}" stroke-width="${Math.round(fontSize * 0.95)}" stroke-linejoin="round" paint-order="stroke"` : ''}>${escapeXml(s.text)}</tspan>`).join('');
     return `<text x="${pad}" y="${y}" xml:space="preserve">${spans}</text>`;
   }).join('\n  ');
 

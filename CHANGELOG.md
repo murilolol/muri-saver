@@ -28,6 +28,14 @@ Sincroniza o repo com o setup do autor no macOS (out/2026).
   (scout-then-build, cascade, review gate). Ideias adaptadas do
   [alethe-orchestrate-skill](https://github.com/Kc1t/alethe-orchestrate-skill).
 
+### Documentação
+- READMEs, INSTALL, arquitetura e troubleshooting cobrem o guarda, a notificação, o faxineiro e o
+  bloco `_recomendado`; prints regerados (status line com o segmento do guarda, instalador 3.2.0,
+  diagrama de arquitetura).
+- `tools/build-assets.mjs` prefere o `chrome-headless-shell` do PATH ao Chrome completo, e o
+  `ansi-to-svg` entende cores de 256 (`38;5;N`/`48;5;N`).
+- Badge e menções ao CI saem do README e da arquitetura enquanto o workflow está pausado.
+
 ### Corrigido
 - Modelo da narrativa: `gemini-3.1-pro-high` saiu do `agy` (toda narrativa falhava). A cadeia
   padrão agora é `agy:gemini-4-argon-high` → `agy:gemini-3.8-flash-high` → `gemini-api:gemini-2.5-flash`.

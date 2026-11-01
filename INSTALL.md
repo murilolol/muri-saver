@@ -59,7 +59,8 @@ mesmo direto do GitHub.
 
 Isso copia a skill `muri-saver` (e `grill-me`) pra `~/.agents/skills/`, os
 hooks pra `~/.claude/hooks/`, os scripts pra `~/.claude/scripts/`, mescla os
-hooks `Stop`/`SessionStart` no seu `~/.claude/settings.json`, cria
+hooks `SessionStart`, `Stop`, `SessionEnd`, `UserPromptSubmit` (guarda de
+contexto) e `Notification` no seu `~/.claude/settings.json`, cria
 `~/.claude/CLAUDE.md` a partir do template (só se você ainda não tiver um) e
 grava tudo que fez em `~/.claude/muri-saver.json` — vault, fuso, alias e um
 manifesto com o hash de cada arquivo. É esse arquivo que os hooks leem pra
