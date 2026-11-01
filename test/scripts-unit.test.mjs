@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { run, tempDir, cleanEnv, REPO_ROOT } from './_helpers.mjs';
 import { setTomlKey, TUNE } from '../scripts/ai-memory-llm-mode.mjs';
 import { idleSessionsSql } from '../scripts/ai-memory-finalize-idle.mjs';
-import { parseArgs, buildPrompt } from '../scripts/muri-delegate.mjs';
+import { parseArgs, buildPrompt, statusOf, mcpOffArgs } from '../scripts/muri-delegate.mjs';
 import { hasNarrative, countUserMessages } from '../scripts/vault-backfill.mjs';
 
 test('aim-guard skips the wrapped command under MURI_AIM_NOCAPTURE and passes stdin through otherwise', () => {
@@ -65,6 +65,13 @@ test('muri-delegate parses options, refuses recursion and builds a read-only bri
   const bad = run('scripts/muri-delegate.mjs', ['gemini', '--write', 'oi'], { home: tempDir() });
   assert.equal(bad.status, 2);
   assert.match(bad.stderr, /escrita só via codex/);
+  assert.match(buildPrompt({ ...o, dir: '/x' }), /STATUS: NEEDS_CONTEXT/);
+  assert.equal(statusOf('ok\nSTATUS: DONE_WITH_CONCERNS\n'), 'DONE_WITH_CONCERNS');
+  assert.equal(statusOf('**STATUS: BLOCKED**\nSTATUS: DONE'), 'DONE');
+  assert.equal(statusOf('sem contrato'), '?');
+  assert.deepEqual(mcpOffArgs('[mcp_servers.rea]\ncmd = "x"\n[mcp_servers.rea.env]\n[mcp_servers.ai-memory]\n'),
+    ['-c', 'mcp_servers.rea.enabled=false', '-c', 'mcp_servers.ai-memory.enabled=false']);
+  assert.equal(parseArgs(['codex', '--mcp', 'x']).mcp, true);
 });
 
 test('vault-backfill knows which notes still need a narrative and skips trivial sessions', () => {
@@ -82,4 +89,20 @@ test('vault-backfill knows which notes still need a narrative and skips trivial 
     { type: 'user', message: { content: 'segundo pedido' } },
   ].map((o) => JSON.stringify(o)).join('\n'));
   assert.equal(countUserMessages(t, 'claude'), 2);
+});
+
+test('guarda-contexto holds one cold-cache prompt, then nudges once per milestone', { skip: process.platform === 'win32' && 'python3 fora do PATH no Windows' }, () => {
+  const home = tempDir();
+  mkdirSync(join(home, '.claude', 'hooks'), { recursive: true });
+  const transcript = join(home, 't.jsonl');
+  const turn = (ctx, ageMin) => JSON.stringify({ timestamp: new Date(Date.now() - ageMin * 60000).toISOString(), message: { usage: { input_tokens: ctx } } }) + '\n';
+  const guard = () => spawnSync('python3', [join(REPO_ROOT, 'hooks', 'guarda-contexto.py')], {
+    input: JSON.stringify({ prompt: 'oi', session_id: 's1', transcript_path: transcript }), encoding: 'utf8', env: cleanEnv(home),
+  });
+  writeFileSync(transcript, turn(100_000, 120));
+  assert.equal(JSON.parse(guard().stdout).continue, false); // cache frio: segura 1x
+  assert.equal(guard().stdout, ''); // reenvio em até 15 min passa
+  writeFileSync(transcript, turn(125_000, 1));
+  assert.match(JSON.parse(guard().stdout).hookSpecificOutput.additionalContext, /~125k/);
+  assert.equal(guard().stdout, ''); // cada marco avisa uma vez só
 });

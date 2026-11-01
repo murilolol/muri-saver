@@ -169,7 +169,7 @@ Isso, sozinho:
   e `~/.agents/skills/grill-me/SKILL.md`
 - copia `hooks/*.mjs` → `~/.claude/hooks/`
 - copia `scripts/*` → `~/.claude/scripts/` (com permissão de execução)
-- mescla os hooks `Stop`/`SessionStart` + `statusLine` em
+- mescla os hooks `SessionStart`/`Stop`/`SessionEnd`/`UserPromptSubmit`/`Notification` + `statusLine` em
   `~/.claude/settings.json` (faz backup do arquivo original primeiro)
 - cria `~/.claude/CLAUDE.md` a partir do template **só se ainda não existir**
 - com `--with-antigravity`: cria `~/.gemini/GEMINI.md`, copia a skill pra

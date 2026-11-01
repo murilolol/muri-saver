@@ -47,4 +47,5 @@ Numa semana real de uso pesado: **1% da cota semanal ≈ 1,3M tokens-eq**, 99%
 do consumo em Opus na conversa principal, e um único dia com ~36% da semana. Ou
 seja, o grosso não é o prefixo fixo (CLAUDE.md, skills), é **a quantidade de
 turnos por sessão**. As alavancas que sobram: delegar leitura e pesquisa de
-verdade, e sessões mais curtas com `/compact` em pontos naturais.
+verdade, e sessões mais curtas: `/clear` com handoff do ai-memory em pontos naturais (ou
+`/compact`), que é o que o guarda de contexto lembra em 120k/160k/200k.

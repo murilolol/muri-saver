@@ -33,7 +33,12 @@ rule lives in the muri-saver repository (docs/), not here.
 - With two or more of: >15-20 tool calls, a build over 2 min, several reads
   over 200 lines or web fetches, >30 min of heavy tool use — treat context as
   large and suggest `/compact` at a natural checkpoint.
+- When `[guarda-contexto]` shows up (the hook fires at 120k/160k/200k) and the
+  request changed topic or the task is done, suggest `/clear` plus the handoff
+  line before starting. After >1h idle the cache is cold: suggest `/compact`.
 - Browser work: page text for facts, screenshots only for visual judgment.
+  Headless screenshots in scripts: `chrome-headless-shell`, never the full
+  Chrome app (on macOS each killed full Chrome leaks a `code_sign_clone`).
 - Confirm before letting a self-pacing `/loop` keep rescheduling itself.
 
 ## 4. Delegation

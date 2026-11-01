@@ -11,7 +11,7 @@ generated: auto
 tags:
   - session
   - claude
-narrativa: agy:gemini-3.1-pro-high
+narrativa: agy:gemini-4-argon-high
 narrativa_em: "2026-10-03 14h20"
 ---
 
@@ -26,7 +26,7 @@ narrativa_em: "2026-10-03 14h20"
 <!-- auto-narrativa:start -->
 ## 🧠 Narrativa — Botão de login corrigido no mobile
 
-> [!info] Gerada por `agy:gemini-3.1-pro-high` em 2026-10-03 14h20. Bloco regerado pelo hook durante a sessão; anotações manuais vão fora dele.
+> [!info] Gerada por `agy:gemini-4-argon-high` em 2026-10-03 14h20. Bloco regerado pelo hook durante a sessão; anotações manuais vão fora dele.
 
 ### 📝 Síntese Executiva
 

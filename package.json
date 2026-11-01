@@ -1,6 +1,6 @@
 {
   "name": "muri-saver",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Governança de tokens, memória persistente (ai-memory), cadeia de LLMs com fallback e nota viva no Obsidian para Claude Code, Codex e Antigravity. macOS, Linux e Windows.",
   "type": "module",
   "license": "MIT",

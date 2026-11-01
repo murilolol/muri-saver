@@ -4,7 +4,7 @@
 //
 // Uma cadeia é uma lista de entradas "<tipo>:<modelo>[@<timeout em s>]":
 //   gemini-api:gemini-2.5-flash   API do Gemini com GEMINI_API_KEY (cota grátis por modelo)
-//   agy:gemini-3.1-pro-high       Antigravity CLI (`agy`), cota do plano Google
+//   agy:gemini-4-argon-high       Antigravity CLI (`agy`), cota do plano Google
 //   claude:claude-haiku-4-5       Claude Code headless (`claude -p`), cota do plano Claude
 //   openai:llama3.1               qualquer endpoint OpenAI-compatível (Ollama, LM Studio,
 //                                 OpenRouter, Groq...) configurado em llm.openai
@@ -24,12 +24,12 @@ export const COOLDOWN_FILE = process.env.MURI_SAVER_COOLDOWN_FILE || join(RUNTIM
 // Padrões públicos. Modelo que sumiu devolve 404 e fica 24h fora da cadeia, então
 // um id antigo aqui degrada para o próximo da lista em vez de quebrar.
 export const DEFAULT_CHAINS = {
-  narrative: ['agy:gemini-3.1-pro-high', 'agy:gemini-3.8-flash-high', 'gemini-api:gemini-2.5-flash'],
+  narrative: ['agy:gemini-4-argon-high', 'agy:gemini-3.8-flash-high', 'gemini-api:gemini-2.5-flash'],
   aiMemory: [
     'gemini-api:gemini-3.1-pro-preview',
     'gemini-api:gemini-3.8-flash',
     'gemini-api:gemini-2.5-flash',
-    'agy:gemini-3.1-pro-high',
+    'agy:gemini-4-argon-high',
     'agy:gemini-3.8-flash-high',
   ],
 };
