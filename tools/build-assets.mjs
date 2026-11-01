@@ -7,7 +7,7 @@
 //   node tools/build-assets.mjs --with-doctor   also render doctor output (needs a real local setup)
 //   node tools/build-assets.mjs --only-screenshots  re-render only the PNGs from the current examples/
 //
-// Screenshots need Google Chrome/Chromium (headless). Missing Chrome = skipped.
+// Screenshots need chrome-headless-shell (preferred, from PATH) or Chrome/Chromium. Missing = skipped.
 
 import {
   mkdtempSync, cpSync, rmSync, mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync, utimesSync,
@@ -118,21 +118,38 @@ function fakeRepo(name, branch) {
   return dir;
 }
 
+// HOME temporário: o segmento do guarda lê ~/.claude/hooks/.guarda-contexto.json, nunca o real.
+const STATUS_HOME = tmp('muri-assets-home-');
+
+// Transcript mínimo com a última resposta `minutesAgo` atrás: é o que o segmento do guarda lê.
+function fakeTranscript(ctx, minutesAgo) {
+  const file = join(tmp(), 'transcript.jsonl');
+  const timestamp = new Date(Date.now() - minutesAgo * 60_000).toISOString();
+  writeFileSync(file, `${JSON.stringify({ timestamp, message: { usage: { input_tokens: 1000, cache_read_input_tokens: ctx - 1000 } } })}\n`);
+  return file;
+}
+
 function statusline(payload, columns) {
-  return run('python3', [join(REPO, 'scripts', 'statusline.py')], { input: JSON.stringify(payload), env: { COLUMNS: String(columns) } }).replace(/\n$/, '');
+  return run('python3', [join(REPO, 'scripts', 'statusline.py')], { input: JSON.stringify(payload), env: { COLUMNS: String(columns), HOME: STATUS_HOME } }).replace(/\n$/, '');
 }
 
 function buildStatuslineSvg() {
   const now = Math.floor(Date.now() / 1000);
   const normal = statusline({
-    cwd: fakeRepo('muri-saver', 'main'), model: { display_name: 'Sonnet 5' },
-    context_window: { total_input_tokens: 170000, context_window_size: 1000000, used_percentage: 17 },
+    cwd: fakeRepo('muri-saver', 'main'), model: { display_name: 'Sonnet 5' }, transcript_path: fakeTranscript(64000, 12),
+    context_window: { total_input_tokens: 64000, context_window_size: 1000000, used_percentage: 6 },
     cost: { total_duration_ms: 106000 },
     rate_limits: { five_hour: { used_percentage: 9, resets_at: now + 3 * 3600 + 41 * 60 + 30 }, seven_day: { used_percentage: 0, resets_at: now + 167 * 3600 + 90 } },
   }, 230);
+  const watch = statusline({
+    cwd: fakeRepo('painel', 'feat/relatorio'), model: { display_name: 'Opus 5.5' }, transcript_path: fakeTranscript(170000, 49),
+    context_window: { total_input_tokens: 170000, context_window_size: 1000000, used_percentage: 17 },
+    cost: { total_duration_ms: 2950000, total_lines_added: 86, total_lines_removed: 14 },
+    rate_limits: { five_hour: { used_percentage: 41, resets_at: now + 2 * 3600 + 8 * 60 + 30 }, seven_day: { used_percentage: 23, resets_at: now + 120 * 3600 + 90 } },
+  }, 230);
   const hot = statusline({
-    cwd: fakeRepo('api-server', 'feat/login'), model: { display_name: 'Opus 5.5' },
-    context_window: { total_input_tokens: 912000, context_window_size: 1000000, used_percentage: 91 },
+    cwd: fakeRepo('api-server', 'feat/login'), model: { display_name: 'Opus 5.5' }, transcript_path: fakeTranscript(212000, 80),
+    context_window: { total_input_tokens: 212000, context_window_size: 1000000, used_percentage: 21 },
     cost: { total_duration_ms: 8049000, total_lines_added: 412, total_lines_removed: 97 },
     rate_limits: { five_hour: { used_percentage: 96, resets_at: now + 12 * 60 + 30 }, seven_day: { used_percentage: 64, resets_at: now + 51 * 3600 + 20 * 60 + 30 } },
   }, 230);
@@ -144,10 +161,13 @@ function buildStatuslineSvg() {
   }, 100);
   const gray = (s) => `\x1b[90m${s}\x1b[0m`;
   const text = [
-    gray('# sessão normal — contexto em 170k já dispara a dica de /compact'),
+    gray('# sessão normal — 🛡 mostra quanto falta pro cache esfriar (55 min sem resposta)'),
     normal,
     '',
-    gray('# sessão pesada — cores mudam em 70% (amarelo) e 90% (vermelho)'),
+    gray('# 120k — a cor segue os tokens, não o %: amarelo em 120k, vermelho em 200k'),
+    watch,
+    '',
+    gray('# parada há 1h20 com 212k — o guarda-contexto vai segurar o próximo prompt'),
     hot,
     '',
     gray('# terminal estreito (<120 colunas) — só números, sem barras'),
@@ -190,6 +210,9 @@ function buildDoctorSvg(installHome) {
 // ------------------------------------------------------------ screenshots
 
 function findChrome() {
+  // chrome-headless-shell primeiro: no macOS cada Chrome completo encerrado deixa um code_sign_clone pra trás.
+  const shell = spawnSync(process.platform === 'win32' ? 'where' : 'which', ['chrome-headless-shell'], { encoding: 'utf8' }).stdout?.split(/\r?\n/)[0];
+  if (shell) return shell;
   const candidates = {
     darwin: ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/Applications/Chromium.app/Contents/MacOS/Chromium'],
     linux: ['/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'],

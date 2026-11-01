@@ -7,7 +7,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/murilolol/muri-saver/actions/workflows/ci.yml"><img src="https://github.com/murilolol/muri-saver/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/murilolol/muri-saver/releases"><img src="https://img.shields.io/github/v/tag/murilolol/muri-saver?style=flat-square&label=version&color=blue" alt="Version" /></a>
   <img src="https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-supported-555?style=flat-square" alt="macOS, Linux and Windows" />
   <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 18+" />
@@ -16,7 +15,7 @@
 </p>
 
 <p align="center">
-  <img src="./assets/terminal-statusline.svg" alt="muri-saver status line: folder, branch, ai-memory, duration, context bar with a /compact hint, 5h and 7-day quotas and model" width="100%" />
+  <img src="./assets/terminal-statusline.svg" alt="muri-saver status line: folder, branch, ai-memory, duration, token-colored context, time left before the cache goes cold, cold-cache badge, 5h and 7-day quotas and model" width="100%" />
 </p>
 
 Anyone using a coding agent every day hits three problems: the **quota runs
@@ -32,6 +31,9 @@ screenshots against 3 text reads) and solves all three with one system:
   consolidated by a model chain that switches on its own when one hits a limit.
 - **Live notes in Obsidian**: every session becomes a note, with a narrative
   written outside your agent's quota.
+- **Context guard** in Claude Code: holds the prompt that would resume a large
+  session on a cold cache and tells you when to start a fresh one. Over 30 days
+  of real use, turns above 250k of context were 71% of the spend.
 
 The docs under `docs/` are in Portuguese; commands, config keys and code are
 the same in both languages.
@@ -96,7 +98,7 @@ Obsidian is optional.
 | `--timezone <IANA>` | system zone | File names and daily notes |
 | `--language <tag>` | `pt-BR` | Narrative language (e.g. `en`) |
 | `--alias <name>` | `muri-saver` | Install under your own name; the original still works |
-| `--narrative-chain <list>` | `agy` Pro → `agy` Flash → Gemini API | Vault narrative models; `off` keeps only the local dump |
+| `--narrative-chain <list>` | `agy` Argon → `agy` Flash → Gemini API | Vault narrative models; `off` keeps only the local dump |
 | `--ai-memory-chain <list>` | Gemini API → `agy` | Models the shim offers to ai-memory |
 | `--llm-key-file <path>` | — | `KEY=value` file to read `GEMINI_API_KEY` from (the key is never copied) |
 | `--with-jobs` / `--jobs <list>` / `--no-jobs` | none | Background jobs in the OS scheduler |
@@ -187,6 +189,9 @@ Registered with **launchd** (macOS), **systemd --user** or **crontab** (Linux)
 and **Task Scheduler** (Windows). With no free model, queue jobs exit
 immediately without spending anything.
 
+A process got stuck (headless `agy`, live-note worker)? `scripts/faxineiro.sh`
+(macOS/Linux) kills whatever ran past its time; `--dry-run` only lists.
+
 ## Commands
 
 `npx muri-saver <command>` (or `node bin/cli.mjs <command>` in a clone):
@@ -212,20 +217,26 @@ Everything lives in `~/.claude/muri-saver.json`; `--update` keeps what you edit:
 `"vault": null` turns Obsidian off. Precedence: flag > environment
 (`OBSIDIAN_VAULT`, `MURI_SAVER_TZ`, `MURI_SAVER_NARRATIVE_CHAIN`...) > file.
 
+In `~/.claude/settings.json` the installer merges hooks and the status line,
+nothing else. The `_recomendado` block in [`claude-config/settings.snippet.json`](./claude-config/settings.snippet.json)
+is the author's setup to copy by hand: `autoCompactWindow` 250k,
+`askUserQuestionTimeout` 10m, empty attribution and `permissions.ask` for
+`git reset --hard`, `git push --force`, `git clean -f` and `rm -rf`.
+
 ## Cross-platform
 
 No hardcoded user paths anywhere. npm-installed CLIs on Windows are `.cmd`
 shims: muri-saver reads the shim and runs the real `.js`/`.exe` directly,
 without a shell. The ai-memory data dir comes from `ai-memory status --json`;
-its database is read with `node:sqlite` (Node ≥ 22.5) or the `sqlite3` CLI. CI
-runs the suite on macOS, Linux and Windows with Node 18, 22 and 24. Real job
+its database is read with `node:sqlite` (Node ≥ 22.5) or the `sqlite3` CLI.
+Real job
 registration has been exercised on macOS; on Linux and Windows the generated
 files (`.timer`, task XML) are covered by tests.
 
 ## Local development
 
 ```bash
-npm test                                      # 92 tests, node:test, < 2 s
+npm test                                      # 93 tests, node:test
 node bin/install.mjs --dry-run --with-all
 MURI_SAVER_SCHEDULER=dry node scripts/muri-jobs.mjs install --all
 node scripts/vault-backfill.mjs --dry-run

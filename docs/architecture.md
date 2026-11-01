@@ -22,7 +22,7 @@ agentes ao mesmo tempo.
 ## Visão geral
 
 <p align="center">
-  <img src="../assets/architecture-diagram.png" alt="Diagrama v2: agentes carregam a governança; hooks gravam sessões novas e o ingestor grava o histórico no ai-memory e no Obsidian Vault" width="100%" />
+  <img src="../assets/architecture-diagram.png" alt="Diagrama 3.2: agentes carregam a governança; hooks gravam sessões novas e o ingestor grava o histórico no ai-memory e no Obsidian Vault" width="100%" />
 </p>
 
 Versão simplificada, em Mermaid:
@@ -31,7 +31,7 @@ Versão simplificada, em Mermaid:
 graph TD
     Gov["🛡️ Governanca CLAUDE.md GEMINI.md AGENTS.md"]
     Skill["🛡️ Skill muri-saver e delegacao"]
-    Hooks["🟧 Hooks Stop SessionEnd SessionStart"]
+    Hooks["🟧 Hooks Stop SessionEnd SessionStart UserPromptSubmit"]
     Worker["🤖 Worker da narrativa"]
     Chain["🤖 Cadeia de LLMs com cooldown"]
     Jobs["🚀 Jobs de fundo por SO"]
@@ -94,6 +94,13 @@ Scripts Node chamados pelo ciclo de vida de cada agente:
 - `codex/obsidian-codex-session.mjs` (`Stop`/`SessionEnd`, Codex CLI): só
   repassa o payload pro hook acima; o rollout do Codex é normalizado pro
   formato do Claude Code.
+- `guarda-contexto.py` (`UserPromptSubmit`, Claude Code): segura 1x o primeiro
+  prompt depois de 55 min parado com >80k de contexto (o turno regravaria o
+  cache inteiro, ~2x o custo) e injeta um lembrete de sessão nova em
+  120k/160k/200k. A status line importa as mesmas regras pra mostrar quanto
+  falta pro cache esfriar. `MURI_GUARDA=0` desliga.
+- `notify.mjs` (`Notification`, Claude Code): alerta no desktop (macOS/Linux)
+  quando o agente espera você; pula dentro do Orca. `MURI_NOTIFY=0` desliga.
 - `muri-common.mjs` e `muri-llm.mjs`: código compartilhado entre hooks e
   scripts (config, fuso, máscara de segredos, resolução de binário em
   qualquer SO, acesso ao ai-memory, cadeia de modelos com cooldown).
@@ -207,8 +214,7 @@ leitura de config em vez de importar de `lib/`.
 
 Os testes (`test/`) usam fixtures de cada agente (sessões fictícias com um
 segredo falso, HTML solto e tags de sistema de propósito) e rodam cada
-script num `HOME` temporário. O CI roda em macOS, Linux e Windows × Node
-18/22/24. Binários falsos de `agy` e `ai-memory` (`tools/test-bin/`) cobrem a
+script num `HOME` temporário. Binários falsos de `agy` e `ai-memory` (`tools/test-bin/`) cobrem a
 narrativa, a cadeia e o reprocessamento sem chamar nada de verdade.
 `tools/build-assets.mjs` usa os mesmos fixtures pra gerar
 [`examples/vault/`](../examples/vault/) e as imagens do README.

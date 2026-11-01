@@ -1,6 +1,6 @@
 <svg viewBox="0 0 820 680" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="muri-saver-arch-title muri-saver-arch-desc">
-<title id="muri-saver-arch-title">Arquitetura do muri-saver v2</title>
-<desc id="muri-saver-arch-desc">Claude Code, Codex e Antigravity carregam cada um seu arquivo de governanca (CLAUDE.md, AGENTS.md, GEMINI.md) e a skill muri-saver. Os hooks de ciclo de vida gravam cada sessao nova no ai-memory e no Obsidian Vault, lendo vault e fuso do muri-saver.json. O ingestor de sessoes le o historico local dos tres agentes e grava retroativamente nos mesmos destinos, sem LLM por padrão. O ai-memory alimenta o vault.</desc>
+<title id="muri-saver-arch-title">Arquitetura do muri-saver 3.2</title>
+<desc id="muri-saver-arch-desc">Claude Code, Codex e Antigravity carregam cada um seu arquivo de governanca (CLAUDE.md, AGENTS.md, GEMINI.md) e a skill muri-saver. Os hooks de ciclo de vida gravam cada sessao nova no ai-memory e no Obsidian Vault, lendo vault e fuso do muri-saver.json; no Claude Code, o guarda de contexto segura o prompt que retomaria um cache frio e a notificacao avisa quando o agente espera voce. O ingestor de sessoes le o historico local dos tres agentes e grava retroativamente nos mesmos destinos, sem LLM por padrão. O ai-memory alimenta o vault.</desc>
 <defs>
   <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
     <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
@@ -56,8 +56,8 @@
 
 <rect x="100" y="330" width="260" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
 <text x="230" y="362" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">Hooks de ciclo de vida</text>
-<text x="230" y="378" fill="#4f5d75" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,monospace" text-anchor="middle">SessionStart -&gt; Stop · sessões novas</text>
-<text x="230" y="392" fill="#7a8399" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,monospace" text-anchor="middle">vault e fuso via muri-saver.json</text>
+<text x="230" y="378" fill="#4f5d75" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,monospace" text-anchor="middle">SessionStart · UserPromptSubmit · Stop</text>
+<text x="230" y="392" fill="#7a8399" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,monospace" text-anchor="middle">nota viva · guarda de contexto · notificação</text>
 
 <rect x="440" y="330" width="260" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
 <text x="570" y="362" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">Ingestor de sessões</text>
