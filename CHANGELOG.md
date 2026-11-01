@@ -3,6 +3,35 @@
 Todas as mudanças relevantes do muri-saver. Formato inspirado em
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [3.2.0] — 2026-11-01
+
+Sincroniza o repo com o setup do autor no macOS (out/2026).
+
+### Adicionado
+- **Guarda de contexto** (`hooks/guarda-contexto.py`, UserPromptSubmit): segura 1x o primeiro
+  prompt depois de 55 min parado com >80k de contexto e injeta um lembrete em 120k/160k/200k.
+  Numa análise de 30 dias, turnos >250k foram 71% do gasto e 64 retomadas com cache frio
+  custaram 33,5M tokens-eq. `MURI_GUARDA=0` desliga.
+- **Status line**: cor do contexto segue os tokens (amarelo 120k, vermelho 200k) e mostra quanto
+  falta pro cache esfriar, com as mesmas regras do guarda.
+- **Notificação** (`hooks/notify.mjs`, Notification): alerta no desktop no macOS/Linux quando o
+  Claude espera você. `MURI_NOTIFY=0` desliga; pula sozinho dentro do Orca.
+- `scripts/faxineiro.sh`: mata `agy` headless e worker da nota viva presos (ver
+  [docs/background-jobs.md](./docs/background-jobs.md)).
+- `settings.snippet.json` ganhou `_recomendado`: `autoCompactWindow` 250k, `askUserQuestionTimeout`
+  10m, attribution vazio e `permissions.ask` pra comandos destrutivos de git/rm.
+- `CLAUDE.md.template`: como reagir ao `[guarda-contexto]` e `chrome-headless-shell` pra print em script.
+- `muri-delegate`: o delegado fecha com `STATUS: DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT`,
+  mostrado no cabeçalho e gravado como última coluna do `.delegations.log`.
+- `muri-delegate`: o Codex delegado sobe sem os MCPs do `config.toml`; `--mcp` mantém o comportamento antigo.
+- Skill: molde de brief (Objetivo · Pronto quando · Pode tocar · Não toque · Check) e três playbooks
+  (scout-then-build, cascade, review gate). Ideias adaptadas do
+  [alethe-orchestrate-skill](https://github.com/Kc1t/alethe-orchestrate-skill).
+
+### Corrigido
+- Modelo da narrativa: `gemini-3.1-pro-high` saiu do `agy` (toda narrativa falhava). A cadeia
+  padrão agora é `agy:gemini-4-argon-high` → `agy:gemini-3.8-flash-high` → `gemini-api:gemini-2.5-flash`.
+
 ## [3.1.0] — 2026-10-03
 
 Versão que junta o que estava rodando só na máquina do autor (orquestração

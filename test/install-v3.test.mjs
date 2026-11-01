@@ -26,7 +26,7 @@ test('install v3: SessionEnd hook, Codex forwarder pointed at the real hooks dir
   const home = tempDir();
   writeFile(join(home, '.gemini', 'config', 'hooks.json'), JSON.stringify(AGY_AIM_GROUP));
   writeFile(join(home, '.claude', 'muri-saver.json'), JSON.stringify({ version: '2.1.0', alias: 'muri-saver', narrative: { intervalMinutes: 30 }, manifest: [] }));
-  const r = run('bin/install.mjs', ['--with-all', '--with-jobs', '--narrative-chain', 'agy:gemini-3.1-pro-high,bogus', '--language', 'en'], {
+  const r = run('bin/install.mjs', ['--with-all', '--with-jobs', '--narrative-chain', 'agy:gemini-4-argon-high,bogus', '--language', 'en'], {
     home, env: { MURI_SAVER_PLATFORM: 'linux' },
   });
   assert.equal(r.status, 0, r.out);
@@ -49,7 +49,7 @@ test('install v3: SessionEnd hook, Codex forwarder pointed at the real hooks dir
 
   const cfg = JSON.parse(readFileSync(join(home, '.claude', 'muri-saver.json'), 'utf8'));
   assert.deepEqual(cfg.narrative, { intervalMinutes: 30 }, 'hand-edited keys survive');
-  assert.deepEqual(cfg.llm.narrative, ['agy:gemini-3.1-pro-high']);
+  assert.deepEqual(cfg.llm.narrative, ['agy:gemini-4-argon-high']);
   assert.equal(cfg.language, 'en');
   assert.deepEqual(cfg.jobs, ['finalize-idle', 'reprocess-parked', 'quota-snapshot', 'economy-report']);
   const units = readdirSync(join(home, '.config', 'systemd', 'user'));

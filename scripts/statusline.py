@@ -22,6 +22,8 @@ import os
 import sys
 import shutil
 import socket
+import time
+import importlib.util
 from datetime import datetime, timezone, timedelta
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -44,9 +46,9 @@ DIV = f" {COLOR['gray']}│{COLOR['reset']} "
 PCT_YELLOW_AT = 70
 PCT_RED_AT = 90
 
-CONTEXT_TOKENS_WATCH_AT = 100000
-CONTEXT_TOKENS_COMPACT_AT = 150000
-CONTEXT_TOKENS_URGENT_AT = 250000
+CONTEXT_TOKENS_WATCH_AT = 120000
+CONTEXT_TOKENS_COMPACT_AT = 200000
+CONTEXT_TOKENS_URGENT_AT = 240000
 CONTEXT_PCT_WATCH_AT = 40
 CONTEXT_PCT_COMPACT_AT = 70
 CONTEXT_PCT_URGENT_AT = 90
@@ -54,8 +56,8 @@ CONTEXT_PCT_URGENT_AT = 90
 CONTEXT_HINT_TIERS = [
     "tranquilo",
     "acompanhe o contexto",
-    "considere /compact",
-    "/compact ou /clear agora",
+    "considere /clear",
+    "/clear agora (compacta em 250k)",
 ]
 
 BAR_FILLED = "▓"
@@ -203,6 +205,37 @@ def countdown_from_epoch(reset_epoch_s):
         return None
 
 
+def guarda_segment(data):
+    """Cache que o guarda-contexto vigia: quanto falta pra esfriar, janela liberada ou selo de cache frio.
+    Usa as regras e as cores do próprio hook pra nunca divergir dele."""
+    try:
+        caminho = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "hooks", "guarda-contexto.py")
+        spec = importlib.util.spec_from_file_location("guarda", caminho)
+        g = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(g)
+        uso = g.ultimo_uso(data.get("transcript_path") or "")
+    except Exception:
+        return None
+    if not uso:
+        return None
+    ctx, ts = uso
+    agora = time.time()
+    parado = (agora - ts) / 60
+    if parado <= g.FRIO_MIN:
+        resta = int(g.FRIO_MIN - parado)
+        cor = g.VERM if resta < 10 and ctx > g.FRIO_CTX else g.BRANCO
+        return f"{cor}🛡 cache {resta}m{g.R}"
+    try:
+        liberado = json.load(open(g.ESTADO)).get(data.get("session_id", ""), {}).get("liberado_ate", 0)
+    except (OSError, ValueError):
+        liberado = 0
+    if agora < liberado:
+        return f"{g.CINZA}🛡 liberado {int((liberado - agora) // 60)}m{g.R}"
+    if ctx > g.FRIO_CTX:
+        return f"{g.SELO} CACHE FRIO {g.R} {g.VERM}{g.duracao(parado)}{g.R}"
+    return f"{g.CINZA}🛡 cache frio{g.R}"
+
+
 def build_statusline():
     try:
         data = json.load(sys.stdin)
@@ -262,6 +295,11 @@ def build_statusline():
     if used_tokens is not None and pct_used is not None:
         pct_int = round(pct_used)
         color = pct_color(pct_int)
+        # Com janela de 1M o % fica baixo: a cor segue os tokens (amarelo 120k, vermelho 200k).
+        if used_tokens >= CONTEXT_TOKENS_COMPACT_AT:
+            color = COLOR["red"]
+        elif used_tokens >= CONTEXT_TOKENS_WATCH_AT and color == COLOR["white"]:
+            color = COLOR["yellow"]
         tokens_str = f"{format_k(used_tokens)}/{format_k(window_size)}"
         if is_narrow:
             segments.append(f"{COLOR['white']}◔ {tokens_str} {color}{pct_int}%{COLOR['reset']}")
@@ -271,6 +309,10 @@ def build_statusline():
             hint_text = CONTEXT_HINT_TIERS[tier] if tier is not None else None
             core = f"{COLOR['white']}◔ {tokens_str} {color}{bar} {pct_int}%{COLOR['reset']}"
             segments.append(core + build_inline_suffix(hint_text))
+
+    guarda = guarda_segment(data)
+    if guarda:
+        segments.append(guarda)
 
     # Quotas 5h / 7d (rate_limits só vem em contas Pro/Max, após a 1ª resposta da API)
     for label, key in (("5h", "five_hour"), ("7d", "seven_day")):

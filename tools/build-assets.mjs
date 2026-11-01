@@ -86,7 +86,7 @@ function buildExamples() {
   node('hooks/obsidian-vault-check.mjs', [workerInput], {
     env: {
       ...liveEnv, MURI_SAVER_NOW: '2026-10-03T14:20:00Z', MURI_VAULT_WORKER: '1',
-      MURI_SAVER_NARRATIVE_CHAIN: 'agy:gemini-3.1-pro-high', MURI_SAVER_AGY_BIN: join(REPO, 'tools', 'test-bin', 'fake-agy.mjs'),
+      MURI_SAVER_NARRATIVE_CHAIN: 'agy:gemini-4-argon-high', MURI_SAVER_AGY_BIN: join(REPO, 'tools', 'test-bin', 'fake-agy.mjs'),
     },
   });
   log('nota viva v2 de exemplo (agy falso)');

@@ -45,6 +45,34 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "<HOME>/.claude/hooks/guarda-contexto.py"
+            ]
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "<HOME>/.claude/hooks/notify.mjs"
+            ]
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -53,5 +81,25 @@
     "padding": 1
   },
   "_nota_ai_memory_hooks": "Os hooks de SessionStart/Stop/PreToolUse/PostToolUse/etc do PRÓPRIO ai-memory (que chamam o binário `ai-memory hook --event ...`) NÃO estão neste snippet de propósito — eles são gerados e mantidos pelo instalador oficial do ai-memory. Depois de instalar o binário, rode `ai-memory install-hooks --client claude-code` (ver docs/ai-memory-obsidian-setup.md) pra essa parte ser adicionada automaticamente e corretamente versionada.",
-  "_nota_nota_viva": "Stop grava o dump e, a cada 15 min de sessão, dispara a narrativa num processo à parte (o Stop volta na hora). SessionEnd gera a versão final. Os dois apontam pro mesmo hook."
+  "_nota_nota_viva": "Stop grava o dump e, a cada 15 min de sessão, dispara a narrativa num processo à parte (o Stop volta na hora). SessionEnd gera a versão final. Os dois apontam pro mesmo hook.",
+  "_recomendado": {
+    "_comment": "O instalador não mexe nestas chaves: copie pro seu settings.json se quiser o mesmo setup do autor.",
+    "autoCompactWindow": 250000,
+    "askUserQuestionTimeout": "10m",
+    "attribution": {
+      "commit": "",
+      "pr": ""
+    },
+    "permissions": {
+      "ask": [
+        "Bash(git reset --hard:*)",
+        "Bash(git push --force:*)",
+        "Bash(git push -f:*)",
+        "Bash(git clean -f:*)",
+        "Bash(git clean -fd:*)",
+        "Bash(rm -rf:*)"
+      ]
+    }
+  },
+  "_nota_guarda": "UserPromptSubmit roda o guarda-contexto: segura 1x o primeiro prompt depois de 55 min parado com >80k de contexto (o próximo turno regravaria o cache inteiro) e lembra de abrir sessão nova em 120k/160k/200k. MURI_GUARDA=0 desliga. Notification avisa no desktop (macOS/Linux) quando o Claude espera você; MURI_NOTIFY=0 desliga."
 }

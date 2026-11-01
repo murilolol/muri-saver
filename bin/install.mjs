@@ -57,7 +57,7 @@ Instalação
   --language <tag>          Idioma das narrativas do vault (padrão: pt-BR; ex: en, es)
 
 Modelos (cadeia de LLMs; ver docs/llm-chain.md)
-  --narrative-chain <lista> Modelos da narrativa do vault, ex: "agy:gemini-3.1-pro-high,gemini-api:gemini-2.5-flash"
+  --narrative-chain <lista> Modelos da narrativa do vault, ex: "agy:gemini-4-argon-high,gemini-api:gemini-2.5-flash"
                             ("off" desliga: o vault fica só com o dump local)
   --ai-memory-chain <lista> Modelos que o shim oferece ao ai-memory
   --llm-key-file <caminho>  Arquivo KEY=valor de onde ler GEMINI_API_KEY etc. (a chave nunca é copiada)

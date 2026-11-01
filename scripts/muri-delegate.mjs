@@ -17,7 +17,8 @@
 //   --file F         anexa o conteúdo de F ao brief (repetível)
 //   --lines N        máx. de linhas devolvidas (padrão: 60)
 //   --timeout S      mata o delegado após S segundos (padrão: 900)
-// Saída: cabeçalho + até N linhas; resposta completa num arquivo temporário.
+//   --mcp            (só codex) mantém os MCPs do config.toml (padrão: desligados)
+// Saída: cabeçalho (com o STATUS do delegado) + até N linhas; resposta completa num arquivo temporário.
 // Exit: 0 ok · 2 uso/pré-condição · 3 o delegado alterou arquivos numa tarefa
 //       somente leitura · 64 recursão · 75 cota esgotada (troque de delegado)
 
@@ -35,10 +36,11 @@ function die(msg, code = 2) {
 }
 
 export function parseArgs(argv) {
-  const o = { agent: argv[0], write: false, dir: process.cwd(), model: '', effort: 'medium', files: [], lines: 60, timeout: 900, brief: '' };
+  const o = { agent: argv[0], write: false, mcp: false, dir: process.cwd(), model: '', effort: 'medium', files: [], lines: 60, timeout: 900, brief: '' };
   for (let i = 1; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--write') o.write = true;
+    else if (a === '--mcp') o.mcp = true;
     else if (a === '--cd') o.dir = argv[++i];
     else if (a === '--model') o.model = argv[++i];
     else if (a === '--effort') o.effort = argv[++i];
@@ -66,6 +68,7 @@ export function buildPrompt(o) {
 2. ${mode}
 3. Consulte o ai-memory só se o brief exigir histórico do projeto.
 4. Responda em no máximo ${o.lines} linhas, direto, sem preâmbulo: resultado, arquivos relevantes (caminho:linha), riscos/dúvidas.
+5. A última linha é exatamente uma destas: STATUS: DONE · STATUS: DONE_WITH_CONCERNS · STATUS: BLOCKED · STATUS: NEEDS_CONTEXT
 
 BRIEF:
 ${o.brief}`;
@@ -74,6 +77,18 @@ ${o.brief}`;
     prompt += `\n\n--- ARQUIVO: ${f} ---\n${readFileSync(f, 'utf8').slice(0, 200000)}`;
   }
   return prompt;
+}
+
+// Última linha STATUS: que o delegado escreveu; '?' quando ele ignorou o contrato.
+export function statusOf(text) {
+  const all = [...String(text).matchAll(/^\W*STATUS:\s*(DONE_WITH_CONCERNS|DONE|BLOCKED|NEEDS_CONTEXT)\b/gm)];
+  return all.length ? all.at(-1)[1] : '?';
+}
+
+// Delegado sobe sem MCP (schemas de tool custam cota e startup); --mcp desliga isso.
+export function mcpOffArgs(configToml) {
+  return [...String(configToml).matchAll(/^\[mcp_servers\.([A-Za-z0-9_-]+)\]\s*$/gm)]
+    .flatMap((m) => ['-c', `mcp_servers.${m[1]}.enabled=false`]);
 }
 
 function main() {
@@ -127,6 +142,8 @@ function main() {
     const args = ['exec', '-C', o.dir, '-s', o.write ? 'workspace-write' : 'read-only', '-c', `model_reasoning_effort=${o.effort}`,
       '--ephemeral', '--skip-git-repo-check', '-o', out];
     if (o.model) args.push('-m', o.model);
+    const cfg = join(process.env.CODEX_HOME || join(os.homedir(), '.codex'), 'config.toml');
+    if (!o.mcp && existsSync(cfg)) args.push(...mcpOffArgs(readFileSync(cfg, 'utf8')));
     args.push('-');
     const r = spawnSync(codex.cmd, [...codex.pre, ...args], {
       env, input: prompt, encoding: 'utf8', timeout: o.timeout * 1000, killSignal: 'SIGKILL', maxBuffer: 64 * 1024 * 1024, windowsHide: true,
@@ -139,8 +156,9 @@ function main() {
   writeFileSync(out, text);
   const secs = Math.round((Date.now() - t0) / 1000);
   const mode = o.write ? 'write' : 'read';
+  const status = statusOf(text);
   appendLog(join(RUNTIME_SCRIPTS_DIR, '.delegations.log'),
-    `${new Date().toISOString()}\t${o.agent}\t${model}\t${o.effort}\t${mode}\t${secs}s\trc=${rc}\t${Buffer.byteLength(text)}B\t${o.dir}`);
+    `${new Date().toISOString()}\t${o.agent}\t${model}\t${o.effort}\t${mode}\t${secs}s\trc=${rc}\t${Buffer.byteLength(text)}B\t${o.dir}\t${status}`);
 
   if (rc !== 0 || !text.trim()) {
     const log = readFileSync(full, 'utf8');
@@ -151,7 +169,7 @@ function main() {
   }
 
   const lines = text.replace(/\s+$/, '').split('\n');
-  console.log(`[muri-delegate] ${o.agent} (${model}, ${o.effort}, ${mode}) ${secs}s · resposta completa: ${out}`);
+  console.log(`[muri-delegate] ${o.agent} (${model}, ${o.effort}, ${mode}) ${secs}s · STATUS: ${status} · resposta completa: ${out}`);
   console.log(lines.slice(0, o.lines).join('\n'));
   if (lines.length > o.lines) console.log(`[... truncado: ${lines.length} linhas no total; use grep em ${out} se precisar]`);
 
