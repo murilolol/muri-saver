@@ -36,6 +36,11 @@ apply them together with the universal rules.
   suggest a fresh session (the automatic handoff keeps continuity). At a
   natural cut-off point, close even if "it could continue". Large context:
   a pointed question → memory query; otherwise close with a handoff.
+  A 30-day audit: turns above 250k context were 71% of the spend and cold-cache
+  resumes cost 33.5M tokens-eq. Hence `autoCompactWindow: 250000`, the
+  `guarda-contexto.py` hook (holds the first prompt after 55 min idle with
+  >80k context; nudges a fresh session at 120k/160k/200k) and the token-colored
+  status line. Off switch: `MURI_GUARDA=0`.
 - **Never** skip a needed test, drop a requirement or stop early to save tokens.
 
 ## Task profiles
@@ -69,6 +74,17 @@ It returns ≤60 lines (full answer in a file), ~25-45 s per call.
 | Code review / second opinion | `codex` (read-only, real sandbox) | automatic |
 | Well-specified implementation, boilerplate, mass refactor, tests | `codex --write` | announce "→ Codex will do X" and **wait for the OK** |
 | Architecture, ambiguous decisions, final diff review, browser UI, conversation | you | — |
+
+Brief template (the delegate never sees this conversation): `Goal:` · `Done when:` ·
+`May touch:` (paths) · `Do not touch:` · `Check:` (command). The delegate ends with
+`STATUS: DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT`, shown in the header: on DONE read only the
+summary; on BLOCKED/NEEDS_CONTEXT resend with what was missing. Codex delegates start without MCP
+servers; pass `--mcp` only when the brief needs one.
+
+Playbooks: unfamiliar code → `gemini --effort low` maps it (path:line), then `codex --write` builds
+(scout-then-build). Mechanical change → `codex --write` plus the `Check:`; on failure, one retry with
+the error in the brief (cascade). Ask `codex` for a read-only review only when the diff is over ~80
+lines or touches security or money (review gate).
 
 Details, exit codes and what never to delegate:
 [references/delegation.md](references/delegation.md).

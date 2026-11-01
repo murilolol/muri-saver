@@ -34,10 +34,10 @@ o próximo da lista em vez de quebrar.
 ```json
 {
   "llm": {
-    "narrative": ["agy:gemini-3.1-pro-high", "agy:gemini-3.8-flash-high", "gemini-api:gemini-2.5-flash"],
+    "narrative": ["agy:gemini-4-argon-high", "agy:gemini-3.8-flash-high", "gemini-api:gemini-2.5-flash"],
     "aiMemory": [
       "gemini-api:gemini-3.1-pro-preview", "gemini-api:gemini-3.8-flash", "gemini-api:gemini-2.5-flash",
-      "agy:gemini-3.1-pro-high", "agy:gemini-3.8-flash-high"
+      "agy:gemini-4-argon-high", "agy:gemini-3.8-flash-high"
     ]
   }
 }
@@ -72,7 +72,7 @@ No `~/.claude/muri-saver.json` (o `--update` preserva o que você editar):
 Ou pelo instalador:
 
 ```bash
-node bin/install.mjs --update --narrative-chain "agy:gemini-3.1-pro-high,gemini-api:gemini-2.5-flash"
+node bin/install.mjs --update --narrative-chain "agy:gemini-4-argon-high,gemini-api:gemini-2.5-flash"
 node bin/install.mjs --update --narrative-chain off      # vault só com o dump local
 node bin/install.mjs --update --llm-key-file ~/.config/muri-saver/llm.env
 ```

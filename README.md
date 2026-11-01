@@ -127,7 +127,9 @@ o instalador sobrescreve ganham backup em `~/.claude/muri-saver-backups/`.
 | **Relatório de economia** ([docs](./docs/economy-report.md)) | sob demanda / semanal | Quanto da cota foi pra onde, medido nos seus transcripts |
 | **Ingestor** ([docs](./docs/session-ingestor.md)) | sob demanda | Importa o histórico antigo de cada agente, sem LLM |
 | **Auditoria** ([docs](./docs/audit.md)) | sob demanda | Tokens observados e chamadas repetidas, local |
-| **Status line** | sempre (Claude Code) | Contexto com dica de `/compact`, cotas de 5h/7d com contagem regressiva |
+| **Status line** | sempre (Claude Code) | Contexto colorido por tokens (amarelo 120k, vermelho 200k), cotas de 5h/7d com contagem regressiva e quanto falta pro cache esfriar |
+| **Guarda de contexto** | sempre (Claude Code) | Segura 1x o prompt depois de 55 min parado com >80k (a retomada regravaria o cache inteiro) e lembra de abrir sessão nova em 120k/160k/200k. `MURI_GUARDA=0` desliga |
+| **Notificação** | sempre (Claude Code, macOS/Linux) | Alerta no desktop quando o Claude está esperando você. `MURI_NOTIFY=0` desliga |
 
 ## Como funciona
 
@@ -218,7 +220,7 @@ Tudo fica em `~/.claude/muri-saver.json`. O `--update` preserva o que você edit
   "language": "pt-BR",
   "agents": ["claude", "codex", "antigravity"],
   "llm": {
-    "narrative": ["agy:gemini-3.1-pro-high", "gemini-api:gemini-2.5-flash"],
+    "narrative": ["agy:gemini-4-argon-high", "gemini-api:gemini-2.5-flash"],
     "apiKeyFile": "~/.config/muri-saver/llm.env",
     "shim": true
   },

@@ -32,7 +32,7 @@ function fakeOpenAi() {
 }
 
 test('parseEntry understands kind:model@timeout and the legacy "api:" prefix', () => {
-  assert.deepEqual(llm.parseEntry('agy:gemini-3.1-pro-high@60'), { kind: 'agy', model: 'gemini-3.1-pro-high', timeoutMs: 60000, key: 'agy:gemini-3.1-pro-high' });
+  assert.deepEqual(llm.parseEntry('agy:gemini-4-argon-high@60'), { kind: 'agy', model: 'gemini-4-argon-high', timeoutMs: 60000, key: 'agy:gemini-4-argon-high' });
   assert.equal(llm.parseEntry('api:gemini-2.5-flash').kind, 'gemini-api');
   assert.equal(llm.parseEntry('nada'), null);
   assert.equal(llm.parseEntry('foo:bar'), null);

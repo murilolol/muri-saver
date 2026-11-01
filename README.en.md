@@ -120,7 +120,9 @@ backed up to `~/.claude/muri-saver-backups/`.
 | **Economy report** | on demand / weekly | Where your quota went, measured from your transcripts |
 | **Ingestor** | on demand | Imports each agent's old history, no LLM |
 | **Audit** | on demand | Observed tokens and repeated calls, locally |
-| **Status line** | always (Claude Code) | Context with a `/compact` hint, 5h/7d quotas with countdown |
+| **Status line** | always (Claude Code) | Token-colored context (yellow 120k, red 200k), 5h/7d quotas with countdown and time left before the cache goes cold |
+| **Context guard** | always (Claude Code) | Holds the first prompt once after 55 min idle with >80k context (resuming would rewrite the whole cache) and nudges a fresh session at 120k/160k/200k. `MURI_GUARDA=0` turns it off |
+| **Notification** | always (Claude Code, macOS/Linux) | Desktop alert when Claude is waiting for you. `MURI_NOTIFY=0` turns it off |
 
 ## How it works
 
@@ -201,7 +203,7 @@ Everything lives in `~/.claude/muri-saver.json`; `--update` keeps what you edit:
   "vault": "/path/to/vault",
   "timezone": "Europe/Lisbon",
   "language": "en",
-  "llm": { "narrative": ["agy:gemini-3.1-pro-high", "gemini-api:gemini-2.5-flash"], "shim": true },
+  "llm": { "narrative": ["agy:gemini-4-argon-high", "gemini-api:gemini-2.5-flash"], "shim": true },
   "narrative": { "intervalMinutes": 15 },
   "jobs": ["finalize-idle", "reprocess-parked"]
 }

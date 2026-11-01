@@ -78,6 +78,14 @@ Tudo em `~/.claude/hooks/`:
 | `.vault-backfill.log` | uma linha por nota |
 | `.ai-memory-llm-shim.log` | uma linha por chamada ao modelo |
 
+## Faxineiro (macOS/Linux, opcional)
+
+`scripts/faxineiro.sh` é uma rede de segurança contra processo preso: mata `agy`
+headless órfão ou rodando há mais de 15 min e worker da nota viva acima do teto.
+Dev server com mais de 3 dias só vira aviso (macOS, 1x por dia). Não entra no
+`muri-saver jobs`: agende você mesmo a cada 10 min (LaunchAgent ou
+`*/10 * * * * bash ~/.claude/scripts/faxineiro.sh`). `--dry-run` só lista.
+
 ## Limitações conhecidas
 
 - **Windows**: a tarefa roda `node.exe` direto, então uma janela de console pode
