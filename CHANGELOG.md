@@ -35,6 +35,10 @@ Sincroniza o repo com o setup do autor no macOS (out/2026).
 - `tools/build-assets.mjs` prefere o `chrome-headless-shell` do PATH ao Chrome completo, e o
   `ansi-to-svg` entende cores de 256 (`38;5;N`/`48;5;N`).
 - Badge e menções ao CI saem do README e da arquitetura enquanto o workflow está pausado.
+- Vídeo de apresentação (90 s) e seis quadros dele no README.
+- README novo, em pt e en: banner, gráfico da cota e cartão dos achados gerados de
+  `assets/readme/dados.json` por `tools/build-readme.mjs` (claro e escuro). Opções do instalador,
+  comandos e configuração foram para `docs/reference.md` e `docs/reference.en.md`.
 
 ### Corrigido
 - Modelo da narrativa: `gemini-3.1-pro-high` saiu do `agy` (toda narrativa falhava). A cadeia
