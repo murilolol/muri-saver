@@ -1,152 +1,148 @@
-<h1 align="center">muri-saver</h1>
-
-<p align="center"><em>Gaste menos cota, nunca perca contexto e tenha um diário legível de tudo que a IA fez. Para Claude Code, Codex e Antigravity, em macOS, Linux e Windows.</em></p>
+<!-- gerado:banner -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/banner-escuro.svg">
+  <img src="assets/readme/banner-claro.svg" width="100%" alt="muri-saver · Menos cota, nenhum contexto perdido e um diário de tudo. 3 agentes, 3 plataformas, 0 dependências, 93 testes.">
+</picture>
+<!-- /gerado:banner -->
 
 <p align="center">
-  <a href="./README.en.md">English</a> · <strong>Português</strong>
+  <b>Português</b> &nbsp;·&nbsp; <a href="README.en.md">English</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/murilolol/muri-saver/releases"><img src="https://img.shields.io/github/v/tag/murilolol/muri-saver?style=flat-square&label=vers%C3%A3o&color=blue" alt="Versão" /></a>
-  <img src="https://img.shields.io/badge/macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-suportado-555?style=flat-square" alt="macOS, Linux e Windows" />
-  <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 18+" />
-  <img src="https://img.shields.io/badge/depend%C3%AAncias-zero-brightgreen?style=flat-square" alt="Zero dependências" />
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT" />
+  <a href="#instalar">Instalar</a> &nbsp;·&nbsp;
+  <a href="docs/architecture.md">Arquitetura</a> &nbsp;·&nbsp;
+  <a href="docs/llm-chain.md">Cadeia de LLMs</a> &nbsp;·&nbsp;
+  <a href="docs/vault-live-notes.md">Nota viva</a> &nbsp;·&nbsp;
+  <a href="docs/reference.md">Referência</a> &nbsp;·&nbsp;
+  <a href="CHANGELOG.md">Versões</a>
 </p>
 
-<p align="center">
-  <img src="./assets/terminal-statusline.svg" alt="Status line do muri-saver: pasta, branch, ai-memory, duração, contexto colorido por tokens, quanto falta pro cache esfriar, selo de cache frio, cotas de 5h e 7 dias e modelo" width="100%" />
-</p>
+Kit de governança, memória e registro para agentes de código. Gasta menos cota, não deixa o contexto evaporar entre sessões e transforma cada sessão numa nota legível no Obsidian. Funciona no **Claude Code**, no **Codex** e no **Antigravity**, em macOS, Linux e Windows, com um instalador em Node e nenhuma dependência.
 
-Quem usa agente de código todo dia esbarra em três problemas: a **cota acaba**
-sem você entender por quê, o **contexto evapora** entre sessões e não sobra
-**nenhum registro legível** do que foi feito. O muri-saver nasceu de auditar
-transcripts reais (uma sessão de 42h, um arquivo relido 54 vezes, 501
-screenshots contra 3 leituras de texto) e resolve os três com um sistema só:
+> [!NOTE]
+> Os números deste README vêm do uso real do autor e servem de diagnóstico, não de benchmark. Meça a sua rotina com `muri-saver report` e `muri-saver audit`. As capturas do vault usam dados fictícios de [`examples/vault/`](examples/vault/).
 
-- **Governança curta** carregada em toda sessão, mais a skill `muri-saver`
-  (modo de economia agressiva sob demanda) e delegação para outros agentes na
-  cota deles.
-- **Memória persistente** com o [ai-memory](https://github.com/akitaonrails/ai-memory),
-  consolidada por uma cadeia de modelos que troca sozinha quando um bate no limite.
-- **Nota viva no Obsidian**: toda sessão vira uma nota, com narrativa gerada fora
-  da cota do seu agente.
-- **Guarda de contexto** no Claude Code: segura o prompt que retomaria uma sessão
-  grande com o cache já frio e lembra a hora de abrir sessão nova. Em 30 dias de
-  uso real, turnos com mais de 250k de contexto foram 71% do gasto.
+## Por que existe
 
-## Vídeo
+Quem usa agente de código todo dia esbarra em três problemas: a **cota acaba** sem você entender por quê, o **contexto evapora** entre sessões e não sobra **nenhum registro legível** do que foi feito.
+
+O muri-saver nasceu de auditar transcripts reais. Uma sessão sozinha gastou 2,1 bilhões de tokens de cache em 42 horas; um arquivo foi relido 54 vezes na mesma sessão; a automação de navegador tirou 501 screenshots onde 3 leituras de texto bastavam. Cada regra do kit responde a um desses achados, e o resto roda sozinho em hooks, sem você precisar lembrar.
+
+## Em 90 segundos
 
 https://github.com/user-attachments/assets/c69dbadb-41bb-4152-825b-ace8e280813f
 
-<sub>90 s, sem narração. Se o player não carregar, <a href="https://github.com/user-attachments/assets/c69dbadb-41bb-4152-825b-ace8e280813f">abra o vídeo</a>. Números da tela: 30 dias de uso real até 22/10/2026; telas de terminal marcadas como simulação usam as cores, limites e textos dos scripts reais.</sub>
+<sub>Sem narração. Se o player não carregar, <a href="https://github.com/user-attachments/assets/c69dbadb-41bb-4152-825b-ace8e280813f">abra o vídeo</a>. Telas de terminal marcadas como simulação usam as cores, os limites e os textos dos scripts reais.</sub>
 
-| Status line | Guarda de contexto | `/compact` na hora certa |
-| --- | --- | --- |
-| ![Status line com contexto, cache e cotas](./assets/video/statusline.png) | ![Guarda de contexto segurando um prompt com o cache frio](./assets/video/guarda-contexto.png) | ![/compact levando o contexto de 218k para 34k](./assets/video/compact.png) |
-| **Memória entre sessões** | **Skills e conectores** | **Onde a cota vai** |
-| ![Sessão nova do ai-memory lembrando de onde parou](./assets/video/ai-memory.png) | ![Skills, conectores e MCP](./assets/video/skills.png) | ![71% do gasto em turnos acima de 250k](./assets/video/cota.png) |
+<table>
+  <tr>
+    <td width="33%"><img src="assets/video/statusline.png" alt="Status line com contexto, cache e cotas"><br><sub><b>Status line:</b> contexto, cache e cotas num relance</sub></td>
+    <td width="33%"><img src="assets/video/guarda-contexto.png" alt="Guarda de contexto segurando um prompt com o cache frio"><br><sub><b>Guarda de contexto:</b> segura a retomada cara</sub></td>
+    <td width="33%"><img src="assets/video/compact.png" alt="/compact levando o contexto de 218k para 34k"><br><sub><b><code>/compact</code> na hora certa:</b> 218k → 34k</sub></td>
+  </tr>
+  <tr>
+    <td><img src="assets/video/ai-memory.png" alt="Sessão nova do ai-memory lembrando de onde parou"><br><sub><b>Memória:</b> a sessão nova sabe de onde parou</sub></td>
+    <td><img src="assets/video/skills.png" alt="Skills, conectores e MCP"><br><sub><b>Skills e conectores</b> sob demanda</sub></td>
+    <td><img src="assets/video/cota.png" alt="71% do gasto em turnos acima de 250k"><br><sub><b>Onde a cota vai:</b> 71% acima de 250k</sub></td>
+  </tr>
+</table>
 
-## Índice
+## O que você vê no terminal
 
-- [Vídeo](#vídeo)
-- [Galeria](#galeria)
-- [Como usar](#como-usar)
-- [Opções do instalador](#opções-do-instalador)
-- [O que vem junto](#o-que-vem-junto)
-- [Como funciona](#como-funciona)
-- [Cadeia de LLMs](#cadeia-de-llms)
-- [Jobs de fundo](#jobs-de-fundo)
-- [Comandos](#comandos)
-- [Configuração](#configuração)
-- [Multiplataforma](#multiplataforma)
-- [Achados que justificam as regras](#achados-que-justificam-as-regras)
-- [Desenvolvimento local](#desenvolvimento-local)
-- [Documentação](#documentação)
-- [Contribuindo](#contribuindo)
-- [Licença e créditos](#licença-e-créditos)
+<img src="assets/terminal-statusline.svg" width="100%" alt="Status line do muri-saver: pasta, branch, ai-memory, duração, contexto colorido por tokens, quanto falta pro cache esfriar, selo de cache frio, cotas de 5h e 7 dias e modelo">
 
-## Galeria
+- **Status line:** o contexto muda de cor pelos tokens (amarelo em 120k, vermelho em 200k), mostra quanto falta para o cache esfriar e as cotas de 5 horas e 7 dias com contagem regressiva.
+- **Guarda de contexto:** depois de 55 minutos parado com mais de 80k de contexto, segura uma vez o próximo prompt, porque a retomada regravaria o cache inteiro. Em 120k, 160k e 200k, lembra a hora de abrir sessão nova. `MURI_GUARDA=0` desliga.
+- **Notificação:** alerta no desktop quando o Claude está esperando você (macOS e Linux). `MURI_NOTIFY=0` desliga.
+- **Skill `muri-saver`:** diga "muri saver" e o agente entra no modo de economia agressiva: não reler, paralelizar, perfil por tarefa e sessões curtas.
 
-| Nota de sessão no vault | Diário cross-agente | `doctor` depois de instalar |
-| --- | --- | --- |
-| ![Nota de sessão com síntese, decisões, ações e arquivos](./assets/vault-session.png) | ![Daily do dia com as sessões dos três agentes e uma chave mascarada](./assets/vault-daily.png) | ![Saída do doctor com todas as checagens OK](./assets/terminal-doctor.svg) |
+## O que fica registrado
 
-As imagens usam dados fictícios de [`examples/vault/`](./examples/vault/), com
-uma chave falsa colada de propósito (ela aparece como `[REDACTED:ANTHROPIC_KEY]`).
+<img src="assets/vault-session.png" width="300" align="right" alt="Nota de sessão no Obsidian com síntese, decisões, ações e arquivos tocados">
 
-## Como usar
+1. **Cada turno** grava um dump local da sessão no seu vault, na hora, sem esperar modelo nenhum.
+2. **A cada 15 minutos**, um processo à parte escreve a narrativa: síntese, decisões, ações e arquivos.
+3. **No fim da sessão**, a narrativa ganha a versão final e entra no Daily do dia, junto com as sessões dos outros agentes.
+4. **O ai-memory** consolida a sessão em páginas pesquisáveis, e a próxima sessão começa sabendo de onde parou.
+5. **Segredos são mascarados** antes de qualquer gravação e antes de o texto ir para o modelo: uma chave colada vira `[REDACTED:ANTHROPIC_KEY]`.
+
+A narrativa e a consolidação usam uma [cadeia de modelos](docs/llm-chain.md) que troca sozinha quando um bate no limite. **Nenhum padrão usa a cota do Claude.**
+
+[A nota viva em detalhe →](docs/vault-live-notes.md)
+
+<br clear="right">
+
+## Onde a cota vai
+
+<!-- gerado:cota -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/cota-escuro.svg">
+  <img src="assets/readme/cota-claro.svg" width="100%" alt="Gasto do Claude Code em 30 dias por faixa de contexto do turno: até 150k 11%, 150–250k 17%, acima de 250k 71%. Os turnos acima de 250k foram 52% dos turnos e 71% do gasto.">
+</picture>
+<!-- /gerado:cota -->
+
+Trinta dias de uso medidos turno a turno mostraram que o problema não é a escolha de modelo, é o tamanho do contexto. Os turnos acima de 250k foram metade dos turnos e **71% do gasto**, porque cada um custa cerca de 2,5 vezes um turno de 100 a 150k. Na mesma análise, 64 retomadas com o cache já frio custaram 33,5 milhões de tokens-eq, perto de 11 pontos da cota semanal no mês.
+
+Daí a status line colorida por tokens, o guarda de contexto e o `autoCompactWindow` de 250k recomendado no [`settings.snippet.json`](claude-config/settings.snippet.json).
+
+## Os achados
+
+<!-- gerado:achados -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/achados-escuro.svg">
+  <img src="assets/readme/achados-claro.svg" width="100%" alt="71% do gasto em turnos acima de 250k; 2,1 bi tokens de cache numa sessão de 42 h; 54× o mesmo arquivo relido na mesma sessão; 501 screenshots contra 3 leituras de texto; 28 mi tokens em 4 loops sem confirmação; 64 retomadas com cache frio: 33,5 mi tokens-eq. Custo de cada hook por turno: guarda de contexto 40 ms, Stop do vault 60 ms, status line 36 ms, hook do ai-memory 17 ms.">
+</picture>
+<!-- /gerado:achados -->
+
+Cada número virou uma regra curta na governança: memória antes de reler, texto antes de screenshot, confirmação antes de loop, sessão nova antes de maratona.
+
+> [!IMPORTANT]
+> Os hooks rodam em todo turno, então precisam ser baratos: **nenhum passa de 150 ms**. O `Stop` nunca espera um modelo; a narrativa roda num processo destacado.
+
+## Instalar
 
 ```bash
 git clone https://github.com/murilolol/muri-saver.git
 cd muri-saver
-node bin/install.mjs --dry-run                 # mostra o que faria, não escreve nada
-node bin/install.mjs --with-all                # Claude Code + Codex + Antigravity
-node bin/doctor.mjs                            # confere tudo (100% leitura)
+node bin/install.mjs --dry-run      # mostra o que faria, não escreve nada
+node bin/install.mjs --with-all     # Claude Code + Codex + Antigravity
+node bin/doctor.mjs                 # confere tudo, só leitura
 ```
 
-Sem clonar: `npx github:murilolol/muri-saver install --with-all`.
-
-Depois, conforme o que você quiser ligar:
+Sem clonar: `npx github:murilolol/muri-saver install --with-all`. Depois, ligue o que quiser:
 
 ```bash
-# Obsidian: toda sessão vira nota no seu vault
-node bin/install.mjs --update --vault "/caminho/do/seu/vault"
-
-# ai-memory consolidando sessões pela cadeia de modelos (ver docs/llm-chain.md)
-npx muri-saver llm chain && npx muri-saver llm tune
-
-# Jobs de fundo: sessões ociosas, reprocesso, backfill, relatório semanal
-node bin/install.mjs --update --with-jobs
+node bin/install.mjs --update --vault "/caminho/do/seu/vault"   # toda sessão vira nota no Obsidian
+npx muri-saver llm chain && npx muri-saver llm tune              # ai-memory pela cadeia de modelos
+node bin/install.mjs --update --with-jobs                         # jobs de fundo
 ```
 
-No Windows, ponha o caminho do vault entre aspas (`"C:\Users\voce\Documents\Vault"`).
-Abra uma sessão nova do agente e diga `muri-saver: revise este projeto gastando
-menos contexto`. Vai instalar com ajuda de uma IA? Mande o link deste repo pra
-ela e peça pra seguir o [`INSTALL-AI.md`](./INSTALL-AI.md).
+Abra uma sessão nova e diga `muri-saver: revise este projeto gastando menos contexto`. O [ai-memory](https://github.com/akitaonrails/ai-memory) é um programa à parte ([como instalar](docs/ai-memory-obsidian-setup.md)); o Obsidian é opcional. Vai instalar com ajuda de uma IA? Mande o link deste repositório e peça para seguir o [`INSTALL-AI.md`](INSTALL-AI.md).
 
-O [ai-memory](https://github.com/akitaonrails/ai-memory) é um programa separado:
-instale-o antes ([`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md)).
-O Obsidian é opcional.
-
-## Opções do instalador
-
-| Opção | Padrão | Descrição |
-| --- | --- | --- |
-| `--with-all` | só o que for detectado | Configura Codex e Antigravity mesmo sem `~/.codex`/`~/.gemini` |
-| `--vault <caminho>` | desligado | Vault do Obsidian usado pelos hooks e pelo ingestor |
-| `--timezone <IANA>` | fuso do sistema | Nomes de arquivo e Dailies (ex.: `America/Sao_Paulo`) |
-| `--language <tag>` | `pt-BR` | Idioma das narrativas |
-| `--alias <nome>` | `muri-saver` | Instala com o seu nome (`--alias mendes-saver`); o original continua funcionando |
-| `--narrative-chain <lista>` | `agy` Argon → `agy` Flash → Gemini API | Modelos da narrativa do vault; `off` deixa só o dump local |
-| `--ai-memory-chain <lista>` | Gemini API → `agy` | Modelos que o shim oferece ao ai-memory |
-| `--llm-key-file <caminho>` | — | Arquivo `KEY=valor` de onde ler a `GEMINI_API_KEY` (a chave nunca é copiada) |
-| `--with-jobs` / `--jobs <lista>` / `--no-jobs` | nenhum | Jobs de fundo no agendador do SO |
-| `--with-companion-skills` | não | Instala `find-skills`, `tdd`, `prototype`, `grill-with-docs` |
-| `--update` / `--uninstall` | | Reaproveita a config salva / remove só o que não foi editado |
-| `--dry-run` | | Mostra tudo e não escreve nada |
-
-Configurações existentes são **mescladas**, nunca substituídas, e arquivos que
-o instalador sobrescreve ganham backup em `~/.claude/muri-saver-backups/`.
+Configurações existentes são **mescladas**, nunca substituídas; o que o instalador sobrescreve ganha backup, e o `--uninstall` remove só o que você não editou. [Passo a passo →](INSTALL.md) &nbsp;·&nbsp; [Todas as opções →](docs/reference.md)
 
 ## O que vem junto
 
 | Peça | Quando roda | O que resolve |
-| --- | --- | --- |
+|---|---|---|
 | **Governança** (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) | toda sessão | Regras curtas: memória primeiro, contexto × cota, delegação, logs, git |
-| **Skill `muri-saver`** | sob demanda ("muri saver") | Economia agressiva: não reler, paralelizar, perfil por tarefa, sessões curtas |
-| **Delegação** ([docs](./docs/delegation.md)) | quando vale a pena | Leitura e pesquisa pro Gemini, revisão e implementação pro Codex, na cota deles |
-| **Nota viva no Obsidian** ([docs](./docs/vault-live-notes.md)) | todo `Stop`/`SessionEnd` | Dump local instantâneo + narrativa por LLM num processo à parte |
-| **Cadeia de LLMs** ([docs](./docs/llm-chain.md)) | narrativa e ai-memory | Troca de modelo sozinha em limite/erro, com cooldown por modelo |
-| **Jobs de fundo** ([docs](./docs/background-jobs.md)) | agendador do SO | Sessões ociosas, sessões estacionadas, backfill, relatório; param sozinhos |
-| **Relatório de economia** ([docs](./docs/economy-report.md)) | sob demanda / semanal | Quanto da cota foi pra onde, medido nos seus transcripts |
-| **Ingestor** ([docs](./docs/session-ingestor.md)) | sob demanda | Importa o histórico antigo de cada agente, sem LLM |
-| **Auditoria** ([docs](./docs/audit.md)) | sob demanda | Tokens observados e chamadas repetidas, local |
-| **Status line** | sempre (Claude Code) | Contexto colorido por tokens (amarelo 120k, vermelho 200k), cotas de 5h/7d com contagem regressiva e quanto falta pro cache esfriar |
-| **Guarda de contexto** | sempre (Claude Code) | Segura 1x o prompt depois de 55 min parado com >80k (a retomada regravaria o cache inteiro) e lembra de abrir sessão nova em 120k/160k/200k. `MURI_GUARDA=0` desliga |
-| **Notificação** | sempre (Claude Code, macOS/Linux) | Alerta no desktop quando o Claude está esperando você. `MURI_NOTIFY=0` desliga |
+| **Skill `muri-saver`** | sob demanda | Economia agressiva: não reler, paralelizar, sessões curtas |
+| **Status line, guarda e notificação** | sempre (Claude Code) | Contexto, cache e cota à vista; retomada cara barrada |
+| **Nota viva no Obsidian** | todo turno e no fim | Dump local na hora e narrativa por LLM num processo à parte |
+| **Cadeia de LLMs** | narrativa e ai-memory | Troca de modelo sozinha em limite ou erro, fora da cota do Claude |
+| **Delegação** | quando vale a pena | Leitura e pesquisa no Gemini, revisão e implementação no Codex, na cota deles |
+| **Jobs de fundo** | agendador do sistema | Sessões ociosas, fila do ai-memory, backfill e relatório semanal; param sozinhos |
+| **Relatório, auditoria e ingestor** | sob demanda | Quanto da cota foi para onde, chamadas repetidas e histórico antigo importado |
 
 ## Como funciona
+
+<img src="assets/architecture-diagram.png" width="100%" alt="Arquitetura: Claude Code, Codex e Antigravity carregam a governança; os hooks de ciclo de vida e o ingestor de sessões alimentam o ai-memory e o vault do Obsidian">
+
+Os três agentes carregam a mesma governança. Os hooks de ciclo de vida (`SessionStart`, `UserPromptSubmit`, `Stop`, `SessionEnd`) alimentam o ai-memory e o vault a cada turno; o ingestor importa o histórico antigo de cada agente sem gastar modelo.
+
+<details>
+<summary>Uma sessão, passo a passo</summary>
 
 ```mermaid
 sequenceDiagram
@@ -173,160 +169,48 @@ sequenceDiagram
     M->>L: consolida a sessao em paginas (via shim)
 ```
 
-O `Stop` nunca espera um modelo: a narrativa roda num processo destacado. Se a
-cadeia inteira estiver em cooldown, a nota fica com o dump e ganha a narrativa
-depois (próximo intervalo, `SessionEnd` ou o job de backfill). Detalhes em
-[`docs/architecture.md`](./docs/architecture.md).
+Se a cadeia inteira estiver em cooldown, a nota fica com o dump e ganha a narrativa depois: no próximo intervalo, no `SessionEnd` ou no job de backfill.
 
-## Cadeia de LLMs
+</details>
 
-Narrativa do vault e consolidação do ai-memory usam uma lista ordenada de
-modelos. O primeiro que responder vence; erro de cota ou 5xx põe o modelo em
-cooldown pelo tempo que o erro indicar, e o próximo assume.
+[A arquitetura em detalhe →](docs/architecture.md)
 
-| Tipo | Cota | Precisa de |
-| --- | --- | --- |
-| `gemini-api:<modelo>` | grátis, separada por modelo | `GEMINI_API_KEY` |
-| `agy:<modelo>` | plano Google (Antigravity) | `agy` instalado |
-| `claude:<modelo>` | **a do seu plano Claude** | `claude` instalado |
-| `openai:<modelo>` | do provedor (Ollama, OpenRouter, Groq...) | `llm.openai.baseUrl` |
+## Versões
 
-Nenhum padrão usa a cota do Claude. Guia completo: [`docs/llm-chain.md`](./docs/llm-chain.md).
+Do kit de regras soltas à guarda de contexto. O detalhe de cada uma está no [histórico de versões](CHANGELOG.md).
 
-## Jobs de fundo
+| Versão | Data | Marco |
+|---|---|---|
+| [2.0.0](CHANGELOG.md#200) | 25/09/2026 | Vault, fuso e alias configuráveis; segredos mascarados; `--update` e `--uninstall` |
+| [2.1.0](CHANGELOG.md#210) | 02/10/2026 | Skills com núcleo curto; templates de 59 KB para 8 KB; comando `audit` |
+| [3.1.0](CHANGELOG.md#310--2026-10-03) | 03/10/2026 | Nota viva, cadeia de LLMs, jobs de fundo em macOS, Linux e Windows, delegação |
+| [3.2.0](CHANGELOG.md#320--2026-11-01) | 01/11/2026 | Guarda de contexto, status line nova, notificação e faxineiro |
 
-| Job | Quando | Para sozinho |
-| --- | --- | --- |
-| `llm-shim` | serviço | — |
-| `finalize-idle` | de hora em hora | — |
-| `reprocess-parked` | toda hora, minuto 10 | quando a fila zera |
-| `vault-backfill` | a cada 2h | quando a fila zera |
-| `quota-snapshot` | de hora em hora | — |
-| `economy-report` | segunda 09:00 | — |
+## Tecnologia
 
-Registrados no **launchd** (macOS), **systemd --user** ou **crontab** (Linux) e
-**Agendador de Tarefas** (Windows). Sem modelo livre, os jobs de fila saem na
-hora sem gastar nada. Guia: [`docs/background-jobs.md`](./docs/background-jobs.md).
+<p>
+  <img src="https://skillicons.dev/icons?i=nodejs,js,python,bash,sqlite,obsidian,apple,linux,windows" alt="Node.js, JavaScript, Python, Bash, SQLite, Obsidian, macOS, Linux e Windows">
+</p>
 
-Processo preso (`agy` headless, worker da nota viva)? `scripts/faxineiro.sh`
-(macOS/Linux) mata o que passou do tempo; `--dry-run` só lista.
-
-## Comandos
-
-`npx muri-saver <comando>` (ou `node bin/cli.mjs <comando>` num clone):
-
-| Comando | Faz |
-| --- | --- |
-| `install` / `update` / `uninstall` | instala, atualiza, remove |
-| `doctor` | verifica o ambiente inteiro, só leitura |
-| `llm chain\|gemini\|anthropic\|off\|status\|tune` | provedor de LLM do ai-memory |
-| `jobs list\|status\|install\|remove\|run` | jobs de fundo |
-| `delegate <gemini\|codex> "<brief>"` | delega uma tarefa |
-| `report [--days N] [--save]` | relatório de economia |
-| `reprocess`, `backfill`, `finalize-idle` | rodam o job correspondente na hora |
-| `ingest`, `audit` | importa histórico, audita consumo |
-
-## Configuração
-
-Tudo fica em `~/.claude/muri-saver.json`. O `--update` preserva o que você editar:
-
-```json
-{
-  "alias": "muri-saver",
-  "vault": "/caminho/do/vault",
-  "timezone": "America/Sao_Paulo",
-  "language": "pt-BR",
-  "agents": ["claude", "codex", "antigravity"],
-  "llm": {
-    "narrative": ["agy:gemini-4-argon-high", "gemini-api:gemini-2.5-flash"],
-    "apiKeyFile": "~/.config/muri-saver/llm.env",
-    "shim": true
-  },
-  "narrative": { "intervalMinutes": 15 },
-  "jobs": ["finalize-idle", "reprocess-parked", "quota-snapshot", "economy-report"]
-}
-```
-
-`"vault": null` desliga o Obsidian. Precedência: flag > variável de ambiente
-(`OBSIDIAN_VAULT`, `MURI_SAVER_TZ`, `MURI_SAVER_NARRATIVE_CHAIN`...) > arquivo.
-
-No `~/.claude/settings.json`, o instalador mescla hooks e status line e mais
-nada. O bloco `_recomendado` de [`claude-config/settings.snippet.json`](./claude-config/settings.snippet.json)
-é o setup do autor pra copiar à mão: `autoCompactWindow` 250k,
-`askUserQuestionTimeout` 10m, attribution vazio e `permissions.ask` pra
-`git reset --hard`, `git push --force`, `git clean -f` e `rm -rf`.
-
-## Multiplataforma
-
-| | macOS | Linux | Windows |
-| --- | --- | --- | --- |
-| Hooks, instalador, ingestor, doctor | ✓ | ✓ | ✓ |
-| Jobs de fundo | launchd | systemd --user / crontab | Agendador de Tarefas |
-| CLIs do npm (`claude`, `agy`, `codex`) | PATH | PATH | o shim `.cmd` é lido e o `.js`/`.exe` real é chamado sem shell |
-| Banco do ai-memory | `node:sqlite` (Node ≥ 22.5) ou `sqlite3` | idem | idem |
-| Dados do ai-memory | lidos de `ai-memory status --json` | idem | idem |
-
-Nada no código usa caminho fixo de usuário. O registro real de jobs foi exercitado no macOS;
-no Linux e no Windows, a geração dos arquivos (`.timer`, XML da tarefa) é coberta
-por teste.
-
-## Achados que justificam as regras
-
-| Achado | Números reais |
-| --- | --- |
-| Contexto grande é onde a cota vai | 30 dias: turnos com **>250k** de contexto = **71%** do gasto; 64 retomadas com cache frio = **33,5M** tokens-eq |
-| Sessão maratona é o maior vilão, não a escolha de modelo | uma sessão: **2,1 bilhões de tokens de cache** em 42h / 7.059 mensagens |
-| Releitura do mesmo arquivo | **30 a 54 vezes** na mesma sessão |
-| Screenshot no lugar de texto | **501** screenshots contra **3** leituras de texto |
-| Loop dinâmico sem confirmação | 4 loops: **~28 milhões de tokens** |
-| Onde a cota vai de verdade | 99% em turnos do modelo principal; um dia sozinho = 36% da semana |
-
-Esses números motivam as regras; não são um benchmark de economia. Meça a sua
-rotina com `muri-saver report` e `muri-saver audit`.
-
-## Desenvolvimento local
-
-```bash
-npm test                                      # 93 testes, node:test
-node bin/install.mjs --dry-run --with-all     # nada é escrito
-HOME="$(mktemp -d)" MURI_SAVER_SCHEDULER=dry node scripts/muri-jobs.mjs install --all   # grava os arquivos dos jobs numa home temporária, sem registrar
-node scripts/muri-jobs.mjs list
-node scripts/vault-backfill.mjs --dry-run
-node scripts/ai-memory-reprocess-parked.mjs --scan --dry-run
-```
-
-Os testes rodam numa home temporária, com o agendador em `dry`, a cadeia de LLMs
-desligada e binários falsos de `agy`/`ai-memory` em `tools/test-bin/`. Nenhum
-teste toca a sua configuração real nem chama um modelo.
+Node.js 18 ou mais novo, só com a biblioteca padrão, e scripts auxiliares em Python e shell. Memória no [ai-memory](https://github.com/akitaonrails/ai-memory) (SQLite com busca FTS5 e servidor MCP local). Jobs no launchd, no `systemd --user` ou crontab e no Agendador de Tarefas do Windows. 93 testes com `node:test`, rodando numa home temporária com binários falsos: nenhum teste toca a sua configuração nem chama um modelo.
 
 ## Documentação
 
-| | |
-| --- | --- |
-| [`INSTALL.md`](./INSTALL.md) · [`INSTALL-AI.md`](./INSTALL-AI.md) | instalação passo a passo (humano / IA) |
-| [`docs/architecture.md`](./docs/architecture.md) | como as peças se encaixam |
-| [`docs/llm-chain.md`](./docs/llm-chain.md) | cadeia de modelos, shim, chave, limites do ai-memory |
-| [`docs/background-jobs.md`](./docs/background-jobs.md) | jobs por SO, como param sozinhos, logs |
-| [`docs/vault-live-notes.md`](./docs/vault-live-notes.md) | nota viva, taxonomia, ponte pro ai-memory |
-| [`docs/delegation.md`](./docs/delegation.md) | delegação para Gemini e Codex |
-| [`docs/economy-report.md`](./docs/economy-report.md) | relatório de economia, tokens-eq |
-| [`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md) | ai-memory + MCP + Obsidian |
-| [`docs/session-ingestor.md`](./docs/session-ingestor.md) | importar histórico antigo |
-| [`docs/skills-companion.md`](./docs/skills-companion.md) | skills de terceiros que combinam |
-| [`docs/troubleshooting.md`](./docs/troubleshooting.md) | problemas conhecidos |
-| [`CHANGELOG.md`](./CHANGELOG.md) | o que mudou em cada versão |
+| Página | O que tem |
+|---|---|
+| [Instalação](INSTALL.md) · [para IA](INSTALL-AI.md) | Passo a passo, para humano e para agente |
+| [Referência](docs/reference.md) | Opções do instalador, comandos, configuração, jobs, multiplataforma |
+| [Arquitetura](docs/architecture.md) | Como as peças se encaixam |
+| [Cadeia de LLMs](docs/llm-chain.md) | Modelos, shim, chave e limites do ai-memory |
+| [Nota viva](docs/vault-live-notes.md) | Nota por sessão, taxonomia, ponte para o ai-memory |
+| [Jobs de fundo](docs/background-jobs.md) | Jobs por sistema, como param sozinhos, logs |
+| [Delegação](docs/delegation.md) | Gemini e Codex na cota deles |
+| [Relatório de economia](docs/economy-report.md) · [Auditoria](docs/audit.md) | Para onde a cota foi, tokens-eq |
+| [ai-memory e Obsidian](docs/ai-memory-obsidian-setup.md) · [Ingestor](docs/session-ingestor.md) | Memória, MCP e histórico antigo |
+| [Skills companheiras](docs/skills-companion.md) · [Problemas conhecidos](docs/troubleshooting.md) | Terceiros que combinam e soluções |
 
-## Contribuindo
+## Contribuindo e créditos
 
-Contribuições são bem-vindas: veja o [`CONTRIBUTING.md`](./CONTRIBUTING.md).
-Problemas e ideias em [issues](https://github.com/murilolol/muri-saver/issues).
+Contribuições são bem-vindas: veja o [`CONTRIBUTING.md`](CONTRIBUTING.md) e as [issues](https://github.com/murilolol/muri-saver/issues). Licença MIT ([`LICENSE`](LICENSE)). Feito por [@murilolol](https://github.com/murilolol) a partir do uso diário real; `muri-saver` e `grill-me` são conteúdo original. O [ai-memory](https://github.com/akitaonrails/ai-memory) é de [Fabio Akita](https://github.com/akitaonrails), e as skills companheiras são dos respectivos autores.
 
-## Licença e créditos
-
-MIT, ver [`LICENSE`](./LICENSE). Feito por [@murilolol](https://github.com/murilolol)
-a partir do uso diário real. `muri-saver` e `grill-me` são conteúdo original. O
-[ai-memory](https://github.com/akitaonrails/ai-memory) é de
-[Fabio Akita](https://github.com/akitaonrails); as skills companheiras são dos
-respectivos autores ([`docs/skills-companion.md`](./docs/skills-companion.md)).
-
-<p align="center"><sub>Se isso te economizou cota ou uma tarde de contexto perdido, uma ⭐ ajuda outra pessoa a achar.</sub></p>
+<sub>O banner, o gráfico e o cartão dos achados são gerados a partir de <a href="assets/readme/dados.json">assets/readme/dados.json</a> com <a href="tools/build-readme.mjs">tools/build-readme.mjs</a>. O mascote é o Pavio, do vídeo de apresentação. Se isso te economizou cota ou uma tarde de contexto perdido, uma ⭐ ajuda outra pessoa a achar.</sub>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 410" width="1200" height="410" role="img" aria-labelledby="at ad" font-family="Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif">
+<title id="at">ACHADOS · USO REAL DO AUTOR</title>
+<desc id="ad">71% do gasto em turnos acima de 250k; 2,1 bi tokens de cache numa sessão de 42 h; 54× o mesmo arquivo relido na mesma sessão; 501 screenshots contra 3 leituras de texto; 28 mi tokens em 4 loops sem confirmação; 64 retomadas com cache frio: 33,5 mi tokens-eq. Custo de cada hook por turno: guarda de contexto 40 ms, Stop do vault 60 ms, status line 36 ms, hook do ai-memory 17 ms.</desc>
+<rect width="1200" height="410" rx="16" fill="#f3efe9"/>
+<text x="56" y="62" font-family="'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" font-weight="700" letter-spacing="2" fill="#c4613f">ACHADOS · USO REAL DO AUTOR</text>
+<text x="56" y="136" font-size="44" font-weight="800" letter-spacing="-1.5" fill="#c4613f">71%</text>
+<text x="56" y="164" font-size="15" fill="#6b655c">do gasto em turnos</text>
+<text x="56" y="183" font-size="15" fill="#6b655c">acima de 250k</text>
+<text x="296" y="136" font-size="44" font-weight="800" letter-spacing="-1.5" fill="#1c1a17">2,1 bi</text>
+<text x="296" y="164" font-size="15" fill="#6b655c">tokens de cache numa</text>
+<text x="296" y="183" font-size="15" fill="#6b655c">sessão de 42 h</text>
+<text x="536" y="136" font-size="44" font-weight="800" letter-spacing="-1.5" fill="#1c1a17">54×</text>
+<text x="536" y="164" font-size="15" fill="#6b655c">o mesmo arquivo relido</text>
+<text x="536" y="183" font-size="15" fill="#6b655c">na mesma sessão</text>
+<text x="56" y="276" font-size="44" font-weight="800" letter-spacing="-1.5" fill="#1c1a17">501</text>
+<text x="56" y="304" font-size="15" fill="#6b655c">screenshots contra</text>
+<text x="56" y="323" font-size="15" fill="#6b655c">3 leituras de texto</text>
+<text x="296" y="276" font-size="44" font-weight="800" letter-spacing="-1.5" fill="#1c1a17">28 mi</text>
+<text x="296" y="304" font-size="15" fill="#6b655c">tokens em 4 loops</text>
+<text x="296" y="323" font-size="15" fill="#6b655c">sem confirmação</text>
+<text x="536" y="276" font-size="44" font-weight="800" letter-spacing="-1.5" fill="#1c1a17">64</text>
+<text x="536" y="304" font-size="15" fill="#6b655c">retomadas com cache frio:</text>
+<text x="536" y="323" font-size="15" fill="#6b655c">33,5 mi tokens-eq</text>
+<line x1="790" y1="56" x2="790" y2="340" stroke="#e2dcd2" stroke-width="1.5"/>
+<text x="830" y="84" font-size="16" font-weight="700" fill="#1c1a17">Custo de cada hook por turno</text>
+<line x1="1120" y1="122" x2="1120" y2="320" stroke="#6b655c" stroke-dasharray="4 4"/>
+<text x="1120" y="338" font-size="12" text-anchor="end" fill="#6b655c">150 ms</text>
+<text x="830" y="128" font-size="14" fill="#6b655c">guarda de contexto</text>
+<rect x="830" y="138" width="77.3" height="14" rx="4" fill="#c4613f"/>
+<text x="915.3" y="150" font-size="14" font-weight="700" fill="#1c1a17">40 ms</text>
+<text x="830" y="180" font-size="14" fill="#6b655c">Stop do vault</text>
+<rect x="830" y="190" width="116.0" height="14" rx="4" fill="#c4613f"/>
+<text x="954.0" y="202" font-size="14" font-weight="700" fill="#1c1a17">60 ms</text>
+<text x="830" y="232" font-size="14" fill="#6b655c">status line</text>
+<rect x="830" y="242" width="69.6" height="14" rx="4" fill="#c4613f"/>
+<text x="907.6" y="254" font-size="14" font-weight="700" fill="#1c1a17">36 ms</text>
+<text x="830" y="284" font-size="14" fill="#6b655c">hook do ai-memory</text>
+<rect x="830" y="294" width="32.9" height="14" rx="4" fill="#c4613f"/>
+<text x="870.9" y="306" font-size="14" font-weight="700" fill="#1c1a17">17 ms</text>
+<text x="56" y="384" font-size="13" fill="#6b655c">Auditorias de transcripts reais, 29/08 a 22/10/2026. Hooks medidos num transcript de 3 MB. Diagnóstico, não benchmark.</text>
+</svg>

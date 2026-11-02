@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 510" width="1200" height="510" role="img" aria-labelledby="ct cd" font-family="Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif">
+<title id="ct">Thirty days, measured turn by turn</title>
+<desc id="cd">Claude Code spend over 30 days by turn context size: up to 150k 11%, 150–250k 17%, above 250k 71%. Turns above 250k were 52% of turns and 71% of spend.</desc>
+<rect width="1200" height="510" rx="16" fill="#f3efe9"/>
+<text x="48" y="60" font-size="28" font-weight="800" fill="#1c1a17">Thirty days, measured turn by turn</text>
+<text x="48" y="90" font-size="16" fill="#6b655c">Claude Code spend in tokens-eq, by the context size of each turn · 30 days to 2026-10-22</text>
+<text x="48" y="140" font-size="18" font-weight="700" fill="#1c1a17">Spend by context size</text>
+<line x1="48" y1="400" x2="640" y2="400" stroke="#e2dcd2"/>
+<line x1="48" y1="342.5" x2="640" y2="342.5" stroke="#e2dcd2"/>
+<line x1="48" y1="285" x2="640" y2="285" stroke="#e2dcd2"/>
+<line x1="48" y1="227.5" x2="640" y2="227.5" stroke="#e2dcd2"/>
+<line x1="48" y1="170" x2="640" y2="170" stroke="#e2dcd2"/>
+<path d="M98.7,400 V373.375 Q98.7,368.375 103.7,368.375 H189.7 Q194.7,368.375 194.7,373.375 V400 Z" fill="#c9c1b5"/>
+<text x="146.66666666666669" y="356.4" font-size="22" font-weight="800" text-anchor="middle" fill="#1c1a17">11%</text>
+<text x="146.66666666666669" y="428" font-family="'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" text-anchor="middle" fill="#6b655c">up to 150k</text>
+<path d="M296,400 V356.125 Q296,351.125 301,351.125 H387 Q392,351.125 392,356.125 V400 Z" fill="#c9c1b5"/>
+<text x="344" y="339.1" font-size="22" font-weight="800" text-anchor="middle" fill="#1c1a17">17%</text>
+<text x="344" y="428" font-family="'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" text-anchor="middle" fill="#6b655c">150–250k</text>
+<path d="M493.3,400 V200.875 Q493.3,195.875 498.3,195.875 H584.3 Q589.3,195.875 589.3,200.875 V400 Z" fill="#c4613f"/>
+<text x="541.3333333333334" y="183.9" font-size="30" font-weight="800" text-anchor="middle" fill="#c4613f">71%</text>
+<text x="541.3333333333334" y="428" font-family="'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" text-anchor="middle" fill="#c4613f">above 250k</text>
+<line x1="48" y1="400" x2="640" y2="400" stroke="#6b655c"/>
+<line x1="700" y1="130" x2="700" y2="420" stroke="#e2dcd2" stroke-width="1.5"/>
+<text x="760" y="140" font-size="18" font-weight="700" fill="#1c1a17">Turns above 250k</text>
+<line x1="760" y1="400" x2="1152" y2="400" stroke="#e2dcd2"/>
+<line x1="760" y1="342.5" x2="1152" y2="342.5" stroke="#e2dcd2"/>
+<line x1="760" y1="285" x2="1152" y2="285" stroke="#e2dcd2"/>
+<line x1="760" y1="227.5" x2="1152" y2="227.5" stroke="#e2dcd2"/>
+<line x1="760" y1="170" x2="1152" y2="170" stroke="#e2dcd2"/>
+<path d="M810,400 V255.5 Q810,250.5 815,250.5 H901 Q906,250.5 906,255.5 V400 Z" fill="#c9c1b5"/>
+<text x="858" y="238.5" font-size="22" font-weight="800" text-anchor="middle" fill="#1c1a17">52%</text>
+<text x="858" y="428" font-family="'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" text-anchor="middle" fill="#6b655c">of turns</text>
+<path d="M1006,400 V200.875 Q1006,195.875 1011,195.875 H1097 Q1102,195.875 1102,200.875 V400 Z" fill="#c4613f"/>
+<text x="1054" y="183.9" font-size="30" font-weight="800" text-anchor="middle" fill="#c4613f">71%</text>
+<text x="1054" y="428" font-family="'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" text-anchor="middle" fill="#c4613f">of spend</text>
+<line x1="760" y1="400" x2="1152" y2="400" stroke="#6b655c"/>
+<text x="48" y="466" font-size="13" fill="#6b655c">tokens-eq: tokens weighted by their quota cost (cache read 0.1, input 1, cache write 1.25 to 2, output 5). Rounded values.</text>
+<text x="48" y="486" font-size="13" fill="#6b655c">7,013 of 13.4k turns went above 250k, and each costs ~2.5× a 100–150k turn. Source: the author's transcripts.</text>
+</svg>

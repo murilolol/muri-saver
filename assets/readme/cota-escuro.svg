@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 510" width="1200" height="510" role="img" aria-labelledby="ct cd" font-family="Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif">
+<title id="ct">Trinta dias, medidos turno a turno</title>
+<desc id="cd">Gasto do Claude Code em 30 dias por faixa de contexto do turno: até 150k 11%, 150–250k 17%, acima de 250k 71%. Os turnos acima de 250k foram 52% dos turnos e 71% do gasto.</desc>
+<rect width="1200" height="510" rx="16" fill="#161513"/>
+<text x="48" y="60" font-size="28" font-weight="800" fill="#faf9f7">Trinta dias, medidos turno a turno</text>
+<text x="48" y="90" font-size="16" fill="#a8a49d">Gasto do Claude Code em tokens-eq, por faixa de contexto do turno · 30 dias até 22/10/2026</text>
+<text x="48" y="140" font-size="18" font-weight="700" fill="#faf9f7">Gasto por faixa de contexto</text>
+<line x1="48" y1="400" x2="640" y2="400" stroke="#2a2724"/>
+<line x1="48" y1="342.5" x2="640" y2="342.5" stroke="#2a2724"/>
+<line x1="48" y1="285" x2="640" y2="285" stroke="#2a2724"/>
+<line x1="48" y1="227.5" x2="640" y2="227.5" stroke="#2a2724"/>
+<line x1="48" y1="170" x2="640" y2="170" stroke="#2a2724"/>
+<path d="M98.7,400 V373.375 Q98.7,368.375 103.7,368.375 H189.7 Q194.7,368.375 194.7,373.375 V400 Z" fill="#4a4640"/>
+<text x="146.66666666666669" y="356.4" font-size="22" font-weight="800" text-anchor="middle" fill="#faf9f7">11%</text>
+<text x="146.66666666666669" y="428" font-family="'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" text-anchor="middle" fill="#a8a49d">até 150k</text>
+<path d="M296,400 V356.125 Q296,351.125 301,351.125 H387 Q392,351.125 392,356.125 V400 Z" fill="#4a4640"/>
+<text x="344" y="339.1" font-size="22" font-weight="800" text-anchor="middle" fill="#faf9f7">17%</text>
+<text x="344" y="428" font-family="'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" text-anchor="middle" fill="#a8a49d">150–250k</text>
+<path d="M493.3,400 V200.875 Q493.3,195.875 498.3,195.875 H584.3 Q589.3,195.875 589.3,200.875 V400 Z" fill="#d97757"/>
+<text x="541.3333333333334" y="183.9" font-size="30" font-weight="800" text-anchor="middle" fill="#d97757">71%</text>
+<text x="541.3333333333334" y="428" font-family="'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" text-anchor="middle" fill="#d97757">acima de 250k</text>
+<line x1="48" y1="400" x2="640" y2="400" stroke="#a8a49d"/>
+<line x1="700" y1="130" x2="700" y2="420" stroke="#2a2724" stroke-width="1.5"/>
+<text x="760" y="140" font-size="18" font-weight="700" fill="#faf9f7">Turnos acima de 250k</text>
+<line x1="760" y1="400" x2="1152" y2="400" stroke="#2a2724"/>
+<line x1="760" y1="342.5" x2="1152" y2="342.5" stroke="#2a2724"/>
+<line x1="760" y1="285" x2="1152" y2="285" stroke="#2a2724"/>
+<line x1="760" y1="227.5" x2="1152" y2="227.5" stroke="#2a2724"/>
+<line x1="760" y1="170" x2="1152" y2="170" stroke="#2a2724"/>
+<path d="M810,400 V255.5 Q810,250.5 815,250.5 H901 Q906,250.5 906,255.5 V400 Z" fill="#4a4640"/>
+<text x="858" y="238.5" font-size="22" font-weight="800" text-anchor="middle" fill="#faf9f7">52%</text>
+<text x="858" y="428" font-family="'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" text-anchor="middle" fill="#a8a49d">dos turnos</text>
+<path d="M1006,400 V200.875 Q1006,195.875 1011,195.875 H1097 Q1102,195.875 1102,200.875 V400 Z" fill="#d97757"/>
+<text x="1054" y="183.9" font-size="30" font-weight="800" text-anchor="middle" fill="#d97757">71%</text>
+<text x="1054" y="428" font-family="'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" text-anchor="middle" fill="#d97757">do gasto</text>
+<line x1="760" y1="400" x2="1152" y2="400" stroke="#a8a49d"/>
+<text x="48" y="466" font-size="13" fill="#a8a49d">tokens-eq: tokens pesados pelo custo na cota (cache lido 0,1, entrada 1, cache gravado 1,25 a 2, saída 5). Valores arredondados.</text>
+<text x="48" y="486" font-size="13" fill="#a8a49d">7.013 de 13,4 mil turnos passaram de 250k, e cada um custa ~2,5× um turno de 100–150k. Fonte: transcripts do autor.</text>
+</svg>

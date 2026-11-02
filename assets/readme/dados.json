@@ -1,0 +1,66 @@
+{
+  "_fonte": "Uso real do autor. Faixas, retomadas e latência: skills/muri-saver reference, análise de 30 dias até 22/10/2026 e medição de 31/10/2026. Achados antigos: auditorias de 29/08 a 06/09/2026.",
+  "versao": "3.2.0",
+  "agentes": 3,
+  "sistemas": 3,
+  "dependencias": 0,
+  "testes": 93,
+  "faixas": [
+    { "pt": "até 150k", "en": "up to 150k", "gasto": 11 },
+    { "pt": "150–250k", "en": "150–250k", "gasto": 17 },
+    { "pt": "acima de 250k", "en": "above 250k", "gasto": 71, "destaque": true }
+  ],
+  "acima250k": { "turnos": 7013, "turnosTotal": 13400, "custoRelativo": 2.5 },
+  "achados": [
+    { "valor": 71, "sufixo": "%", "pt": ["do gasto em turnos", "acima de 250k"], "en": ["of spend on turns", "above 250k"], "destaque": true },
+    { "valor": 2.1, "casas": 1, "sufixo": { "pt": " bi", "en": "B" }, "pt": ["tokens de cache numa", "sessão de 42 h"], "en": ["cache tokens in a", "single 42 h session"] },
+    { "valor": 54, "sufixo": "×", "pt": ["o mesmo arquivo relido", "na mesma sessão"], "en": ["the same file re-read", "in one session"] },
+    { "valor": 501, "pt": ["screenshots contra", "3 leituras de texto"], "en": ["screenshots against", "3 text reads"] },
+    { "valor": 28, "sufixo": { "pt": " mi", "en": "M" }, "pt": ["tokens em 4 loops", "sem confirmação"], "en": ["tokens in 4 loops", "nobody confirmed"] },
+    { "valor": 64, "pt": ["retomadas com cache frio:", "33,5 mi tokens-eq"], "en": ["cold-cache resumes:", "33.5M tokens-eq"] }
+  ],
+  "latencia": [
+    { "pt": "guarda de contexto", "en": "context guard", "ms": 40 },
+    { "pt": "Stop do vault", "en": "vault Stop", "ms": 60 },
+    { "pt": "status line", "en": "status line", "ms": 36 },
+    { "pt": "hook do ai-memory", "en": "ai-memory hook", "ms": 17 }
+  ],
+  "mascote": {
+    "_origem": "Pavio, o mascote do vídeo de apresentação (pose feliz).",
+    "cores": { "K": "#1c1424", "O": "#d97757", "R": "#a8452e", "P": "#a78bfa", "D": "#6b4fc0", "W": "#f0f6fc" },
+    "pixels": [
+      "................................",
+      "................................",
+      "................................",
+      ".........................P......",
+      "........................PPP.....",
+      "......S........KK........P......",
+      ".....SSS......KORK..............",
+      "......S.......KORK..............",
+      ".............KOOORK.............",
+      ".............KOWWRK.............",
+      ".............KRWWRK.............",
+      "..............KRRK..............",
+      "..........KKKKKKKKKKKK..........",
+      ".........KWWWWWWWWWWWWK.........",
+      "........KPPWPPPPPPPWPPDK........",
+      "........KPPWPPPPPPPWPPDK........",
+      "........KPPPWWPPPPPWPPDK........",
+      "........KPPPWPPPPPPPPPDK........",
+      "........KPPPPPPPPPPPPPDK........",
+      "........KPPPKKPPPPKKPPDK........",
+      "........KPPKPPKPPKPPKPDK........",
+      "......KKKPPPPPPPPPPPPPDKKK......",
+      ".....KPPPPPOPPKPPKPPOPDPPDK.....",
+      ".....KDDPPPPPPPKKPPPPDDPDDK.....",
+      "......KKKPPPPPPPPPPDDDDKKK......",
+      "........KPPPPPPPPPDDDDDK........",
+      "........KDPPPPPPDDDDDDDK........",
+      ".....KKKKKDDDDDDDDDDDDKKKKK.....",
+      "....KOOOOOKKKKKKKKKKKKOOOORK....",
+      "....KRROOOOOOOOOOOOOORRRRRRK....",
+      ".....KKRRRRRRRRRRRRRRRRRRKK.....",
+      ".......KKKKKKKKKKKKKKKKKK......."
+    ]
+  }
+}
