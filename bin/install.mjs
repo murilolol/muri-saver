@@ -602,7 +602,7 @@ function main() {
   const { written, unchanged, backups, moved } = ctx.counts;
   log(`Pronto: ${written} arquivo(s) criado(s)/atualizado(s), ${unchanged} já em dia, ${backups} backup(s), ${moved} antigo(s) movido(s). Config: ${cfgPath}`);
   log('Próximos passos (detalhes em INSTALL-AI.md):');
-  log('  1. ai-memory: instalar o binário e rodar `ai-memory install-hooks --client claude-code`.');
+  log('  1. ai-memory: instalar o binário e rodar `ai-memory install-hooks --agent claude-code`.');
   log(vault
     ? '  2. Obsidian: configure o MCP do vault se quiser comandos de leitura/escrita no app.'
     : '  2. Obsidian opcional: para ativar depois, rode --update --vault <caminho>.');

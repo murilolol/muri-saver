@@ -21,9 +21,9 @@
 [3. ai-memory](#3-ai-memory-memória-persistente) ·
 [4. MCP](#4-mcp-servers-ai-memory--obsidian) ·
 [5. Plugin](#5-plugin-claude-obsidian-opcional-mas-recomendado) ·
-[6. Obsidian](#6-app-obsidian) ·
+[6. Obsidian](#6-app-obsidian-se-escolhido) ·
 [7. Doctor](#7-verificação-automática) ·
-[8. Ingestor](#8-importar-sessões-antigas-bin-ingest-sessionsmjs--se-a-resposta-da-pergunta-3-foi-sim) ·
+[8. Ingestor](#8-importar-sessões-antigas-biningest-sessionsmjs--se-a-resposta-da-pergunta-3-foi-sim) ·
 [9. Skills companheiras](#9-skills-companheiras-opcional) ·
 [10. Confirmar](#10-reiniciar-e-confirmar)
 
@@ -167,7 +167,7 @@ Isso, sozinho:
 - copia `skills/muri-saver/SKILL.md` (com o alias aplicado, se algum foi
   pedido) e `skills/grill-me/SKILL.md` → `~/.agents/skills/<alias>/SKILL.md`
   e `~/.agents/skills/grill-me/SKILL.md`
-- copia `hooks/*.mjs` → `~/.claude/hooks/`
+- copia `hooks/*.mjs` e `hooks/guarda-contexto.py` → `~/.claude/hooks/`
 - copia `scripts/*` → `~/.claude/scripts/` (com permissão de execução)
 - mescla os hooks `SessionStart`/`Stop`/`SessionEnd`/`UserPromptSubmit`/`Notification` + `statusLine` em
   `~/.claude/settings.json` (faz backup do arquivo original primeiro)
@@ -200,7 +200,7 @@ mesma memória compartilhada, guardada como wiki markdown versionada
 (indexada em SQLite/FTS5), com captura automática via hooks e handoff real
 entre sessões — sem exigir nenhuma chamada de LLM no caminho padrão. Se o
 usuário perguntar "o que é isso", essa é a explicação; detalhes completos em
-[`README.md#ai-memory`](./README.md#ai-memory).
+[`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md).
 
 Isto **não** é instalado pelo `bin/install.mjs` de propósito — é um projeto
 externo com seu próprio instalador. Siga

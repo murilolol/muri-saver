@@ -28,8 +28,8 @@ não estavam instalados ainda.
 
 ## Por que não chama LLM por padrão
 
-Os hooks deste repositório (`hooks/obsidian-vault-check.mjs`) chamam
-`claude -p` pra gerar uma narrativa rica de sessões **substanciais**, uma por
+Os hooks deste repositório (`hooks/obsidian-vault-check.mjs`) chamam a
+cadeia `llm.narrative` (ver [llm-chain.md](./llm-chain.md)) pra gerar uma narrativa rica de sessões **substanciais**, uma por
 uma, em tempo real. Fazer isso retroativamente pra uma varredura de
 possivelmente milhares de sessões custaria uma fortuna e contradiria a
 filosofia de economia do próprio projeto — por isso o ingestor, **por

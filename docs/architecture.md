@@ -80,7 +80,7 @@ compatibilidade com o gatilho original.
 
 **Hooks** (`hooks/`)
 Scripts Node chamados pelo ciclo de vida de cada agente:
-- `ai-memory-ensure-server.mjs` (`SessionStart`, Claude Code/Antigravity):
+- `ai-memory-ensure-server.mjs` (`SessionStart`, Claude Code):
   garante que o daemon HTTP do `ai-memory` está de pé antes da sessão pedir
   um handoff, e avisa se a sessão começou na home dir em vez de dentro de um
   projeto (o que quebraria o roteamento de projeto do `ai-memory`).
@@ -157,7 +157,7 @@ assumir que um passo funcionou.
 A governança e os hooks cobrem sessões **novas**, daqui pra frente. Pra
 quem já tinha meses de histórico em algum desses agentes antes de instalar
 isto, `bin/ingest-sessions.mjs` faz o mesmo trabalho retroativamente — sem
-nunca chamar uma LLM (ver [por quê](./session-ingestor.md#por-que-não-chama-nenhuma-llm),
+nunca chamar uma LLM (ver [por quê](./session-ingestor.md#por-que-não-chama-llm-por-padrão),
 importar milhares de sessões via `claude -p` custaria uma fortuna):
 
 ```mermaid

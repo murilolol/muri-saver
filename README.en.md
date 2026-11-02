@@ -35,12 +35,24 @@ screenshots against 3 text reads) and solves all three with one system:
   session on a cold cache and tells you when to start a fresh one. Over 30 days
   of real use, turns above 250k of context were 71% of the spend.
 
-The docs under `docs/` are in Portuguese; commands, config keys and code are
+The docs under `docs/` are in Portuguese (`docs/audit.en.md` has an English version); commands, config keys and code are
 the same in both languages.
+
+## Video
+
+https://github.com/user-attachments/assets/c69dbadb-41bb-4152-825b-ace8e280813f
+
+<sub>90 s, no voice-over, on-screen text in Portuguese. If the player doesn't load, <a href="https://github.com/user-attachments/assets/c69dbadb-41bb-4152-825b-ace8e280813f">open the video</a>. On-screen numbers: 30 days of real use up to 2026-10-22; terminal screens marked as simulation use the real scripts' colors, limits and text.</sub>
+
+| Status line | Context guard | `/compact` at the right time |
+| --- | --- | --- |
+| ![Status line with context, cache and quotas](./assets/video/statusline.png) | ![Context guard holding a prompt with a cold cache](./assets/video/guarda-contexto.png) | ![/compact taking context from 218k to 34k](./assets/video/compact.png) |
+| **Memory across sessions** | **Skills and connectors** | **Where the quota goes** |
+| ![A new ai-memory session remembering where it left off](./assets/video/ai-memory.png) | ![Skills, connectors and MCP](./assets/video/skills.png) | ![71% of spend in turns above 250k](./assets/video/cota.png) |
 
 ## Contents
 
-- [Gallery](#gallery) · [Usage](#usage) · [Installer options](#installer-options)
+- [Video](#video) · [Gallery](#gallery) · [Usage](#usage) · [Installer options](#installer-options)
 - [What's included](#whats-included) · [How it works](#how-it-works)
 - [LLM chain](#llm-chain) · [Background jobs](#background-jobs) · [Commands](#commands)
 - [Configuration](#configuration) · [Cross-platform](#cross-platform)
@@ -238,7 +250,7 @@ files (`.timer`, task XML) are covered by tests.
 ```bash
 npm test                                      # 93 tests, node:test
 node bin/install.mjs --dry-run --with-all
-MURI_SAVER_SCHEDULER=dry node scripts/muri-jobs.mjs install --all
+HOME="$(mktemp -d)" MURI_SAVER_SCHEDULER=dry node scripts/muri-jobs.mjs install --all   # writes the job files into a temp home
 node scripts/vault-backfill.mjs --dry-run
 ```
 

@@ -49,7 +49,7 @@
   <text x="18" y="843" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] gravar ~/.gemini/config/hooks.json (hook Stop do muri-saver + aim-guard nos hooks do ai-memory (Antigravity))</tspan></text>
   <text x="18" y="862" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] Pronto: 34 arquivo(s) criado(s)/atualizado(s), 0 já em dia, 0 backup(s), 0 antigo(s) movido(s). Config: ~/.claude/muri-saver.json</tspan></text>
   <text x="18" y="881" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver] Próximos passos (detalhes em INSTALL-AI.md):</tspan></text>
-  <text x="18" y="900" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver]   1. ai-memory: instalar o binário e rodar `ai-memory install-hooks --client claude-code`.</tspan></text>
+  <text x="18" y="900" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver]   1. ai-memory: instalar o binário e rodar `ai-memory install-hooks --agent claude-code`.</tspan></text>
   <text x="18" y="919" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver]   2. Obsidian: configure o MCP do vault se quiser comandos de leitura/escrita no app.</tspan></text>
   <text x="18" y="938" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver]   3. Reiniciar Claude Code/Antigravity/Codex pra carregar skill, hooks e governança.</tspan></text>
   <text x="18" y="957" xml:space="preserve"><tspan fill="#c9d1d9">[muri-saver]   4. `node bin/doctor.mjs` pra conferir tudo.</tspan></text>

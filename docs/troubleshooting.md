@@ -118,7 +118,7 @@ O roteamento por `repo-root` usa o diretório onde o processo começou. Abrir o
 Claude Code na home e usar `/add-dir` **não muda isso** — tudo vai pro
 projeto genérico. Abra direto no projeto (`cd projeto && claude`) ou crie um
 `.ai-memory.toml` na raiz do repo (ver
-[`docs/ai-memory-obsidian-setup.md`](./ai-memory-obsidian-setup.md#3-marker-file-por-projeto-ai-memorytoml)).
+[`docs/ai-memory-obsidian-setup.md`](./ai-memory-obsidian-setup.md#3-identidade-explícita-e-histórico)).
 O hook `ai-memory-ensure-server.mjs` avisa quando a sessão começa na home.
 </details>
 

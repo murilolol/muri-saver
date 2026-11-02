@@ -9,7 +9,7 @@ abaixo ilustra como as peças se conectam, sem usar sessões pessoais.
 ```bash
 node bin/install.mjs --dry-run --with-all --vault "/caminho/para/vault"
 node bin/install.mjs --with-all --vault "/caminho/para/vault"
-ai-memory install-hooks --client claude-code
+ai-memory install-hooks --agent claude-code
 ai-memory install-mcp --client claude-code --session-aware --apply
 node bin/doctor.mjs
 ```

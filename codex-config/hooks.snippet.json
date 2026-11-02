@@ -26,5 +26,5 @@
       }
     ]
   },
-  "_nota_ai_memory_hooks": "Assim como no Claude Code, os hooks do próprio `ai-memory` pro Codex (PostToolUse/Stop/SessionStart/etc chamando `ai-memory hook --event ... --agent codex`) não estão aqui de propósito — rode `ai-memory install-hooks --client codex` (se sua versão do ai-memory suportar) ou registre manualmente seguindo docs/ai-memory-obsidian-setup.md."
+  "_nota_ai_memory_hooks": "Assim como no Claude Code, os hooks do próprio `ai-memory` pro Codex (PostToolUse/Stop/SessionStart/etc chamando `ai-memory hook --event ... --agent codex`) não estão aqui de propósito — rode `ai-memory install-hooks --agent codex` (se sua versão do ai-memory suportar) ou registre manualmente seguindo docs/ai-memory-obsidian-setup.md."
 }

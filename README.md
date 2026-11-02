@@ -35,8 +35,21 @@ screenshots contra 3 leituras de texto) e resolve os três com um sistema só:
   grande com o cache já frio e lembra a hora de abrir sessão nova. Em 30 dias de
   uso real, turnos com mais de 250k de contexto foram 71% do gasto.
 
+## Vídeo
+
+https://github.com/user-attachments/assets/c69dbadb-41bb-4152-825b-ace8e280813f
+
+<sub>90 s, sem narração. Se o player não carregar, <a href="https://github.com/user-attachments/assets/c69dbadb-41bb-4152-825b-ace8e280813f">abra o vídeo</a>. Números da tela: 30 dias de uso real até 22/10/2026; telas de terminal marcadas como simulação usam as cores, limites e textos dos scripts reais.</sub>
+
+| Status line | Guarda de contexto | `/compact` na hora certa |
+| --- | --- | --- |
+| ![Status line com contexto, cache e cotas](./assets/video/statusline.png) | ![Guarda de contexto segurando um prompt com o cache frio](./assets/video/guarda-contexto.png) | ![/compact levando o contexto de 218k para 34k](./assets/video/compact.png) |
+| **Memória entre sessões** | **Skills e conectores** | **Onde a cota vai** |
+| ![Sessão nova do ai-memory lembrando de onde parou](./assets/video/ai-memory.png) | ![Skills, conectores e MCP](./assets/video/skills.png) | ![71% do gasto em turnos acima de 250k](./assets/video/cota.png) |
+
 ## Índice
 
+- [Vídeo](#vídeo)
 - [Galeria](#galeria)
 - [Como usar](#como-usar)
 - [Opções do instalador](#opções-do-instalador)
@@ -276,7 +289,7 @@ rotina com `muri-saver report` e `muri-saver audit`.
 ```bash
 npm test                                      # 93 testes, node:test
 node bin/install.mjs --dry-run --with-all     # nada é escrito
-MURI_SAVER_SCHEDULER=dry node scripts/muri-jobs.mjs install --all   # gera os arquivos dos jobs sem registrar
+HOME="$(mktemp -d)" MURI_SAVER_SCHEDULER=dry node scripts/muri-jobs.mjs install --all   # grava os arquivos dos jobs numa home temporária, sem registrar
 node scripts/muri-jobs.mjs list
 node scripts/vault-backfill.mjs --dry-run
 node scripts/ai-memory-reprocess-parked.mjs --scan --dry-run

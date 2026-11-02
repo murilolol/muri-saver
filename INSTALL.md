@@ -33,9 +33,9 @@ Depois: [atualizar e remover](#atualizar-e-remover) · deu problema? [`docs/trou
 | Ferramenta | Por quê | Link |
 |---|---|---|
 | Node.js ≥ 18 | Roda os hooks (`.mjs`) e o instalador (`bin/`) | [nodejs.org](https://nodejs.org) |
-| Python 3 | Roda `scripts/usage-status.py` e `scripts/statusline.py` | já vem no macOS/Linux; [python.org](https://python.org) no Windows |
+| Python 3 | Roda `scripts/statusline.py`, `scripts/usage-status.py`, `scripts/muri-economy-report.py` e o hook `hooks/guarda-contexto.py` | já vem no macOS/Linux; [python.org](https://python.org) no Windows |
 | [Claude Code](https://claude.com/claude-code) | O client que carrega a skill, os hooks e o `CLAUDE.md` | — |
-| [ai-memory](https://github.com/akitaonrails/ai-memory) | Memória persistente cross-sessão (ver [explicação completa no README](./README.md#ai-memory)) | binário próprio, instalado à parte |
+| [ai-memory](https://github.com/akitaonrails/ai-memory) | Memória persistente cross-sessão (ver [o que é, no INSTALL-AI](./INSTALL-AI.md#3-ai-memory-memória-persistente)) | binário próprio, instalado à parte |
 | [Obsidian](https://obsidian.md) | Onde o vault de registro humano-legível vive | opcional, mas recomendado |
 
 <br>
@@ -127,7 +127,7 @@ node bin/install.mjs --with-all           # os três de uma vez
 | `--claude-dir`, `--skills-dir`, `--codex-dir`, `--gemini-dir` | Sobrescrevem os diretórios de destino (raramente necessário) |
 
 Detalhes de uso de cada uma em
-[`INSTALL-AI.md`](./INSTALL-AI.md#passo-1--clonar-e-rodar-o-instalador).
+[`INSTALL-AI.md`](./INSTALL-AI.md#2-clonar-e-rodar-o-instalador).
 </details>
 
 <br>
@@ -136,7 +136,7 @@ Detalhes de uso de cada uma em
 
 O `ai-memory` é a peça que dá memória persistente cross-sessão a este setup
 — ver a explicação completa de [o que é e por que ele importa no
-README](./README.md#ai-memory). Siga
+INSTALL-AI](./INSTALL-AI.md#3-ai-memory-memória-persistente). Siga
 [`docs/ai-memory-obsidian-setup.md`](./docs/ai-memory-obsidian-setup.md) pra
 instalar o binário, registrar os hooks oficiais dele
 (`ai-memory install-hooks`), e ativar o modo session-aware do MCP.
@@ -254,4 +254,4 @@ comando exato de instalação — índice completo em
 | 📥 | [`docs/session-ingestor.md`](./docs/session-ingestor.md) | Como `bin/ingest-sessions.mjs` importa sessões antigas de cada agente |
 | 🩹 | [`docs/troubleshooting.md`](./docs/troubleshooting.md) | Problemas conhecidos e como resolver |
 | 🤖 | [`INSTALL-AI.md`](./INSTALL-AI.md) | Runbook completo pra uma IA instalar sozinha |
-| 📖 | [`README.md`](./README.md) | Visão geral do projeto, achados reais, antes/depois |
+| 📖 | [`README.md`](./README.md) | Visão geral do projeto e achados reais |
