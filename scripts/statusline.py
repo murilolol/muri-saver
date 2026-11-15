@@ -279,7 +279,7 @@ def build_statusline():
             g.gravar_janela(data.get("session_id", ""), window_size, model_id)  # o hook não recebe a janela
         except Exception:
             pass
-    compact_at = g.ponto_compactacao(window_size, model_id) if g else (window_size or 200000)
+    compact_at = g.ponto_compactacao(window_size, model_id, used_tokens or 0) if g else (window_size or 200000)
     fracs = g.MARCOS_FRAC if g else (PCT_YELLOW_AT / 100, PCT_RED_AT / 100)
     # Só promete "compacta em Nk" quando N vem da janela do payload ou do autoCompactWindow, não de palpite.
     conhecido = bool(g and (window_size or g.auto_compact_window(model_id)))

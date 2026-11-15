@@ -56,14 +56,22 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
   dele. Quem não tem `autoCompactWindow` e usa modelo de 1M passa a ver os avisos bem mais tarde,
   perto de onde o Claude Code compacta de fato.
 - A janela vem do `context_window_size` do payload da status line, que a grava num cache
-  (`~/.claude/hooks/.guarda-contexto-janela.json`) para o guarda, que não a recebe. Sem esse cache,
-  o guarda supõe 1M.
+  (`~/.claude/hooks/.guarda-contexto-janela.json`) para o guarda, que não a recebe. Sem esse cache
+  (status line sua no lugar da do muri-saver), o guarda supõe 200k, que erra para o lado seguro, e
+  só passa a 1M quando o contexto já passou de 200k ou o modelo tem `[1m]`. Supor 1M desligava o
+  guarda na prática para quem usa modelo de 200k: ponto em 967k, tudo acima da janela.
+- O ponto de compactação tem piso na metade da janela efetiva: com `autoCompactWindow` ≤ 33k ele
+  dava zero ou negativo, a status line caía no fallback (`ZeroDivisionError`) ou mostrava
+  `1k/-13000`, e o guarda contava qualquer contexto como frio.
+- Os marcos já avisados ficam guardados como fração do ponto (0,7/0,9), não em tokens: se o ponto
+  muda na sessão (cache da janela gravado depois do 1º prompt, `/autocompact`), o aviso não repete.
 - O `autoCompactWindow` do modelo em `modelSettings`, onde o `/autocompact` grava, vence o global.
 - `compact_boundary` no transcript (inclusive o idle compaction): vale o `postTokens`, e o guarda
   deixa de segurar por "cache frio" com o contexto de antes da compactação.
 - TTL do cache lido do transcript: se o último turno só gravou cache de 5 min (API, créditos,
   nuvem), o guarda só avisa (`systemMessage`), sem segurar, e a status line conta 5 min.
-- Aviso do semanal (cache do `~/.claude.json`) em 70% e de novo em 90%, uma vez por sessão.
+- Aviso do semanal (cache do `~/.claude.json`) em 70% e de novo em 90%, uma vez por sessão, com o
+  % arredondado como no `usage-status` (antes, `72.4%`).
 - Status line: o % e a barra são sobre o ponto de compactação (`161k/467k`), com as cores e dicas
   nos mesmos 70% e 90% do guarda. "compacta em Nk" só aparece quando N vem da janela ou do
   `autoCompactWindow`, nunca o "250k" fixo de antes.

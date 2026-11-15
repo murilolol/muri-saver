@@ -30,8 +30,10 @@ const boundary = (post, ageMin) =>
   JSON.stringify({ type: 'system', subtype: 'compact_boundary', timestamp: at(ageMin), compactMetadata: { trigger: 'auto', preTokens: 230_000, postTokens: post } }) + '\n';
 const ctxOf = (out) => out.hookSpecificOutput.additionalContext;
 
+const W1M = [1_000_000, 'claude-x'];
+
 test('guarda: autoCompactWindow 250k segura 1x o cache frio e avisa em 70% e 90% do ponto (217k)', { skip }, () => {
-  const { transcript, guard } = setup({ settings: { autoCompactWindow: 250_000 } });
+  const { transcript, guard } = setup({ settings: { autoCompactWindow: 250_000 }, janela: W1M });
   writeFileSync(transcript, turn(100_000, 120)); // 100k > 40% de 217k
   assert.equal(guard().continue, false);
   assert.equal(guard(), null); // reenvio em até 15 min passa
@@ -43,7 +45,7 @@ test('guarda: autoCompactWindow 250k segura 1x o cache frio e avisa em 70% e 90%
 });
 
 test('guarda: janela de 1M sem autoCompactWindow compacta em ~967k; 300k parado não segura', { skip }, () => {
-  const { transcript, guard } = setup({ janela: [1_000_000, 'claude-x'] });
+  const { transcript, guard } = setup({ janela: W1M });
   writeFileSync(transcript, turn(300_000, 120));
   assert.equal(guard(), null);
   writeFileSync(transcript, turn(700_000, 1));
@@ -64,12 +66,12 @@ test('guarda: modelSettings do modelo (onde o /autocompact grava) vence o autoCo
 });
 
 test('guarda: com TTL de 5 min só avisa (systemMessage), sem segurar o prompt', { skip }, () => {
-  const { transcript, guard } = setup({ settings: { autoCompactWindow: 250_000 } });
+  const { transcript, guard } = setup({ settings: { autoCompactWindow: 250_000 }, janela: W1M });
   writeFileSync(transcript, turn(150_000, 10, { ephemeral_5m_input_tokens: 800, ephemeral_1h_input_tokens: 0 }));
   const out = guard();
   assert.equal(out.continue, undefined);
   assert.match(out.systemMessage, /TTL de 5 min.*~150k/);
-  const umaHora = setup({ settings: { autoCompactWindow: 250_000 } });
+  const umaHora = setup({ settings: { autoCompactWindow: 250_000 }, janela: W1M });
   writeFileSync(umaHora.transcript, turn(150_000, 10)); // o mesmo cenário com TTL de 1 h ainda não esfriou
   assert.equal(umaHora.guard(), null);
 });
@@ -78,6 +80,39 @@ test('guarda: depois de um compact_boundary vale o postTokens, não o contexto d
   const { transcript, guard } = setup({ settings: { autoCompactWindow: 250_000 } });
   writeFileSync(transcript, turn(210_000, 130) + boundary(30_000, 120));
   assert.equal(guard(), null); // sem o boundary, 210k parado 2 h seria bloqueado
+});
+
+test('guarda: sem o cache de janela supõe 200k (150k parado segura) e 1M só acima de 200k', { skip }, () => {
+  const { transcript, guard } = setup();
+  writeFileSync(transcript, turn(150_000, 120)); // 150k > 40% de 167k; com 1M suposto não segurava
+  assert.equal(guard().continue, false);
+  const grande = setup();
+  writeFileSync(grande.transcript, turn(300_000, 120)); // >200k: janela de 1M, frio só acima de 387k
+  assert.equal(grande.guard(), null);
+});
+
+test('guarda: marco já avisado não repete quando o ponto muda na sessão (/autocompact)', { skip }, () => {
+  const { home, transcript, guard } = setup({ settings: { autoCompactWindow: 300_000 }, janela: W1M });
+  writeFileSync(transcript, turn(190_000, 1));
+  assert.match(ctxOf(guard()), /~190k de ~267k/);
+  writeFileSync(join(home, '.claude', 'settings.json'), JSON.stringify({ autoCompactWindow: 280_000 }));
+  assert.equal(guard(), null); // 70% de 247k = 173k: com o marco em tokens absolutos, avisava de novo
+});
+
+test('guarda: semanal avisa 1x em 70% e em 90% (% arredondado) e volta depois do reset', { skip }, () => {
+  const { home, transcript, guard } = setup({ janela: W1M });
+  writeFileSync(transcript, turn(10_000, 1));
+  const semanal = (pct) => writeFileSync(join(home, '.claude.json'),
+    JSON.stringify({ cachedUsageUtilization: { utilization: { seven_day: { utilization: pct } } } }));
+  semanal(72.4);
+  assert.match(ctxOf(guard()), /Semanal em 72% .*sessões curtas/);
+  assert.equal(guard(), null);
+  semanal(91.2);
+  assert.match(ctxOf(guard()), /Semanal em 91% .*Crítico/);
+  semanal(10); // reset semanal
+  assert.equal(guard(), null);
+  semanal(75);
+  assert.match(ctxOf(guard()), /Semanal em 75%/);
 });
 
 function statusline(home, payload) {
@@ -113,6 +148,14 @@ test('status line: sem janela nem autoCompactWindow, a dica não inventa o ponto
   const out = statusline(home, { context_window: { total_input_tokens: 900_000 } });
   assert.match(out, /\/clear agora/);
   assert.doesNotMatch(out, /compacta em/);
+});
+
+test('status line: autoCompactWindow <= 33k não zera o ponto (piso na metade)', { skip }, () => {
+  for (const [acw, esperado] of [[33_000, /1k\/16k .* 6%/], [20_000, /1k\/10k .* 10%/]]) {
+    const { home } = setup({ settings: { autoCompactWindow: acw } });
+    const out = statusline(home, { context_window: { context_window_size: 200_000, total_input_tokens: 1_000 } });
+    assert.match(out, esperado);
+  }
 });
 
 test('usage-status: fuso do muri-saver.json, % fracionário arredondado e plano sem janela de 5h', { skip }, () => {

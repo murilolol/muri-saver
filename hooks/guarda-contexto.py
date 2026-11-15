@@ -13,7 +13,8 @@
 
 Ponto de auto-compact = autoCompactWindow (o do modelo em modelSettings, onde o /autocompact
 grava, ou o global), limitado à janela do modelo, menos ~33k. A janela e o modelo vêm da status
-line, que grava o context_window_size do payload num cache; sem ele, supõe 1M.
+line, que grava o context_window_size do payload num cache; sem ele, supõe 200k (erra pro lado
+seguro), ou 1M quando o contexto já passou de 200k ou o modelo tem [1m].
 
 Na análise, 64 retomadas frias custaram 33,5M tokens-eq/mês e turnos >250k foram 71% do gasto.
 Desligar: MURI_GUARDA=0 no ambiente, ou remover o hook do settings.json.
@@ -29,7 +30,7 @@ FRIO_FRAC = 0.40  # fração do ponto de compactação a partir da qual o cache 
 LIBERA_S = 15 * 60
 # shortcut: FOLGA medida só com 250k (compacta em 216-219k); remedir pelo compactMetadata.preTokens com outro valor.
 FOLGA = 33_000
-JANELA_PADRAO = 1_000_000
+JANELA_200K, JANELA_1M = 200_000, 1_000_000
 MARCOS_FRAC = (0.70, 0.90)  # fração do ponto de compactação; a status line usa as mesmas
 SEMANAL = (70, 90)
 
@@ -80,10 +81,11 @@ def auto_compact_window(modelo=None):
     return w if isinstance(w, int) else None
 
 
-def ponto_compactacao(janela=None, modelo=None):
+def ponto_compactacao(janela=None, modelo=None, ctx=0):
     """Tokens em que o auto-compact dispara; guarda e status line usam a mesma conta."""
-    janela = janela or JANELA_PADRAO
-    return min(auto_compact_window(modelo) or janela, janela) - FOLGA
+    janela = janela or (JANELA_1M if ctx > JANELA_200K or "[1m]" in (modelo or "") else JANELA_200K)
+    w = min(auto_compact_window(modelo) or janela, janela)
+    return max(w - FOLGA, w // 2)  # piso: com autoCompactWindow <= 33k o ponto daria zero ou negativo
 
 
 def semanal():
@@ -175,14 +177,15 @@ def main():
     ctx, ts, ttl = uso
     agora = time.time()
     janela, modelo = (ler_json(JANELAS).get(sessao) or [None, None])[:2]
-    ponto = ponto_compactacao(janela, modelo)
+    ponto = ponto_compactacao(janela, modelo, ctx)
 
     estado = ler_json(ESTADO)
     # Esquece sessões paradas há mais de 3 dias.
     estado = {k: v for k, v in estado.items() if agora - v.get("visto", 0) < 3 * 86400}
     s = estado.setdefault(sessao, {})
     s["visto"] = agora
-    s["avisos"] = [m for m in s.get("avisos", []) if m <= ctx]  # depois de compactar, os marcos voltam
+    # Marcos guardados como fração do ponto: se o ponto muda na sessão, o mesmo marco não repete.
+    s["avisos"] = [f for f in s.get("avisos", []) if f * ponto <= ctx]  # depois de compactar, os marcos voltam
 
     saida = None
     parado = (agora - ts) / 60
@@ -195,7 +198,7 @@ def main():
                                       f"~{ctx // 1000}k tokens. Antes de uma pausa longa, prefira /clear ou /compact."}
     else:
         avisos = []
-        novos = [m for m in (int(f * ponto) for f in MARCOS_FRAC) if ctx >= m and m not in s["avisos"]]
+        novos = [f for f in MARCOS_FRAC if ctx >= f * ponto and f not in s["avisos"]]
         if novos:
             s["avisos"] += novos
             avisos.append(
@@ -207,7 +210,7 @@ def main():
         nivel = max([n for n in SEMANAL if pct is not None and pct >= n], default=0)
         if nivel > s.get("semanal", 0):
             avisos.append(
-                f"[guarda-contexto] Semanal em {pct}% (cache do ~/.claude.json, trate como piso). "
+                f"[guarda-contexto] Semanal em {round(pct)}% (cache do ~/.claude.json, trate como piso). "
                 + ("Crítico: avise o usuário, delegue leitura e pesquisa e grave a síntese no ai-memory antes de "
                    "tarefa longa; em 100% para até o reset." if nivel >= 90 else
                    "Prefira sessões curtas e /compact antes de tarefa nova.")

@@ -35,7 +35,9 @@ rule lives in the muri-saver repository (docs/), not here.
   large and suggest `/compact` at a natural checkpoint.
 - When `[guarda-contexto]` shows up (the hook fires at 70% and 90% of the
   auto-compact point) and the request changed topic or the task is done,
-  suggest `/clear` plus the handoff line before starting. After >1h idle the cache is cold: suggest `/compact`.
+  suggest `/clear` plus the handoff line before starting. Idle past the
+  cache TTL (1h, or 5 min on API/credits/cloud) leaves the cache cold:
+  suggest `/compact`.
 - Browser work: page text for facts, screenshots only for visual judgment.
   Headless screenshots in scripts: `chrome-headless-shell`, never the full
   Chrome app (on macOS each killed full Chrome leaks a `code_sign_clone`).
