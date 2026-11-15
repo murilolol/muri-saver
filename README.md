@@ -20,6 +20,15 @@
 
 Kit de governança, memória e registro para agentes de código. Gasta menos cota, não deixa o contexto evaporar entre sessões e transforma cada sessão numa nota legível no Obsidian. Funciona no **Claude Code**, no **Codex** e no **Antigravity**, em macOS, Linux e Windows, com um instalador em Node e nenhuma dependência.
 
+**Instalar em 1 minuto.** Precisa de Node 18+ e Python 3; ai-memory e Obsidian são opcionais; 0 dependências npm.
+
+```bash
+git clone https://github.com/murilolol/muri-saver.git && cd muri-saver
+node bin/install.mjs --dry-run      # mostra o que faria, não escreve nada
+```
+
+Opções e próximos passos em [Instalar](#instalar).
+
 > [!NOTE]
 > Os números deste README vêm do uso real do autor e servem de diagnóstico, não de benchmark. Meça a sua rotina com `muri-saver report` e `muri-saver audit`. As capturas do vault usam dados fictícios de [`examples/vault/`](examples/vault/).
 
@@ -110,11 +119,11 @@ node bin/install.mjs --with-all     # Claude Code + Codex + Antigravity
 node bin/doctor.mjs                 # confere tudo, só leitura
 ```
 
-Sem clonar: `npx github:murilolol/muri-saver install --with-all`. Depois, ligue o que quiser:
+Sem clonar: `npx github:murilolol/muri-saver install --with-all` (nos comandos abaixo, troque `node bin/install.mjs` por `npx github:murilolol/muri-saver install` e `node bin/cli.mjs` por `npx github:murilolol/muri-saver`). Depois, ligue o que quiser:
 
 ```bash
 node bin/install.mjs --update --vault "/caminho/do/seu/vault"   # toda sessão vira nota no Obsidian
-npx muri-saver llm chain && npx muri-saver llm tune              # ai-memory pela cadeia de modelos
+node bin/cli.mjs llm chain && node bin/cli.mjs llm tune          # ai-memory pela cadeia de modelos
 node bin/install.mjs --update --with-jobs                         # jobs de fundo
 ```
 
@@ -208,6 +217,7 @@ Node.js 18 ou mais novo, só com a biblioteca padrão, e scripts auxiliares em P
 | [Relatório de economia](docs/economy-report.md) · [Auditoria](docs/audit.md) | Para onde a cota foi, tokens-eq |
 | [ai-memory e Obsidian](docs/ai-memory-obsidian-setup.md) · [Ingestor](docs/session-ingestor.md) | Memória, MCP e histórico antigo |
 | [Skills companheiras](docs/skills-companion.md) · [Problemas conhecidos](docs/troubleshooting.md) | Terceiros que combinam e soluções |
+| [Avaliar a skill](docs/evaluation.md) · [Pacotes ZIP](docs/marketplace.md) | Cenários para comparar versões da skill; ZIPs das skills para marketplaces |
 
 ## Contribuindo e créditos
 

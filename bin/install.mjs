@@ -42,7 +42,7 @@ const VERSION = readPackageVersion(REPO_ROOT);
 const HOME = os.homedir();
 
 const HELP = `
-Uso: node bin/install.mjs [opções]      (ou: npx muri-saver install [opções])
+Uso: node bin/install.mjs [opções]      (ou: node bin/cli.mjs install [opções])
 
 Instalação
   --alias <nome>            Renomeia a skill e os gatilhos (padrão: muri-saver). Sinônimo: --skill-name
@@ -602,7 +602,9 @@ function main() {
   const { written, unchanged, backups, moved } = ctx.counts;
   log(`Pronto: ${written} arquivo(s) criado(s)/atualizado(s), ${unchanged} já em dia, ${backups} backup(s), ${moved} antigo(s) movido(s). Config: ${cfgPath}`);
   log('Próximos passos (detalhes em INSTALL-AI.md):');
-  log('  1. ai-memory: instalar o binário e rodar `ai-memory install-hooks --agent claude-code`.');
+  log('  1. ai-memory: instalar o binário e rodar `ai-memory install-hooks --agent claude-code --apply` e `ai-memory install-mcp --client claude-code --session-aware --apply`.');
+  const aimAgents = agents.filter((a) => a !== 'claude').map((a) => (a === 'codex' ? 'codex' : 'antigravity-cli'));
+  if (aimAgents.length) log(`     Também \`ai-memory install-hooks --apply\` com ${aimAgents.map((a) => `--agent ${a}`).join(' e ')}, depois \`node bin/install.mjs --update\` (religa o aim-guard).`);
   log(vault
     ? '  2. Obsidian: configure o MCP do vault se quiser comandos de leitura/escrita no app.'
     : '  2. Obsidian opcional: para ativar depois, rode --update --vault <caminho>.');

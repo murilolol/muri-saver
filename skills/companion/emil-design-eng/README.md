@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/tipo-skill_companheira-555?style=flat-square" alt="Skill companheira" />
   <img src="https://img.shields.io/badge/autor-Emil_Kowalski-000000?style=flat-square" alt="Autor: Emil Kowalski" />
   <img src="https://img.shields.io/badge/licença-MIT-yellow?style=flat-square" alt="Licença MIT" />
-  <img src="https://img.shields.io/badge/status-planejado-orange?style=flat-square" alt="Status: planejado, ainda não uso" />
+  <img src="https://img.shields.io/badge/status-uso_hoje-brightgreen?style=flat-square" alt="Status: uso hoje" />
 </p>
 
 > [!NOTE]
@@ -12,7 +12,7 @@
 > Ver [`docs/skills-companion.md`](../../../docs/skills-companion.md) pra
 > entender por quê.
 >
-> **Status no meu setup:** ainda não uso — planejo instalar.
+> **Status no meu setup:** instalada e em uso.
 
 Pacote de skills de design engineering feito por
 [Emil Kowalski](https://github.com/emilkowalski) (autor do Vaul, Sonner, e

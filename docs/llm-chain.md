@@ -106,7 +106,7 @@ muri-saver llm anthropic  # Claude via ANTHROPIC_OAUTH_TOKEN (gasta a cota do Cl
 muri-saver llm off        # sem LLM: só captura, nada vira página
 ```
 
-(`muri-saver <cmd>` = `npx muri-saver <cmd>` ou `node ~/.claude/scripts/ai-memory-llm-mode.mjs <cmd>`.)
+(`muri-saver <cmd>` = `node bin/cli.mjs <cmd>` num clone ou `node ~/.claude/scripts/ai-memory-llm-mode.mjs <cmd>`.)
 
 `llm chain` também grava `llm.shim: true` no `muri-saver.json`. A partir daí, o
 hook SessionStart sobe o shim se ele estiver fora do ar, em qualquer SO. Para ele

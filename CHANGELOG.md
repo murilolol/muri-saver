@@ -16,6 +16,19 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
 - Shim LLM (`127.0.0.1:49380`): recusa `Host` fora do loopback (403) e POST sem
   `Content-Type: application/json` (415).
 
+### Documentação
+- `npx muri-saver` (o pacote não existe no npm) vira `node bin/cli.mjs` em READMEs, INSTALL,
+  INSTALL-AI, docs e help do CLI; a rota sem clonar usa `npx github:murilolol/muri-saver`.
+- Instalador e `settings.snippet.json`: a dica do ai-memory leva `--apply` e soma
+  `install-mcp --client claude-code --session-aware --apply`; com Codex ou Antigravity detectados,
+  cita `--agent codex`/`antigravity-cli` e o `--update` que religa o aim-guard.
+- `skills-companion.md`: link do OpenSpec (`Fission-AI/OpenSpec`), colisão do `prototype`
+  (Matt Pocock × Emil Kowalski), status de `emil-design-eng` e `taste-skill`, nota do superpowers.
+- "Testado com o ai-memory 3.2.x" no INSTALL e no guia do ai-memory.
+- README pt/en: bloco "Instalar em 1 minuto" no topo, com requisitos e "0 dependências npm";
+  `evaluation.md` e `marketplace.md` entram na tabela de documentação.
+- CHANGELOG: `[Unreleased]`, datas da 2.0.0 e da 2.1.0 e links de comparação.
+
 ## [3.2.0] — 2026-11-01
 
 Sincroniza o repo com o setup do autor no macOS (out/2026).
@@ -143,7 +156,7 @@ Quem tinha os scripts soltos (LaunchAgents `com.muri.*`): rode
 e descarregue os antigos com `launchctl bootout gui/$(id -u)/com.muri.<nome>`. A
 fila de sessões estacionadas no formato antigo (2 colunas) continua válida.
 
-## [2.1.0]
+## [2.1.0] — 2026-10-02
 
 - Skills em inglês com núcleo curto e referências sob demanda.
 - Templates globais de ~59 KB para ~8 KB.
@@ -151,10 +164,16 @@ fila de sessões estacionadas no formato antigo (2 colunas) continua válida.
   chamadas repetidas).
 - ZIPs reproduzíveis das skills para marketplaces.
 
-## [2.0.0]
+## [2.0.0] — 2026-09-25
 
 - Vault, fuso e alias configuráveis em `~/.claude/muri-saver.json`.
 - Máscara de segredos no hook e no ingestor.
 - `--update`, `--uninstall`, manifesto com sha256.
 - Ingestor lendo o SQLite do Codex, pulando subagentes, `--enrich` opcional.
 - Suíte `node --test` e CI em macOS, Linux e Windows.
+
+[Unreleased]: https://github.com/murilolol/muri-saver/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/murilolol/muri-saver/compare/v3.1.0...v3.2.0
+[3.1.0]: https://github.com/murilolol/muri-saver/compare/1f462ed...v3.1.0
+[2.1.0]: https://github.com/murilolol/muri-saver/compare/v2.0.0...1f462ed
+[2.0.0]: https://github.com/murilolol/muri-saver/releases/tag/v2.0.0

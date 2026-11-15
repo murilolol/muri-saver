@@ -24,7 +24,7 @@ o instalador sobrescreve ganham backup em `~/.claude/muri-saver-backups/`.
 
 ## Comandos
 
-`npx muri-saver <comando>` (ou `node bin/cli.mjs <comando>` num clone):
+`node bin/cli.mjs <comando>` num clone (sem clonar: `npx github:murilolol/muri-saver <comando>`):
 
 | Comando | Faz |
 | --- | --- |

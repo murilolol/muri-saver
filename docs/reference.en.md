@@ -24,7 +24,7 @@ backed up to `~/.claude/muri-saver-backups/`.
 
 ## Commands
 
-`npx muri-saver <command>` (or `node bin/cli.mjs <command>` in a clone):
+`node bin/cli.mjs <command>` in a clone (without cloning: `npx github:murilolol/muri-saver <command>`):
 `install`, `update`, `uninstall`, `doctor`, `llm chain|gemini|anthropic|off|status|tune`,
 `jobs list|status|install|remove|run`, `delegate <gemini|codex> "<brief>"`,
 `report [--days N] [--save]`, `reprocess`, `backfill`, `finalize-idle`, `ingest`, `audit`.

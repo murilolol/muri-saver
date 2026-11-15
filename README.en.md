@@ -20,6 +20,15 @@
 
 A governance, memory and logging kit for coding agents. It spends less quota, keeps context from evaporating between sessions and turns every session into a readable Obsidian note. It works with **Claude Code**, **Codex** and **Antigravity**, on macOS, Linux and Windows, with a Node installer and zero dependencies.
 
+**Install in 1 minute.** Needs Node 18+ and Python 3; ai-memory and Obsidian are optional; 0 npm dependencies.
+
+```bash
+git clone https://github.com/murilolol/muri-saver.git && cd muri-saver
+node bin/install.mjs --dry-run      # shows what it would do, writes nothing
+```
+
+Options and next steps under [Install](#install).
+
 > [!NOTE]
 > The numbers in this README come from the author's real usage and are a diagnosis, not a benchmark. Measure your own routine with `muri-saver report` and `muri-saver audit`. Vault screenshots use fake data from [`examples/vault/`](examples/vault/). Most deeper docs are in Portuguese.
 
@@ -110,11 +119,11 @@ node bin/install.mjs --with-all     # Claude Code + Codex + Antigravity
 node bin/doctor.mjs                 # checks everything, read-only
 ```
 
-Without cloning: `npx github:murilolol/muri-saver install --with-all`. Then turn on what you want:
+Without cloning: `npx github:murilolol/muri-saver install --with-all` (in the commands below, swap `node bin/install.mjs` for `npx github:murilolol/muri-saver install` and `node bin/cli.mjs` for `npx github:murilolol/muri-saver`). Then turn on what you want:
 
 ```bash
 node bin/install.mjs --update --vault "/path/to/your/vault"   # every session becomes an Obsidian note
-npx muri-saver llm chain && npx muri-saver llm tune            # ai-memory through the model chain
+node bin/cli.mjs llm chain && node bin/cli.mjs llm tune        # ai-memory through the model chain
 node bin/install.mjs --update --with-jobs                       # background jobs
 ```
 
@@ -208,6 +217,7 @@ Node.js 18 or newer, standard library only, plus helper scripts in Python and sh
 | [Economy report](docs/economy-report.md) · [Audit](docs/audit.en.md) | Where the quota went, tokens-eq |
 | [ai-memory and Obsidian](docs/ai-memory-obsidian-setup.md) · [Ingestor](docs/session-ingestor.md) | Memory, MCP and old history |
 | [Companion skills](docs/skills-companion.md) · [Troubleshooting](docs/troubleshooting.md) | Third-party skills that pair well, and fixes |
+| [Evaluate the skill](docs/evaluation.md) · [ZIP packages](docs/marketplace.md) | Scenarios to compare skill versions; skill ZIPs for marketplaces |
 
 ## Contributing and credits
 

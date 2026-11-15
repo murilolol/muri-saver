@@ -35,7 +35,7 @@ Depois: [atualizar e remover](#atualizar-e-remover) · deu problema? [`docs/trou
 | Node.js ≥ 18 | Roda os hooks (`.mjs`) e o instalador (`bin/`) | [nodejs.org](https://nodejs.org) |
 | Python 3 | Roda `scripts/statusline.py`, `scripts/usage-status.py`, `scripts/muri-economy-report.py` e o hook `hooks/guarda-contexto.py` | já vem no macOS/Linux; [python.org](https://python.org) no Windows |
 | [Claude Code](https://claude.com/claude-code) | O client que carrega a skill, os hooks e o `CLAUDE.md` | — |
-| [ai-memory](https://github.com/akitaonrails/ai-memory) | Memória persistente cross-sessão (ver [o que é, no INSTALL-AI](./INSTALL-AI.md#3-ai-memory-memória-persistente)) | binário próprio, instalado à parte |
+| [ai-memory](https://github.com/akitaonrails/ai-memory) | Memória persistente cross-sessão (ver [o que é, no INSTALL-AI](./INSTALL-AI.md#3-ai-memory-memória-persistente)) | binário próprio, instalado à parte; testado com a 3.2.x |
 | [Obsidian](https://obsidian.md) | Onde o vault de registro humano-legível vive | opcional, mas recomendado |
 
 <br>
@@ -174,10 +174,10 @@ item.
 ## Passo 4b — Cadeia de LLMs e jobs de fundo (opcional, recomendado)
 
 ```bash
-npx muri-saver llm chain                    # ai-memory consolida pela cadeia de modelos
-npx muri-saver llm tune                     # limites recomendados do ai-memory
+node bin/cli.mjs llm chain                  # ai-memory consolida pela cadeia de modelos
+node bin/cli.mjs llm tune                   # limites recomendados do ai-memory
 node bin/install.mjs --update --with-jobs   # sessões ociosas, reprocesso, backfill, relatório
-npx muri-saver jobs status
+node bin/cli.mjs jobs status
 ```
 
 A cadeia usa por padrão a API do Gemini (grátis, por modelo) e o `agy`

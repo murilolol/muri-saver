@@ -3,7 +3,8 @@
 O [ai-memory de AkitaOnRails](https://github.com/akitaonrails/ai-memory) é uma
 dependência externa. Captura, busca e handoff podem funcionar sem provedor de
 LLM. O muri-saver acrescenta governança, instalação dos próprios hooks e
-registro opcional em um vault; não instala nem substitui o daemon.
+registro opcional em um vault; não instala nem substitui o daemon. Testado com o
+ai-memory 3.2.x.
 
 ## 1. Instalar e conferir os comandos
 
@@ -74,7 +75,7 @@ workspace/project/scopes nessa chamada. O nome `muri` não é um padrão públic
 
 ## 4. Roteamento curto, detalhes sob demanda
 
-A versão local 2.4.0 oferece preview das instruções compactas e das skills
+O ai-memory 3.2.x oferece preview das instruções compactas e das skills
 gerenciadas; confirme as flags no help da sua versão:
 
 ```bash
@@ -111,10 +112,10 @@ consolida em páginas da wiki. O muri-saver oferece uma cadeia de modelos com
 troca automática em limite/erro, servida por um shim local:
 
 ```bash
-npx muri-saver llm chain    # ai-memory → shim 127.0.0.1:49380 → cadeia llm.aiMemory
-npx muri-saver llm tune     # limites recomendados (entrada maior, scheduler sem rajada)
-npx muri-saver llm status   # provedor ativo e estado de cada modelo
-npx muri-saver jobs install llm-shim finalize-idle reprocess-parked
+node bin/cli.mjs llm chain    # ai-memory → shim 127.0.0.1:49380 → cadeia llm.aiMemory
+node bin/cli.mjs llm tune     # limites recomendados (entrada maior, scheduler sem rajada)
+node bin/cli.mjs llm status   # provedor ativo e estado de cada modelo
+node bin/cli.mjs jobs install llm-shim finalize-idle reprocess-parked
 ```
 
 O guia completo (tipos de modelo, chave da API para serviços, tabela de

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Entrada única do `npx muri-saver <comando>`. Os comandos de instalação e
+// Entrada única do `node bin/cli.mjs <comando>` (ou `npx github:murilolol/muri-saver`). Os comandos de instalação e
 // diagnóstico são os scripts de bin/; os de operação (jobs, llm, delegate...)
 // rodam a cópia INSTALADA em ~/.claude/scripts quando ela existe, para que um
 // job registrado pelo `npx` não aponte para uma pasta temporária.
@@ -40,9 +40,9 @@ Comandos:
 ${rows}
 
 Cada comando aceita --help pra ver as próprias opções. Ex:
-  npx muri-saver install --alias mendes-saver --with-all --with-jobs
-  npx muri-saver llm chain
-  npx muri-saver jobs status
+  node bin/cli.mjs install --alias mendes-saver --with-all --with-jobs
+  node bin/cli.mjs llm chain
+  node bin/cli.mjs jobs status
 `);
 }
 

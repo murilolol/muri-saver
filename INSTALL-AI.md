@@ -96,14 +96,14 @@ Mapeamento das perguntas 7 e 8 para comandos (depois do passo 2):
 
 | Resposta | Comando |
 |---|---|
-| Google | `npx muri-saver llm chain` e, se houver chave em arquivo, `node bin/install.mjs --update --llm-key-file <caminho>` |
-| Local/OpenRouter | editar `llm.openai` e `llm.narrative`/`llm.aiMemory` no `~/.claude/muri-saver.json` (ver docs/llm-chain.md), depois `npx muri-saver llm chain` |
+| Google | `node bin/cli.mjs llm chain` e, se houver chave em arquivo, `node bin/install.mjs --update --llm-key-file <caminho>` |
+| Local/OpenRouter | editar `llm.openai` e `llm.narrative`/`llm.aiMemory` no `~/.claude/muri-saver.json` (ver docs/llm-chain.md), depois `node bin/cli.mjs llm chain` |
 | Claude Haiku | `node bin/install.mjs --update --narrative-chain claude:claude-haiku-4-5` |
 | Nenhum | `node bin/install.mjs --update --narrative-chain off` |
 | Jobs recomendados | `node bin/install.mjs --update --with-jobs` |
-| Shim como serviço | `npx muri-saver jobs install llm-shim` |
+| Shim como serviço | `node bin/cli.mjs jobs install llm-shim` |
 
-Depois rode `npx muri-saver llm tune` (com o OK do usuário: edita o
+Depois rode `node bin/cli.mjs llm tune` (com o OK do usuário: edita o
 `config.toml` do ai-memory, com backup) e confira tudo com `node bin/doctor.mjs`.
 
 ## 1. Detectar o ambiente (primeiro comando técnico, sempre)

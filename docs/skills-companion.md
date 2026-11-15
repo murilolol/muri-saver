@@ -35,20 +35,30 @@ documento.
 |---|---|---|---|---|---|
 | 🔍 | `find-skills` | ✅ uso hoje | [vercel-labs/skills](https://github.com/vercel-labs/skills) | MIT | [skills/companion/find-skills/](../skills/companion/find-skills/README.md) |
 | 🧪 | `tdd` | ✅ uso hoje | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | [skills/companion/tdd/](../skills/companion/tdd/README.md) |
-| 🧬 | `prototype` | ✅ uso hoje | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | [skills/companion/prototype/](../skills/companion/prototype/README.md) |
+| 🧬 | `prototype` | ⚠️ ver [colisão](#colisão-do-prototype) | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | [skills/companion/prototype/](../skills/companion/prototype/README.md) |
 | ❓ | `grill-me` | ✅ uso hoje | reescrita própria (ver nota abaixo) | MIT (deste repo) | já vendorizada em [`skills/grill-me/`](../skills/grill-me/SKILL.md) |
 | 📝 | `grill-with-docs` | ✅ uso hoje | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | [skills/companion/grill-with-docs/](../skills/companion/grill-with-docs/README.md) |
-| 📐 | `openspec` | ✅ uso hoje | [openspecio/openspec](https://github.com/openspecio/openspec) | MIT | [skills/companion/openspec/](../skills/companion/openspec/README.md) |
+| 📐 | `openspec` | ✅ uso hoje | [Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) | MIT | [skills/companion/openspec/](../skills/companion/openspec/README.md) |
 | 🕸️ | `graphify` | ✅ uso hoje | [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) (safishamsi) | Apache-2.0 | [skills/companion/graphify/](../skills/companion/graphify/README.md) |
 | 🎨 | `impeccable` | ✅ uso hoje | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Apache-2.0 | [skills/companion/impeccable/](../skills/companion/impeccable/README.md) |
-| 🎞️ | `emil-design-eng` (pack) | 🔜 quero usar | [emilkowalski/skills](https://github.com/emilkowalski/skills) | MIT | [skills/companion/emil-design-eng/](../skills/companion/emil-design-eng/README.md) |
-| 🖌️ | `taste-skill` | 🔜 quero usar | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT | [skills/companion/taste-skill/](../skills/companion/taste-skill/README.md) |
+| 🎞️ | `emil-design-eng` (pack) | ✅ uso hoje | [emilkowalski/skills](https://github.com/emilkowalski/skills) | MIT | [skills/companion/emil-design-eng/](../skills/companion/emil-design-eng/README.md) |
+| 🖌️ | `taste-skill` | ✅ uso hoje | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT | [skills/companion/taste-skill/](../skills/companion/taste-skill/README.md) |
 
 > [!NOTE]
-> Não uso (e não recomendo por padrão) o pacote `obra/superpowers` — é ótimo,
-> mas pesado: puxa muito contexto/token pro que meu fluxo precisa. Combina bem
-> com a filosofia deste repositório (`muri-saver` existe justamente pra cortar
-> gasto desnecessário) deixar ele de fora até que o custo compense.
+> Não recomendo por padrão o pacote inteiro `obra/superpowers`: é ótimo, mas
+> pesado, e puxa muito contexto pro que meu fluxo precisa. Da coleção, a que uso
+> de fato é a `test-driven-development`, que dá pra instalar avulsa com
+> `npx skills add obra/superpowers@test-driven-development`.
+
+### Colisão do `prototype`
+
+O [`emilkowalski/skills`](https://github.com/emilkowalski/skills) também tem
+uma skill chamada `prototype`: gera variantes de uma peça de UI atrás de um
+seletor visual e só roda quando você a chama (`disable-model-invocation: true`).
+As duas usam o mesmo nome e a pasta da última instalada sobrescreve a outra, então
+instale só uma. O `--with-companion-skills` instala a do Matt Pocock (protótipo
+descartável para responder uma pergunta de design); na minha máquina ficou a do
+Emil, instalada junto com o pack `emil-design-eng`.
 
 <br>
 
