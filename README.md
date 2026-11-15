@@ -61,8 +61,8 @@ https://github.com/user-attachments/assets/c69dbadb-41bb-4152-825b-ace8e280813f
 
 <img src="assets/terminal-statusline.svg" width="100%" alt="Status line do muri-saver: pasta, branch, ai-memory, duração, contexto colorido por tokens, quanto falta pro cache esfriar, selo de cache frio, cotas de 5h e 7 dias e modelo">
 
-- **Status line:** o contexto muda de cor pelos tokens (amarelo em 120k, vermelho em 200k), mostra quanto falta para o cache esfriar e as cotas de 5 horas e 7 dias com contagem regressiva.
-- **Guarda de contexto:** depois de 55 minutos parado com mais de 80k de contexto, segura uma vez o próximo prompt, porque a retomada regravaria o cache inteiro. Em 120k, 160k e 200k, lembra a hora de abrir sessão nova. `MURI_GUARDA=0` desliga.
+- **Status line:** o contexto aparece contra o ponto em que o Claude Code compacta (`autoCompactWindow` ou a janela do modelo) e muda de cor em 70% e 90% dele; mostra quanto falta para o cache esfriar (TTL de 1 h ou 5 min, lido do transcript) e as cotas de 5 horas e 7 dias com contagem regressiva. A de 5 horas some no plano que não tem essa janela.
+- **Guarda de contexto:** depois de 55 minutos parado com mais de 40% do ponto de compactação, segura uma vez o próximo prompt, porque a retomada regravaria o cache inteiro (com TTL de 5 min, só avisa). Em 70% e 90% do ponto, lembra a hora de abrir sessão nova, e avisa quando a cota semanal passa de 70% e de 90%. `MURI_GUARDA=0` desliga.
 - **Notificação:** alerta no desktop quando o Claude está esperando você (macOS e Linux). `MURI_NOTIFY=0` desliga.
 - **Skill `muri-saver`:** diga "muri saver" e o agente entra no modo de economia agressiva: não reler, paralelizar, perfil por tarefa e sessões curtas.
 
@@ -93,7 +93,7 @@ A narrativa e a consolidação usam uma [cadeia de modelos](docs/llm-chain.md) q
 
 Trinta dias de uso medidos turno a turno mostraram que o problema não é a escolha de modelo, é o tamanho do contexto. Os turnos acima de 250k foram metade dos turnos e **71% do gasto**, porque cada um custa cerca de 2,5 vezes um turno de 100 a 150k. Na mesma análise, 64 retomadas com o cache já frio custaram 33,5 milhões de tokens-eq, perto de 11 pontos da cota semanal no mês.
 
-Daí a status line colorida por tokens, o guarda de contexto e o `autoCompactWindow` de 250k recomendado no [`settings.snippet.json`](claude-config/settings.snippet.json).
+Daí a status line que mede o contexto contra o ponto de compactação, o guarda de contexto e o `autoCompactWindow` de 250k recomendado no [`settings.snippet.json`](claude-config/settings.snippet.json).
 
 ## Os achados
 

@@ -48,4 +48,4 @@ do consumo em Opus na conversa principal, e um único dia com ~36% da semana. Ou
 seja, o grosso não é o prefixo fixo (CLAUDE.md, skills), é **a quantidade de
 turnos por sessão**. As alavancas que sobram: delegar leitura e pesquisa de
 verdade, e sessões mais curtas: `/clear` com handoff do ai-memory em pontos naturais (ou
-`/compact`), que é o que o guarda de contexto lembra em 120k/160k/200k.
+`/compact`), que é o que o guarda de contexto lembra em 70% e 90% do ponto de compactação.

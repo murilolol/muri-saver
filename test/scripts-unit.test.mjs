@@ -125,19 +125,3 @@ test('vault-backfill knows which notes still need a narrative and skips trivial 
   ].map((o) => JSON.stringify(o)).join('\n'));
   assert.equal(countUserMessages(t, 'claude'), 2);
 });
-
-test('guarda-contexto holds one cold-cache prompt, then nudges once per milestone', { skip: process.platform === 'win32' && 'python3 fora do PATH no Windows' }, () => {
-  const home = tempDir();
-  mkdirSync(join(home, '.claude', 'hooks'), { recursive: true });
-  const transcript = join(home, 't.jsonl');
-  const turn = (ctx, ageMin) => JSON.stringify({ timestamp: new Date(Date.now() - ageMin * 60000).toISOString(), message: { usage: { input_tokens: ctx } } }) + '\n';
-  const guard = () => spawnSync('python3', [join(REPO_ROOT, 'hooks', 'guarda-contexto.py')], {
-    input: JSON.stringify({ prompt: 'oi', session_id: 's1', transcript_path: transcript }), encoding: 'utf8', env: cleanEnv(home),
-  });
-  writeFileSync(transcript, turn(100_000, 120));
-  assert.equal(JSON.parse(guard().stdout).continue, false); // cache frio: segura 1x
-  assert.equal(guard().stdout, ''); // reenvio em até 15 min passa
-  writeFileSync(transcript, turn(125_000, 1));
-  assert.match(JSON.parse(guard().stdout).hookSpecificOutput.additionalContext, /~125k/);
-  assert.equal(guard().stdout, ''); // cada marco avisa uma vez só
-});

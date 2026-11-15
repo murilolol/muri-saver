@@ -61,8 +61,8 @@ https://github.com/user-attachments/assets/c69dbadb-41bb-4152-825b-ace8e280813f
 
 <img src="assets/terminal-statusline.svg" width="100%" alt="muri-saver status line: folder, branch, ai-memory, duration, context colored by tokens, time until the cache goes cold, cold-cache badge, 5h and 7-day quotas and model">
 
-- **Status line:** context changes color by tokens (yellow at 120k, red at 200k), shows how long until the cache goes cold, and the 5-hour and 7-day quotas with a countdown.
-- **Context guard:** after 55 minutes idle with more than 80k of context, it holds your next prompt once, because resuming would rewrite the whole cache. At 120k, 160k and 200k it reminds you to start a fresh session. `MURI_GUARDA=0` turns it off.
+- **Status line:** context is shown against the point where Claude Code compacts (`autoCompactWindow` or the model's window) and changes color at 70% and 90% of it; it shows how long until the cache goes cold (1 h or 5 min TTL, read from the transcript) and the 5-hour and 7-day quotas with a countdown. The 5-hour one hides on plans without that window.
+- **Context guard:** after 55 minutes idle with more than 40% of the compaction point, it holds your next prompt once, because resuming would rewrite the whole cache (with a 5-minute TTL it only warns). At 70% and 90% of that point it reminds you to start a fresh session, and it warns when the weekly quota passes 70% and 90%. `MURI_GUARDA=0` turns it off.
 - **Notification:** a desktop alert when Claude is waiting for you (macOS and Linux). `MURI_NOTIFY=0` turns it off.
 - **`muri-saver` skill:** say "muri saver" and the agent switches to aggressive saving: no re-reads, parallel calls, per-task profile and short sessions.
 
@@ -93,7 +93,7 @@ Narratives and consolidation use a [model chain](docs/llm-chain.md) that switche
 
 Thirty days of usage measured turn by turn showed the problem isn't model choice, it's context size. Turns above 250k were half of all turns and **71% of spend**, because each one costs about 2.5 times a 100–150k turn. In the same analysis, 64 resumes on an already-cold cache cost 33.5 million tokens-eq, close to 11 points of the weekly quota over the month.
 
-Hence the token-colored status line, the context guard and the 250k `autoCompactWindow` recommended in [`settings.snippet.json`](claude-config/settings.snippet.json).
+Hence the status line that measures context against the compaction point, the context guard and the 250k `autoCompactWindow` recommended in [`settings.snippet.json`](claude-config/settings.snippet.json).
 
 ## The findings
 

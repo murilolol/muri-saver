@@ -95,10 +95,13 @@ Scripts Node chamados pelo ciclo de vida de cada agente:
   repassa o payload pro hook acima; o rollout do Codex é normalizado pro
   formato do Claude Code.
 - `guarda-contexto.py` (`UserPromptSubmit`, Claude Code): segura 1x o primeiro
-  prompt depois de 55 min parado com >80k de contexto (o turno regravaria o
-  cache inteiro, ~2x o custo) e injeta um lembrete de sessão nova em
-  120k/160k/200k. A status line importa as mesmas regras pra mostrar quanto
-  falta pro cache esfriar. `MURI_GUARDA=0` desliga.
+  prompt depois de 55 min parado com mais de 40% do ponto de compactação (o
+  turno regravaria o cache inteiro, ~2x o custo; com TTL de 5 min só avisa) e
+  injeta um lembrete de sessão nova em 70% e 90% do ponto, mais o aviso do
+  semanal em 70% e 90%. Ponto = `autoCompactWindow` (o do modelo em
+  `modelSettings` ou o global) limitado à janela, menos ~33k. A status line
+  importa as mesmas regras e grava a janela do payload num cache que o hook lê.
+  `MURI_GUARDA=0` desliga.
 - `notify.mjs` (`Notification`, Claude Code): alerta no desktop (macOS/Linux)
   quando o agente espera você; pula dentro do Orca. `MURI_NOTIFY=0` desliga.
 - `muri-common.mjs` e `muri-llm.mjs`: código compartilhado entre hooks e

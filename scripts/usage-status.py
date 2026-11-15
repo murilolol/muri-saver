@@ -2,11 +2,28 @@
 """Print current Claude Code usage/limit status, formatted pt-BR."""
 import json
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
-BR_TZ = timezone(timedelta(hours=-3))
+HOME = os.environ.get("USERPROFILE") or os.path.expanduser("~")
 DIAS = ["segunda-feira", "terca-feira", "quarta-feira", "quinta-feira",
         "sexta-feira", "sabado", "domingo"]
+
+
+def local_tz():
+    """(fuso, nome): MURI_SAVER_TZ ou o timezone do muri-saver.json; sem nada (ou sem tzdata), o do sistema."""
+    name = os.environ.get("MURI_SAVER_TZ")
+    if not name:
+        try:
+            with open(os.environ.get("MURI_SAVER_CONFIG") or os.path.join(HOME, ".claude", "muri-saver.json"),
+                      encoding="utf-8") as f:
+                name = json.load(f).get("timezone")
+        except (OSError, ValueError, AttributeError):
+            name = None
+    try:
+        from zoneinfo import ZoneInfo
+        return ZoneInfo(name), name
+    except Exception:
+        return datetime.now().astimezone().tzinfo, "fuso local"
 
 
 def fmt_dt(dt):
@@ -42,15 +59,16 @@ def level_tag(pct):
 
 
 def main():
-    path = os.path.join(os.environ.get("USERPROFILE", os.path.expanduser("~")), ".claude.json")
+    path = os.path.join(HOME, ".claude.json")
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
-    cached = data["cachedUsageUtilization"]
-    util = cached["utilization"]
-    now_br = datetime.now(BR_TZ)
-    weekday = DIAS[now_br.weekday()]
+    cached = data.get("cachedUsageUtilization") or {}
+    util = cached.get("utilization") or {}
+    tz, tz_name = local_tz()
+    now = datetime.now(tz)
+    weekday = DIAS[now.weekday()]
 
-    print(f"Uso do Claude Code -- hoje, {weekday}, {fmt_dt(now_br)} (Brasilia)")
+    print(f"Uso do Claude Code -- hoje, {weekday}, {fmt_dt(now)} ({tz_name})")
 
     # `cachedUsageUtilization` so FRESCA quanto a ultima vez que o proprio
     # Claude Code sincronizou com o servidor (normalmente ao abrir /usage ou
@@ -71,15 +89,18 @@ def main():
             print(f"(sincronizado ha {age_min}min)")
     print()
 
+    so_semanal = util.get("five_hour") is None and (util.get("seven_day") or {}).get("utilization") is not None
     for key, label in (("five_hour", "Janela de 5h "), ("seven_day", "Semanal (7d) ")):
         entry = util.get(key) or {}
         pct = entry.get("utilization")
         resets_at = entry.get("resets_at")
         if pct is None or not resets_at:
-            print(f"{label}: sem dado disponivel")
+            print(f"{label}: " + ("plano sem janela 5h (so semanal)" if key == "five_hour" and so_semanal
+                                  else "sem dado disponivel"))
             continue
-        reset_dt = datetime.fromisoformat(resets_at).astimezone(BR_TZ)
-        remaining = reset_dt - now_br
+        pct = round(pct)
+        reset_dt = datetime.fromisoformat(resets_at).astimezone(tz)
+        remaining = reset_dt - now
         print(f"{label}: {pct:3d}% usado [{level_tag(pct)}] -- reseta {fmt_dt(reset_dt)} -> faltam {fmt_delta(remaining)}")
 
 

@@ -101,5 +101,5 @@
       ]
     }
   },
-  "_nota_guarda": "UserPromptSubmit roda o guarda-contexto: segura 1x o primeiro prompt depois de 55 min parado com >80k de contexto (o próximo turno regravaria o cache inteiro) e lembra de abrir sessão nova em 120k/160k/200k. MURI_GUARDA=0 desliga. Notification avisa no desktop (macOS/Linux) quando o Claude espera você; MURI_NOTIFY=0 desliga."
+  "_nota_guarda": "UserPromptSubmit roda o guarda-contexto: segura 1x o primeiro prompt depois de 55 min parado com mais de 40% do ponto de compactação (o próximo turno regravaria o cache inteiro; com TTL de 5 min só avisa) e lembra de abrir sessão nova em 70% e 90% do ponto (autoCompactWindow, o do modelo em modelSettings ou o global, limitado à janela, menos ~33k). MURI_GUARDA=0 desliga. Notification avisa no desktop (macOS/Linux) quando o Claude espera você; MURI_NOTIFY=0 desliga."
 }

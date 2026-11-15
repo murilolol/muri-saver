@@ -39,8 +39,8 @@ apply them together with the universal rules.
   A 30-day audit: turns above 250k context were 71% of the spend and cold-cache
   resumes cost 33.5M tokens-eq. Hence `autoCompactWindow: 250000`, the
   `guarda-contexto.py` hook (holds the first prompt after 55 min idle with
-  >80k context; nudges a fresh session at 120k/160k/200k) and the token-colored
-  status line. Off switch: `MURI_GUARDA=0`.
+  over 40% of the auto-compact point; nudges a fresh session at 70% and 90% of
+  it) and the status line measured against that point. Off switch: `MURI_GUARDA=0`.
 - **Never** skip a needed test, drop a requirement or stop early to save tokens.
 
 ## Task profiles

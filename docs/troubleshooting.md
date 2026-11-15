@@ -155,8 +155,8 @@ SessionStart tenta subi-lo) e se não há outro hook pesado no `settings.json`.
 <details>
 <summary><strong>"Operation stopped by hook: GUARDA-CONTEXTO"</strong></summary>
 
-É o guarda de contexto: a sessão ficou mais de 55 min parada com mais de 80k
-de contexto, e a resposta regravaria o cache inteiro. O aviso mostra quanto
+É o guarda de contexto: a sessão ficou mais de 55 min parada com mais de 40%
+do ponto de compactação em contexto, e a resposta regravaria o cache inteiro. O aviso mostra quanto
 custaria. Pra seguir mesmo assim, aperte ↑ e reenvie em até 15 min (passa
 direto). Pra desligar: `MURI_GUARDA=0` no ambiente ou tire o
 `UserPromptSubmit` do `~/.claude/settings.json`.

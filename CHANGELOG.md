@@ -49,6 +49,30 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
 - Uma `grill-me` de outro autor (ou editada por você) em `~/.claude/skills` fica como está, com
   aviso no log; nesse caso, a do muri-saver vai só para `~/.agents/skills`.
 
+### Guarda de contexto, status line e usage-status
+- Limiares proporcionais ao ponto de auto-compact, no lugar de 80k e 120k/160k/200k fixos. Ponto =
+  `autoCompactWindow` limitado à janela do modelo, menos ~33k (sem valor, a janela inteira: ~967k
+  com 1M, ~167k com 200k). O guarda avisa em 70% e 90% do ponto e segura o cache frio acima de 40%
+  dele. Quem não tem `autoCompactWindow` e usa modelo de 1M passa a ver os avisos bem mais tarde,
+  perto de onde o Claude Code compacta de fato.
+- A janela vem do `context_window_size` do payload da status line, que a grava num cache
+  (`~/.claude/hooks/.guarda-contexto-janela.json`) para o guarda, que não a recebe. Sem esse cache,
+  o guarda supõe 1M.
+- O `autoCompactWindow` do modelo em `modelSettings`, onde o `/autocompact` grava, vence o global.
+- `compact_boundary` no transcript (inclusive o idle compaction): vale o `postTokens`, e o guarda
+  deixa de segurar por "cache frio" com o contexto de antes da compactação.
+- TTL do cache lido do transcript: se o último turno só gravou cache de 5 min (API, créditos,
+  nuvem), o guarda só avisa (`systemMessage`), sem segurar, e a status line conta 5 min.
+- Aviso do semanal (cache do `~/.claude.json`) em 70% e de novo em 90%, uma vez por sessão.
+- Status line: o % e a barra são sobre o ponto de compactação (`161k/467k`), com as cores e dicas
+  nos mesmos 70% e 90% do guarda. "compacta em Nk" só aparece quando N vem da janela ou do
+  `autoCompactWindow`, nunca o "250k" fixo de antes.
+- Estado do guarda ao lado do hook instalado, com `~/.claude` de fallback quando roda de um checkout
+  do repo; gravação atômica, e o aviso sai antes de gravar.
+- `usage-status.py`: fuso do `MURI_SAVER_TZ` ou do `muri-saver.json` (antes, Brasília fixo); sem a
+  chave `cachedUsageUtilization` mostra "sem dado" em vez de `KeyError`; % fracionário arredondado
+  (antes, `ValueError`); "plano sem janela 5h (so semanal)" quando só o semanal vem preenchido.
+
 ### Documentação
 - `npx muri-saver` (o pacote não existe no npm) vira `node bin/cli.mjs` em READMEs, INSTALL,
   INSTALL-AI, docs e help do CLI; a rota sem clonar usa `npx github:murilolol/muri-saver`.
@@ -63,6 +87,8 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
 - README pt/en: bloco "Instalar em 1 minuto" no topo, com requisitos e "0 dependências npm";
   `evaluation.md` e `marketplace.md` entram na tabela de documentação.
 - CHANGELOG: `[Unreleased]`, datas da 2.0.0 e da 2.1.0 e links de comparação.
+- READMEs pt/en, `CLAUDE.md.template`, `settings.snippet.json`, `architecture`, `economy-report`,
+  `troubleshooting` e a SKILL.md descrevem o guarda e a status line proporcionais.
 
 ### CI
 - O último run (2026-09-25) não chegou a rodar: os jobs foram recusados por bloqueio de
