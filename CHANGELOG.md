@@ -37,6 +37,17 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
 - O hook do guarda e a status line chamam o Python que existe no PATH (`python3`/`python`, ou
   `python`/`py`/`python3` no Windows), no lugar de `python3` fixo. A busca saiu do `cli.mjs` para
   `lib/exec.mjs`.
+- Fora do Windows, a busca pelo Python só lê o PATH, sem executar nada: no macOS sem Command Line
+  Tools, `python3 --version` abria o diálogo de instalação das ferramentas a cada instalação,
+  inclusive no `--dry-run` e no `--uninstall`.
+- `"hooks": null` no `settings.json` não derruba mais a instalação no meio (o log do merge dava
+  `TypeError` depois de copiar skills e hooks).
+- A identidade de um hook é só o primeiro script do `command` (ou de `args`): um hook seu que cita
+  o script do muri-saver como argumento (`node wrapper.mjs --target .../obsidian-vault-check.mjs`)
+  não é mais trocado no merge nem removido no `--uninstall`. No Windows, `%USERPROFILE%` e caixa
+  diferente (`C:/Users` × `c:/users`) também contam como o mesmo caminho.
+- Uma `grill-me` de outro autor (ou editada por você) em `~/.claude/skills` fica como está, com
+  aviso no log; nesse caso, a do muri-saver vai só para `~/.agents/skills`.
 
 ### Documentação
 - `npx muri-saver` (o pacote não existe no npm) vira `node bin/cli.mjs` em READMEs, INSTALL,

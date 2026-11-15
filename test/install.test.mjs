@@ -163,9 +163,35 @@ test('reinstalling over older hook forms does not duplicate them', () => {
 test('hooks and status line call the Python found on PATH (python where there is no python3)', { skip: process.platform === 'win32' }, () => {
   const home = freshHome();
   const bin = tempDir();
-  writeFileSync(join(bin, 'python'), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+  writeFileSync(join(bin, 'python'), '#!/bin/sh\ntouch "$0.rodou"\n', { mode: 0o755 });
   assert.equal(run('bin/install.mjs', [], { home, env: { PATH: bin } }).status, 0);
   const settings = readJson(join(home, '.claude', 'settings.json'));
   assert.equal(settings.hooks.UserPromptSubmit[0].hooks[0].command, 'python');
   assert.match(settings.statusLine.command, /^python \S+statusline\.py$/);
+  assert.equal(existsSync(join(bin, 'python.rodou')), false, 'only reads PATH: on macOS without CLT, running python3 opens the install dialog');
+});
+
+test('"hooks": null in settings.json does not break the install', () => {
+  const home = freshHome();
+  mkdirSync(join(home, '.claude'), { recursive: true });
+  writeFileSync(join(home, '.claude', 'settings.json'), JSON.stringify({ hooks: null }));
+  const dry = run('bin/install.mjs', ['--dry-run'], { home });
+  assert.equal(dry.status, 0, dry.out);
+  assert.match(dry.out, /settings\.json \(.*hooks\.Stop/);
+  assert.equal(run('bin/install.mjs', [], { home }).status, 0);
+  assert.ok(readJson(join(home, '.claude', 'settings.json')).hooks.Stop);
+});
+
+test('another grill-me in ~/.claude/skills is kept (and survives --uninstall)', () => {
+  const home = freshHome();
+  const theirs = join(home, '.claude', 'skills', 'grill-me', 'SKILL.md');
+  mkdirSync(join(home, '.claude', 'skills', 'grill-me'), { recursive: true });
+  writeFileSync(theirs, '---\nname: grill-me\ndescription: de terceiros\n---\n');
+  const r = run('bin/install.mjs', [], { home });
+  assert.equal(r.status, 0, r.out);
+  assert.match(r.out, /AVISO: .*grill-me.* não sobrescrevi/);
+  assert.match(readFileSync(theirs, 'utf8'), /de terceiros/);
+  assert.equal(readFileSync(join(home, '.agents', 'skills', 'grill-me', 'SKILL.md'), 'utf8'), readFileSync('skills/grill-me/SKILL.md', 'utf8'));
+  assert.equal(run('bin/install.mjs', ['--uninstall'], { home }).status, 0);
+  assert.match(readFileSync(theirs, 'utf8'), /de terceiros/);
 });

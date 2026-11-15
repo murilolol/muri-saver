@@ -166,7 +166,8 @@ Isso, sozinho:
 - copia `skills/muri-saver/SKILL.md` (com o alias aplicado, se algum foi
   pedido) e `skills/grill-me/SKILL.md` → `~/.agents/skills/<alias>/SKILL.md`
   e `~/.agents/skills/grill-me/SKILL.md`, e a mesma coisa em `~/.claude/skills/`
-  (o Claude Code só carrega skills de lá)
+  (o Claude Code só carrega skills de lá; uma `grill-me` de outro autor que já
+  esteja em `~/.claude/skills/` fica)
 - copia `hooks/*.mjs` e `hooks/guarda-contexto.py` → `~/.claude/hooks/`
 - copia `scripts/*` → `~/.claude/scripts/` (com permissão de execução)
 - mescla os hooks `SessionStart`/`Stop`/`SessionEnd`/`UserPromptSubmit`/`Notification` + `statusLine` em

@@ -251,7 +251,8 @@ function writeGovernance(ctx, src, dest, alias) {
 }
 
 // Chaves de topo que mudam e, dentro de `hooks`, os eventos (hooks.Stop...).
-const changedKeys = (a = {}, b = {}) => [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((k) => !jsonEqual(a[k], b[k]));
+// `|| {}` e não default: `"hooks": null` no settings.json chega aqui como null.
+const changedKeys = (a, b) => [...new Set([...Object.keys(a || {}), ...Object.keys(b || {})])].filter((k) => !jsonEqual(a?.[k], b?.[k]));
 
 function mergeJsonFile(ctx, path, label, compute) {
   const { exists, data, invalid } = readJson(path);
@@ -285,10 +286,17 @@ function loadSnippet(relPath) {
 
 // ------------------------------------------------------------------ steps
 
-function installSkills(ctx, skillsDir, alias) {
+function installSkills(ctx, skillsDir, alias, keepTheirGrillMe = false) {
   copyManaged(ctx, join(REPO_ROOT, 'skills', 'muri-saver', 'SKILL.md'), join(skillsDir, alias, 'SKILL.md'), 'skill',
     (c) => renderWithAlias(c, alias));
-  copyManaged(ctx, join(REPO_ROOT, 'skills', 'grill-me', 'SKILL.md'), join(skillsDir, 'grill-me', 'SKILL.md'), 'skill');
+  const grillSrc = join(REPO_ROOT, 'skills', 'grill-me', 'SKILL.md');
+  const grillDest = join(skillsDir, 'grill-me', 'SKILL.md');
+  const prevGrill = ctx.prev.get(grillDest);
+  // Há outras skills grill-me (de terceiros); a que não veio da última instalação, ou foi editada, fica.
+  if (keepTheirGrillMe && existsSync(grillDest) && ![sha256File(grillSrc), prevGrill?.sha256].includes(sha256File(grillDest))) {
+    log(`AVISO: ${grillDest} é outra skill grill-me (sua ou de terceiros) — não sobrescrevi.`);
+    if (prevGrill) ctx.manifest.push(prevGrill);
+  } else copyManaged(ctx, grillSrc, grillDest, 'skill');
   function installReferences(source, destination) {
     for (const entry of readdirSync(source, { withFileTypes: true })) {
       const src = join(source, entry.name);
@@ -586,7 +594,7 @@ function main() {
   installSkills(ctx, paths.skillsDir, alias);
   // O Claude Code só carrega skills de ~/.claude/skills; ~/.agents/skills ele usa para importar.
   const claudeSkills = join(claudeDir, 'skills');
-  if (claudeSkills !== paths.skillsDir) installSkills(ctx, claudeSkills, alias);
+  if (claudeSkills !== paths.skillsDir) installSkills(ctx, claudeSkills, alias, true);
   installFlatDir(ctx, join(REPO_ROOT, 'hooks'), join(claudeDir, 'hooks'), 'hook');
   installFlatDir(ctx, join(REPO_ROOT, 'scripts'), join(claudeDir, 'scripts'), 'script');
   const settings = installClaudeSettings(ctx, claudeDir, prevCfg);

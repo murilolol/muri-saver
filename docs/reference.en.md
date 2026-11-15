@@ -23,6 +23,7 @@ A flag that needs a value and gets none (or gets another flag, as in
 `--vault --dry-run`) stops with an error before doing anything. An unknown
 flag also stops with an error; under `--dry-run` it is only a warning. Skills
 go to `~/.agents/skills` and to `~/.claude/skills`, the folder Claude Code loads.
+Another `grill-me` already in `~/.claude/skills` (yours or a third party's) is kept.
 
 Existing configs are **merged**, never replaced, and overwritten files are
 backed up to `~/.claude/muri-saver-backups/`.

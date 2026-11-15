@@ -36,3 +36,20 @@ test('Antigravity merge and removal use the script path too', () => {
   assert.deepEqual(merged['obsidian-vault-check'].Stop, [snippet['obsidian-vault-check'].Stop[0], USER_HOOK]);
   assert.deepEqual(removeAntigravityHooks(merged, snippet), { 'obsidian-vault-check': { Stop: [USER_HOOK] } });
 });
+
+test('a hook of yours that only passes the script as an argument stays yours', () => {
+  const wrapper = { type: 'command', command: `node /opt/mine/wrapper.mjs --target ${H}/obsidian-vault-check.mjs` };
+  const wrapperArgs = { type: 'command', command: 'node', args: ['/opt/mine/wrapper.mjs', '--target', `${H}/obsidian-vault-check.mjs`] };
+  const existing = { Stop: [{ matcher: '', hooks: [wrapper, wrapperArgs] }] };
+  const merged = mergeHooks(existing, SNIPPET);
+  assert.deepEqual(merged.Stop, [existing.Stop[0], SNIPPET.Stop[0]]);
+  assert.deepEqual(removeHooks(merged, SNIPPET), { Stop: existing.Stop });
+});
+
+test('Windows forms of the same path: %USERPROFILE% and drive-letter case', () => {
+  const snippet = { Stop: [{ matcher: '', hooks: [{ type: 'command', command: 'node "C:\\Users\\Ana\\.claude\\hooks\\obsidian-vault-check.mjs"' }] }] };
+  const caseOnly = { Stop: [{ matcher: '', hooks: [{ type: 'command', command: 'node c:/users/ana/.claude/hooks/obsidian-vault-check.mjs' }] }] };
+  assert.deepEqual(mergeHooks(caseOnly, snippet), snippet);
+  const viaEnv = { Stop: [{ matcher: '', hooks: [{ type: 'command', command: 'node %USERPROFILE%\\.claude\\hooks\\obsidian-vault-check.mjs' }] }] };
+  assert.deepEqual(mergeHooks(viaEnv, SNIPPET).Stop, SNIPPET.Stop, '%USERPROFILE% is the home');
+});
