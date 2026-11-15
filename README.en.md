@@ -30,7 +30,7 @@ node bin/install.mjs --dry-run      # shows what it would do, writes nothing
 Options and next steps under [Install](#install).
 
 > [!NOTE]
-> The numbers in this README come from the author's real usage and are a diagnosis, not a benchmark. Measure your own routine with `muri-saver report` and `muri-saver audit`. Vault screenshots use fake data from [`examples/vault/`](examples/vault/). Most deeper docs are in Portuguese.
+> The numbers in this README come from the author's real usage and are a diagnosis, not a benchmark. Measure your own routine with `node bin/cli.mjs report` and `node bin/cli.mjs audit`. Vault screenshots use fake data from [`examples/vault/`](examples/vault/). Most deeper docs are in Portuguese.
 
 ## Why it exists
 

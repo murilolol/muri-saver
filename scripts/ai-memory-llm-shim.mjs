@@ -51,10 +51,15 @@ function toReq(body) {
 
 // Só clientes locais: Host fora do loopback indica DNS rebinding, e exigir
 // application/json obriga o navegador a um preflight CORS que o shim não responde.
+// O ai-memory 3.2.0 manda Host 127.0.0.1:<porta> e application/json (conferido com llm-test).
+// Recusa vai pro log: se um ai-memory futuro mudar o header, a consolidação não para em silêncio.
 const LOCAL_HOST_RE = /^(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?$/i;
 
 const server = http.createServer((req, res) => {
-  if (!LOCAL_HOST_RE.test(req.headers.host || '')) return send(res, 403, { error: { message: 'host not allowed' } });
+  if (!LOCAL_HOST_RE.test(req.headers.host || '')) {
+    log(`recusado 403: Host ${JSON.stringify((req.headers.host || '').slice(0, 200))}`);
+    return send(res, 403, { error: { message: 'host not allowed' } });
+  }
   if (req.method === 'GET' && req.url === '/health') {
     return send(res, 200, { ok: true, chain: chainStatus(chain(), CFG) });
   }
@@ -65,6 +70,7 @@ const server = http.createServer((req, res) => {
     return send(res, 404, { error: { message: 'not found' } });
   }
   if (!/^application\/json\b/i.test(req.headers['content-type'] || '')) {
+    log(`recusado 415: content-type ${JSON.stringify((req.headers['content-type'] || '').slice(0, 200))}`);
     return send(res, 415, { error: { message: 'content-type must be application/json' } });
   }
   let size = 0;

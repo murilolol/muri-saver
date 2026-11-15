@@ -119,8 +119,9 @@ const SECRET_PATTERNS = [
   [/Bearer\s+[A-Za-z0-9._-]{20,}/g, 'BEARER_TOKEN'],
   [/-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g, 'PRIVATE_KEY'],
   [/(?:senha|password|passwd)['"]?\s*[:=]\s*['"]?\S{6,}['"]?/gi, 'PASSWORD'],
-  // Genérico chave=valor (env, YAML, JSON); pula o que um padrão acima já mascarou.
-  [/\b[\w-]{0,40}?(?:api[_-]?key|secret(?:[_-]?key)?|token|access[_-]?key)['"]?\s*[:=]\s*['"]?(?!\[REDACTED)[^\s'"]{8,}['"]?/gi, 'SECRET'],
+  // Genérico chave=valor (env, YAML, JSON, JSON escapado, Authorization: Basic): troca só o valor,
+  // pula o que um padrão acima já mascarou, número puro (max_token=128000) e código (getToken()).
+  [/(?<=(?:api[_-]?key|secret(?:[_-]?key)?|token|access[_-]?key|authorization)[\\'"]{0,4}\s{0,5}[:=]\s{0,5}[\\'"]{0,4}(?:basic\s{1,5})?)(?!\[REDACTED|\d+(?:[\s'"`\\)\]},;]|$))[^\s'"`\\()[\]{},;]{8,}(?=[\s'"`\\)\]},;]|$)/gi, 'SECRET'],
 ];
 const DROP_BLOCKS_RE = /<(ADDITIONAL_METADATA|SYSTEM_MESSAGE|system-reminder|local-command-caveat|CONTEXT_SUMMARY)>[\s\S]*?<\/\1>/g;
 const SYSTEM_TAGS_RE = /<\/?(?:USER_REQUEST|ADDITIONAL_METADATA|CONTEXT_SUMMARY|SYSTEM_MESSAGE|PLAN|local-command-caveat|local-command-stdout|command-name|command-message|command-args|system-reminder)>/g;

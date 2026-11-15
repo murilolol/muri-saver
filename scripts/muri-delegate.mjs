@@ -18,11 +18,12 @@
 //   --lines N        máx. de linhas devolvidas (padrão: 60)
 //   --timeout S      mata o delegado após S segundos (padrão: 900)
 //   --mcp            (só codex) mantém os MCPs do config.toml (padrão: desligados)
-// Saída: cabeçalho (com o STATUS do delegado) + até N linhas; resposta completa num arquivo temporário.
+// Saída: cabeçalho (com o STATUS do delegado) + até N linhas; resposta completa num arquivo temporário
+//        (cada delegação apaga as pastas muri-delegate-* com mais de 7 dias).
 // Exit: 0 ok · 2 uso/pré-condição · 3 o delegado alterou arquivos numa tarefa
 //       somente leitura · 64 recursão · 75 cota esgotada (troque de delegado)
 
-import { mkdtempSync, writeFileSync, readFileSync, existsSync, statSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, existsSync, statSync, readdirSync, lstatSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import os from 'node:os';
@@ -91,6 +92,21 @@ export function mcpOffArgs(configToml) {
     .flatMap((m) => ['-c', `mcp_servers.${m[1]}.enabled=false`]);
 }
 
+// Cada execução ganha uma pasta (mkdtemp) e no Windows ninguém limpa o %TEMP%:
+// apaga as nossas antigas. Symlink fica de fora; pasta de outro usuário falha no rm e segue.
+export function sweepOldRuns(tmp = os.tmpdir(), maxAgeMs = 7 * 86400000, now = Date.now()) {
+  let names = [];
+  try { names = readdirSync(tmp); } catch { return; }
+  for (const name of names) {
+    if (!name.startsWith('muri-delegate-')) continue;
+    const p = join(tmp, name);
+    try {
+      const st = lstatSync(p);
+      if (st.isDirectory() && now - st.mtimeMs > maxAgeMs) rmSync(p, { recursive: true, force: true });
+    } catch { /* sem permissão ou já apagada */ }
+  }
+}
+
 function main() {
   if (process.env.MURI_DELEGATE === '1') die('recusado: já estou dentro de uma delegação (MURI_DELEGATE=1)', 64);
   const o = parseArgs(process.argv.slice(2));
@@ -110,6 +126,7 @@ function main() {
 
   const prompt = buildPrompt(o);
   // Resposta e log ficam para o grep de quem chamou, mas numa pasta 0700 só desta execução.
+  sweepOldRuns();
   const outDir = mkdtempSync(join(os.tmpdir(), 'muri-delegate-'));
   const stamp = `${new Date().toISOString().replace(/[:.]/g, '-')}-${process.pid}`;
   const out = join(outDir, `${stamp}-${o.agent}.md`);

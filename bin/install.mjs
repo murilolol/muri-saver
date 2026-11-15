@@ -611,7 +611,7 @@ function main() {
   log('  3. Reiniciar Claude Code/Antigravity/Codex pra carregar skill, hooks e governança.');
   log('  4. `node bin/doctor.mjs` pra conferir tudo.');
   log('  5. Opcional: `node bin/ingest-sessions.mjs --all --dry-run` pra importar sessões antigas.');
-  log('  6. Opcional: consolidação do ai-memory pela cadeia de modelos: `muri-saver llm chain` (docs/llm-chain.md).');
+  log('  6. Opcional: consolidação do ai-memory pela cadeia de modelos: `node bin/cli.mjs llm chain` (docs/llm-chain.md).');
   if (!jobs.length) log('  7. Opcional: jobs de fundo (sessões ociosas, reprocesso, backfill, relatório): `--update --with-jobs`.');
   log('  Atualizar depois: `node bin/install.mjs --update` · Remover: `node bin/install.mjs --uninstall`.');
 }

@@ -6,19 +6,24 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
 ## [Unreleased]
 
 ### Segurança
-- Máscara de segredos com padrão genérico chave=valor (`api_key=`, `*_TOKEN=`, `client_secret:`,
-  `"access_token": "..."`, também em JSON), nos hooks e no ingestor. Contagens como
-  `max_tokens=128000` não são mascaradas.
+- Máscara de segredos com padrão genérico chave=valor (`api_key=`, `*_TOKEN=` com nome de qualquer
+  tamanho, `client_secret:`, `"access_token": "..."`, JSON escapado e `Authorization: Basic`), nos
+  hooks e no ingestor. Troca só o valor e mantém a chave. Ficam de fora número puro
+  (`max_token=128000`, `max_tokens=128000`) e chamada de código (`token = getAuthToken()`).
 - A cópia normalizada do transcript do Codex vai para uma pasta temporária 0700, com arquivo 0600,
   e é apagada quando o hook termina (antes ficava em `muri-codex-*.jsonl`, legível e sem limpeza).
 - `muri-delegate`: o conteúdo de `--file` passa pela máscara de segredos antes de ir ao delegado;
-  resposta e log ficam numa pasta temporária 0700 por execução.
+  resposta e log ficam numa pasta temporária 0700 por execução, e cada delegação apaga as pastas
+  `muri-delegate-*` com mais de 7 dias (no Windows ninguém limpa o `%TEMP%`).
 - Shim LLM (`127.0.0.1:49380`): recusa `Host` fora do loopback (403) e POST sem
-  `Content-Type: application/json` (415).
+  `Content-Type: application/json` (415). A recusa vai para o log do shim; o ai-memory 3.2.0
+  manda `127.0.0.1` e `application/json` (conferido com `ai-memory llm-test`).
 
 ### Documentação
 - `npx muri-saver` (o pacote não existe no npm) vira `node bin/cli.mjs` em READMEs, INSTALL,
   INSTALL-AI, docs e help do CLI; a rota sem clonar usa `npx github:murilolol/muri-saver`.
+- Dica final do instalador (passo 6) e nota dos READMEs sobre `report`/`audit` também com
+  `node bin/cli.mjs`, que funciona num clone sem nada no PATH.
 - Instalador e `settings.snippet.json`: a dica do ai-memory leva `--apply` e soma
   `install-mcp --client claude-code --session-aware --apply`; com Codex ou Antigravity detectados,
   cita `--agent codex`/`antigravity-cli` e o `--update` que religa o aim-guard.

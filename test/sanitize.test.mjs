@@ -22,12 +22,15 @@ test('masks common secret formats', () => {
 // hooks/muri-common.mjs keeps its own copy of the list (hooks never import lib/).
 for (const [name, mask] of [['lib', maskSecrets], ['hooks', hookMaskSecrets]]) {
   test(`${name}: masks generic key=value secrets but leaves token counts alone`, () => {
-    for (const s of ['api_key=abcd1234efgh5678', 'export MY_SERVICE_TOKEN="zz9-plural-z-alpha"', 'client_secret: s3cr3tValue99', '"access_token": "ya29.abcdefgh"', '"password": "hunter2hunter2"']) {
+    for (const s of ['api_key=abcd1234efgh5678', 'export MY_SERVICE_TOKEN="zz9-plural-z-alpha"', 'client_secret: s3cr3tValue99', '"access_token": "ya29.abcdefgh"', '"password": "hunter2hunter2"',
+      `export ${'A'.repeat(50)}_TOKEN=abcd1234efgh5678`, '{\\"api_key\\": \\"abcd1234efgh5678\\"}', 'Authorization: Basic abcd1234efgh5678==']) {
       assert.match(mask(s), /REDACTED:(SECRET|PASSWORD)/, s);
       assert.doesNotMatch(mask(s), /abcd1234|zz9-plural|s3cr3t|ya29|hunter2/, s);
     }
     assert.equal(mask('GITHUB_TOKEN=ghp_FAKEFAKEFAKEFAKEFAKEFAKE1234'), 'GITHUB_TOKEN=[REDACTED:GITHUB_TOKEN]');
-    for (const s of ['max_tokens=128000000', 'input_tokens: 123456789', 'token: curto', 'tokenizer=whatever123']) assert.equal(mask(s), s);
+    assert.equal(mask('export MY_TOKEN="zz9-plural-z-alpha"'), 'export MY_TOKEN="[REDACTED:SECRET]"');
+    for (const s of ['max_tokens=128000000', 'max_token=128000000', 'input_tokens: 123456789', 'token: curto', 'tokenizer=whatever123',
+      'const token = getAuthToken();']) assert.equal(mask(s), s);
   });
 }
 

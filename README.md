@@ -30,7 +30,7 @@ node bin/install.mjs --dry-run      # mostra o que faria, não escreve nada
 Opções e próximos passos em [Instalar](#instalar).
 
 > [!NOTE]
-> Os números deste README vêm do uso real do autor e servem de diagnóstico, não de benchmark. Meça a sua rotina com `muri-saver report` e `muri-saver audit`. As capturas do vault usam dados fictícios de [`examples/vault/`](examples/vault/).
+> Os números deste README vêm do uso real do autor e servem de diagnóstico, não de benchmark. Meça a sua rotina com `node bin/cli.mjs report` e `node bin/cli.mjs audit`. As capturas do vault usam dados fictícios de [`examples/vault/`](examples/vault/).
 
 ## Por que existe
 

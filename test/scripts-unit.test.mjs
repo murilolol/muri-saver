@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, utimesSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync, spawn } from 'node:child_process';
 import http from 'node:http';
@@ -8,7 +8,7 @@ import net from 'node:net';
 import { run, tempDir, cleanEnv, REPO_ROOT } from './_helpers.mjs';
 import { setTomlKey, TUNE } from '../scripts/ai-memory-llm-mode.mjs';
 import { idleSessionsSql } from '../scripts/ai-memory-finalize-idle.mjs';
-import { parseArgs, buildPrompt, statusOf, mcpOffArgs } from '../scripts/muri-delegate.mjs';
+import { parseArgs, buildPrompt, statusOf, mcpOffArgs, sweepOldRuns } from '../scripts/muri-delegate.mjs';
 import { hasNarrative, countUserMessages } from '../scripts/vault-backfill.mjs';
 
 test('aim-guard skips the wrapped command under MURI_AIM_NOCAPTURE and passes stdin through otherwise', () => {
@@ -79,6 +79,17 @@ test('muri-delegate parses options, refuses recursion and builds a read-only bri
   const withFile = buildPrompt({ ...o, dir: '/x', files: [secretFile] });
   assert.match(withFile, /\[REDACTED:SECRET\]/);
   assert.doesNotMatch(withFile, /abcd1234efgh5678/);
+});
+
+test('muri-delegate sweeps only its own run folders older than the limit', () => {
+  const tmp = tempDir();
+  const old = new Date(Date.now() - 8 * 86400000);
+  for (const d of ['muri-delegate-old', 'muri-delegate-new', 'outra-old']) mkdirSync(join(tmp, d));
+  writeFileSync(join(tmp, 'muri-delegate-old', 'r.md'), 'x');
+  utimesSync(join(tmp, 'muri-delegate-old'), old, old);
+  utimesSync(join(tmp, 'outra-old'), old, old);
+  sweepOldRuns(tmp);
+  assert.deepEqual(['muri-delegate-old', 'muri-delegate-new', 'outra-old'].map((d) => existsSync(join(tmp, d))), [false, true, true]);
 });
 
 test('llm shim refuses a non-local Host and a non-JSON body before touching the chain', async (t) => {
