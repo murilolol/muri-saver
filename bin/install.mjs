@@ -36,6 +36,7 @@ import {
 } from '../lib/hooks-merge.mjs';
 import { JOBS, installJob, removeJob } from '../scripts/muri-jobs.mjs';
 import { parseEntry } from '../hooks/muri-llm.mjs';
+import { findPython } from '../lib/exec.mjs';
 
 const REPO_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const VERSION = readPackageVersion(REPO_ROOT);
@@ -89,14 +90,22 @@ function parseArgs(argv) {
     '--with-companion-skills': 'withCompanionSkills', '--update': 'update', '--uninstall': 'uninstall', '--help': 'help', '-h': 'help',
     '--with-jobs': 'withJobs', '--no-jobs': 'noJobs',
   };
+  const unknown = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (takes[a]) args[takes[a]] = argv[++i];
-    else if (flags[a]) args[flags[a]] = true;
+    if (takes[a]) {
+      // Sem isso, `--vault --dry-run` gravava o vault "--dry-run" e instalava de verdade.
+      const value = argv[i + 1];
+      if (value === undefined || value.startsWith('-')) {
+        throw new Error(`${a} precisa de um valor${value === undefined ? '' : `, mas veio a flag ${value}`}`);
+      }
+      args[takes[a]] = value;
+      i++;
+    } else if (flags[a]) args[flags[a]] = true;
     else if (a === '--with-all') { args.withCodex = true; args.withAntigravity = true; }
-    else console.warn(`[muri-saver] AVISO: flag desconhecida ignorada: ${a}`);
+    else unknown.push(a);
   }
-  return args;
+  return { args, unknown };
 }
 
 function log(msg) {
@@ -241,6 +250,9 @@ function writeGovernance(ctx, src, dest, alias) {
   log(`AVISO: ${dest} já existe e é seu (ou foi editado) — não sobrescrevi. Compare com: ${relative(process.cwd(), src) || src}`);
 }
 
+// Chaves de topo que mudam e, dentro de `hooks`, os eventos (hooks.Stop...).
+const changedKeys = (a = {}, b = {}) => [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((k) => !jsonEqual(a[k], b[k]));
+
 function mergeJsonFile(ctx, path, label, compute) {
   const { exists, data, invalid } = readJson(path);
   if (invalid) {
@@ -254,7 +266,8 @@ function mergeJsonFile(ctx, path, label, compute) {
     return false;
   }
   backupCopy(ctx, path);
-  log(`gravar ${path} (${label})`);
+  const changed = changedKeys(before, after).flatMap((k) => (k === 'hooks' ? changedKeys(before.hooks, after.hooks).map((e) => `hooks.${e}`) : [k]));
+  log(`gravar ${path} (${label}: ${changed.join(', ')})`);
   if (!ctx.dryRun) {
     ensureDir(ctx, dirname(path));
     writeFileSync(path, JSON.stringify(after, null, 2) + '\n', 'utf8');
@@ -262,9 +275,12 @@ function mergeJsonFile(ctx, path, label, compute) {
   return true;
 }
 
+let python;
 function loadSnippet(relPath) {
-  const snippet = JSON.parse(readFileSync(join(REPO_ROOT, relPath), 'utf8'));
-  return resolveHomePlaceholder(snippet, HOME);
+  // Hooks e status line chamam o Python que existe aqui (no Windows, em geral `python` ou `py`).
+  python ??= findPython() || 'python3';
+  const raw = readFileSync(join(REPO_ROOT, relPath), 'utf8').replace(/("command":\s*")python3\b/g, `$1${python}`);
+  return resolveHomePlaceholder(JSON.parse(raw), HOME);
 }
 
 // ------------------------------------------------------------------ steps
@@ -305,7 +321,7 @@ function installClaudeSettings(ctx, claudeDir, prevCfg) {
   const snippet = loadSnippet(join('claude-config', 'settings.snippet.json'));
   const path = join(claudeDir, 'settings.json');
   let statusLineInstalled = Boolean(prevCfg?.statusLineInstalled);
-  mergeJsonFile(ctx, path, 'hooks Stop/SessionStart do muri-saver', (existing) => {
+  mergeJsonFile(ctx, path, 'hooks e statusLine do muri-saver', (existing) => {
     const result = { ...existing, hooks: mergeHooks(existing.hooks, snippet.hooks) };
     if (!existing.statusLine) {
       result.statusLine = snippet.statusLine;
@@ -327,7 +343,7 @@ function installCodex(ctx, codexDir, alias, claudeDir) {
   writeGovernance(ctx, join(REPO_ROOT, 'codex-config', 'AGENTS.md.template'), join(codexDir, 'AGENTS.md'), alias);
   const snippet = loadSnippet(join('codex-config', 'hooks.snippet.json'));
   const path = join(codexDir, 'hooks.json');
-  mergeJsonFile(ctx, path, 'hook Stop do muri-saver pro Codex', (existing) => ({
+  mergeJsonFile(ctx, path, 'hooks do muri-saver pro Codex', (existing) => ({
     ...existing, hooks: mergeHooks(existing.hooks, snippet.hooks),
   }));
   return { kind: 'codex-hooks', path };
@@ -503,8 +519,25 @@ function uninstall(args, claudeDir) {
 // ------------------------------------------------------------------ main
 
 function main() {
-  const args = parseArgs(process.argv.slice(2));
+  let parsed;
+  try {
+    parsed = parseArgs(process.argv.slice(2));
+  } catch (e) {
+    log(`FALHA: ${e.message}. Nada foi feito (veja --help).`);
+    process.exitCode = 1;
+    return;
+  }
+  const { args, unknown } = parsed;
   if (args.help) return console.log(HELP);
+  if (unknown.length) {
+    const msg = `flag(s) desconhecida(s): ${unknown.join(', ')}`;
+    if (!args.dryRun) {
+      log(`FALHA: ${msg}. Nada foi feito (veja --help).`);
+      process.exitCode = 1;
+      return;
+    }
+    log(`AVISO: ${msg}, ignorada(s) no --dry-run. Sem o --dry-run, a instalação para aqui.`);
+  }
 
   const claudeDir = args.claudeDir || join(HOME, '.claude');
   log(`muri-saver ${VERSION} — SO: ${platformLabel(process.platform)} (${process.platform}/${process.arch}) — home: ${HOME}`);
@@ -551,6 +584,9 @@ function main() {
   log(`Fuso: ${timezone}${vault ? ` — vault: ${vault}` : ''}`);
 
   installSkills(ctx, paths.skillsDir, alias);
+  // O Claude Code só carrega skills de ~/.claude/skills; ~/.agents/skills ele usa para importar.
+  const claudeSkills = join(claudeDir, 'skills');
+  if (claudeSkills !== paths.skillsDir) installSkills(ctx, claudeSkills, alias);
   installFlatDir(ctx, join(REPO_ROOT, 'hooks'), join(claudeDir, 'hooks'), 'hook');
   installFlatDir(ctx, join(REPO_ROOT, 'scripts'), join(claudeDir, 'scripts'), 'script');
   const settings = installClaudeSettings(ctx, claudeDir, prevCfg);

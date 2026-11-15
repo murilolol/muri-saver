@@ -159,8 +159,7 @@ SessionStart tenta subi-lo) e se não há outro hook pesado no `settings.json`.
 de contexto, e a resposta regravaria o cache inteiro. O aviso mostra quanto
 custaria. Pra seguir mesmo assim, aperte ↑ e reenvie em até 15 min (passa
 direto). Pra desligar: `MURI_GUARDA=0` no ambiente ou tire o
-`UserPromptSubmit` do `~/.claude/settings.json`. No Windows, troque `python3`
-por `python` no comando do hook, como na status line.
+`UserPromptSubmit` do `~/.claude/settings.json`.
 </details>
 
 <details>
@@ -266,9 +265,11 @@ instalador: `launchctl bootout gui/$(id -u)/com.muri.<nome>`.
 <details>
 <summary><strong>A status line não aparece</strong></summary>
 
-O `statusLine` padrão chama `python3`, que muitas vezes não existe no
-Windows (só `python`). Troque o comando no `~/.claude/settings.json` pra
-`python %USERPROFILE%\.claude\scripts\statusline.py`. O `doctor` avisa
+O instalador grava no `statusLine` e no hook do guarda o Python que achou no
+PATH (`python`, `py` ou `python3`, nessa ordem no Windows). Se você instalou o
+Python depois, rode `node bin/install.mjs --update`: ele troca o hook, mas
+mantém um `statusLine` que já exista. Nesse caso, troque `python3` por `python`
+no comando do `statusLine` em `~/.claude/settings.json`. O `doctor` avisa
 quando só encontra `python`.
 </details>
 

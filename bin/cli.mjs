@@ -10,6 +10,7 @@ import { spawnSync } from 'node:child_process';
 import os from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readPackageVersion, readConfig, configPath } from '../lib/config.mjs';
+import { findPython } from '../lib/exec.mjs';
 
 const BIN_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = dirname(BIN_DIR);
@@ -53,11 +54,6 @@ function scriptPath(name) {
   return existsSync(installed) ? installed : join(REPO_ROOT, 'scripts', name);
 }
 
-function python() {
-  const names = process.platform === 'win32' ? ['python', 'py', 'python3'] : ['python3', 'python'];
-  return names.find((n) => spawnSync(n, ['--version'], { stdio: 'ignore', windowsHide: true }).status === 0) || null;
-}
-
 const [cmd, ...rest] = process.argv.slice(2);
 if (!cmd || ['help', '--help', '-h'].includes(cmd)) {
   usage();
@@ -74,7 +70,7 @@ if (!cmd || ['help', '--help', '-h'].includes(cmd)) {
   await import(pathToFileURL(path).href);
 } else {
   const c = COMMANDS[cmd];
-  const interp = c.python ? python() : process.execPath;
+  const interp = c.python ? findPython() : process.execPath;
   if (!interp) {
     console.error('Python 3 não encontrado no PATH (o relatório de economia é um script Python).');
     process.exitCode = 1;

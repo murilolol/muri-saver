@@ -278,11 +278,15 @@ async function main() {
   if (existsSync(join(claudeDir, 'hooks', 'ai-memory-ensure-server.mjs'))) ok('arquivo hooks/ai-memory-ensure-server.mjs presente em ~/.claude/hooks');
   else fail('~/.claude/hooks/ai-memory-ensure-server.mjs não encontrado');
 
-  const skillsDir = config?.paths?.skillsDir || join(HOME, '.agents', 'skills');
-  const detectedAlias = config?.alias && existsSync(join(skillsDir, config.alias, 'SKILL.md')) ? config.alias : detectAlias(skillsDir);
-  if (detectedAlias && detectedAlias === 'muri-saver') ok('skill muri-saver instalada em ~/.agents/skills (alias padrão)');
-  else if (detectedAlias) ok(`skill muri-saver instalada em ~/.agents/skills sob alias customizado "${detectedAlias}"`, 'muri-saver/muri saver continuam funcionando como alias alternativo');
-  else fail('nenhuma skill muri-saver (padrão ou alias customizado) encontrada em ~/.agents/skills', 'rode node install.mjs [--alias <nome>]');
+  // ~/.agents/skills é lida por Codex e Antigravity; o Claude Code só carrega ~/.claude/skills.
+  const skillDirs = new Set([config?.paths?.skillsDir || join(HOME, '.agents', 'skills'), join(claudeDir, 'skills')]);
+  for (const skillsDir of skillDirs) {
+    const shown = skillsDir.startsWith(HOME) ? `~${skillsDir.slice(HOME.length)}` : skillsDir;
+    const detectedAlias = config?.alias && existsSync(join(skillsDir, config.alias, 'SKILL.md')) ? config.alias : detectAlias(skillsDir);
+    if (detectedAlias && detectedAlias === 'muri-saver') ok(`skill muri-saver instalada em ${shown} (alias padrão)`);
+    else if (detectedAlias) ok(`skill muri-saver instalada em ${shown} sob alias customizado "${detectedAlias}"`, 'muri-saver/muri saver continuam funcionando como alias alternativo');
+    else fail(`nenhuma skill muri-saver (padrão ou alias customizado) encontrada em ${shown}`, 'rode node bin/install.mjs --update (ou node bin/install.mjs [--alias <nome>])');
+  }
 
   if (existsSync(join(claudeDir, 'CLAUDE.md'))) ok('~/.claude/CLAUDE.md existe');
   else warn('~/.claude/CLAUDE.md não existe ainda', 'rode node install.mjs (ele cria a partir do template se não existir)');

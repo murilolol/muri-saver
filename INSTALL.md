@@ -57,7 +57,8 @@ vault, `--update` preserva essa configuração.
 Sem clonar: `npx github:murilolol/muri-saver install --vault "..."` faz o
 mesmo direto do GitHub.
 
-Isso copia a skill `muri-saver` (e `grill-me`) pra `~/.agents/skills/`, os
+Isso copia a skill `muri-saver` (e `grill-me`) pra `~/.agents/skills/` e pra
+`~/.claude/skills/` (a única pasta que o Claude Code carrega), os
 hooks pra `~/.claude/hooks/`, os scripts pra `~/.claude/scripts/`, mescla os
 hooks `SessionStart`, `Stop`, `SessionEnd`, `UserPromptSubmit` (guarda de
 contexto) e `Notification` no seu `~/.claude/settings.json`, cria
@@ -107,7 +108,7 @@ node bin/install.mjs --with-all           # os três de uma vez
 
 | Flag | O que faz |
 |---|---|
-| `--dry-run` | Simula, não escreve nada |
+| `--dry-run` | Simula, não escreve nada (flag desconhecida aqui só gera aviso; sem `--dry-run`, ela para a instalação com erro) |
 | `--alias <nome>` / `--skill-name <nome>` | Renomeia a skill e os gatilhos de ativação |
 | `--author-name <nome>` | Cosmético, aparece no log da instalação |
 | `--vault "<caminho>"` | Vault usado pelos hooks e pelo ingestor (também cria a estrutura de pastas) |

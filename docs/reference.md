@@ -19,6 +19,11 @@ Opções do instalador, comandos, configuração e detalhes por sistema. Para in
 | `--update` / `--uninstall` | | Reaproveita a config salva / remove só o que não foi editado |
 | `--dry-run` | | Mostra tudo e não escreve nada |
 
+Flag que pede valor e vem sem ele (ou seguida de outra flag, como em
+`--vault --dry-run`) para com erro antes de fazer qualquer coisa. Flag
+desconhecida também para com erro; no `--dry-run`, só gera aviso. As skills
+vão para `~/.agents/skills` e para `~/.claude/skills`, a pasta que o Claude Code carrega.
+
 Configurações existentes são **mescladas**, nunca substituídas, e arquivos que
 o instalador sobrescreve ganham backup em `~/.claude/muri-saver-backups/`.
 

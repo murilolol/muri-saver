@@ -38,6 +38,7 @@ test('install writes files, config with manifest, and merged hooks for all agent
   assert.deepEqual(cfg.agents, ['claude', 'codex', 'antigravity']);
   assert.ok(cfg.manifest.length >= 10);
   assert.ok(existsSync(join(home, '.agents', 'skills', 'muri-saver', 'SKILL.md')));
+  for (const s of ['muri-saver', 'grill-me']) assert.ok(existsSync(join(home, '.claude', 'skills', s, 'SKILL.md')), `~/.claude/skills/${s}`);
   assert.ok(existsSync(join(home, '.claude', 'CLAUDE.md')));
   assert.ok(existsSync(join(home, '.codex', 'AGENTS.md')));
   assert.ok(existsSync(join(home, '.gemini', 'GEMINI.md')));
@@ -108,6 +109,7 @@ test('--uninstall removes installed files and hook entries, keeps edited ones', 
   const r = run('bin/install.mjs', ['--uninstall'], { home });
   assert.equal(r.status, 0, r.out);
   assert.equal(existsSync(join(home, '.agents', 'skills', 'muri-saver', 'SKILL.md')), false);
+  assert.equal(existsSync(join(home, '.claude', 'skills', 'muri-saver', 'SKILL.md')), false);
   assert.equal(existsSync(join(home, '.claude', 'hooks', 'obsidian-vault-check.mjs')), false);
   assert.equal(existsSync(join(home, '.claude', 'muri-saver.json')), false);
   assert.ok(existsSync(join(home, '.claude', 'CLAUDE.md')), 'edited CLAUDE.md must stay');
@@ -115,8 +117,55 @@ test('--uninstall removes installed files and hook entries, keeps edited ones', 
   assert.ok(existsSync(join(home, '.claude', 'muri-saver-backups')));
 });
 
-test('--dry-run writes nothing', () => {
+test('--dry-run writes nothing and names what would change in settings.json', () => {
   const home = tempDir();
-  run('bin/install.mjs', ['--dry-run', '--with-all'], { home });
+  const r = run('bin/install.mjs', ['--dry-run', '--with-all'], { home });
   assert.deepEqual(readdirSync(home), []);
+  assert.match(r.out, /settings\.json \(.*hooks\.UserPromptSubmit, hooks\.Notification, statusLine\)/);
+});
+
+test('a flag missing its value fails before doing anything (--vault --dry-run used to install for real)', () => {
+  for (const argv of [['--vault', '--dry-run'], ['--dry-run', '--vault'], ['--alias', '-h']]) {
+    const home = tempDir();
+    const r = run('bin/install.mjs', argv, { home });
+    assert.equal(r.status, 1, `${argv.join(' ')}: ${r.out}`);
+    assert.match(r.out, /precisa de um valor/);
+    assert.deepEqual(readdirSync(home), []);
+  }
+  assert.equal(existsSync(join(process.cwd(), '--dry-run')), false);
+});
+
+test('unknown flag: exit 1 on a real run, only a warning with --dry-run', () => {
+  const home = tempDir();
+  const real = run('bin/install.mjs', ['--plan', 'max'], { home });
+  assert.equal(real.status, 1, real.out);
+  assert.match(real.out, /flag\(s\) desconhecida\(s\): --plan, max/);
+  assert.deepEqual(readdirSync(home), []);
+  const dry = run('bin/install.mjs', ['--plan', '--dry-run'], { home });
+  assert.equal(dry.status, 0, dry.out);
+  assert.match(dry.out, /AVISO: flag\(s\) desconhecida\(s\): --plan/);
+  assert.deepEqual(readdirSync(home), []);
+});
+
+test('reinstalling over older hook forms does not duplicate them', () => {
+  const home = freshHome();
+  const settingsPath = join(home, '.claude', 'settings.json');
+  mkdirSync(join(home, '.claude'), { recursive: true });
+  writeFileSync(settingsPath, JSON.stringify({ hooks: {
+    Stop: [{ matcher: '', hooks: [{ type: 'command', command: 'node', args: [join(home, '.claude', 'hooks', 'obsidian-vault-check.mjs')], statusMessage: 'antiga' }] }],
+    UserPromptSubmit: [{ matcher: '', hooks: [{ type: 'command', command: `python3 ${join(home, '.claude', 'hooks', 'guarda-contexto.py')}`, timeout: 5 }] }],
+  } }));
+  assert.equal(run('bin/install.mjs', [], { home }).status, 0);
+  const { hooks } = readJson(settingsPath);
+  for (const event of ['Stop', 'UserPromptSubmit']) assert.equal(hooks[event].length, 1, event);
+});
+
+test('hooks and status line call the Python found on PATH (python where there is no python3)', { skip: process.platform === 'win32' }, () => {
+  const home = freshHome();
+  const bin = tempDir();
+  writeFileSync(join(bin, 'python'), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+  assert.equal(run('bin/install.mjs', [], { home, env: { PATH: bin } }).status, 0);
+  const settings = readJson(join(home, '.claude', 'settings.json'));
+  assert.equal(settings.hooks.UserPromptSubmit[0].hooks[0].command, 'python');
+  assert.match(settings.statusLine.command, /^python \S+statusline\.py$/);
 });

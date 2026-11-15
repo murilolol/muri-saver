@@ -19,6 +19,11 @@ Installer options, commands, configuration and per-OS details. To install, start
 | `--update` / `--uninstall` | | Reuse the saved config / remove only what you didn't edit |
 | `--dry-run` | | Show everything, write nothing |
 
+A flag that needs a value and gets none (or gets another flag, as in
+`--vault --dry-run`) stops with an error before doing anything. An unknown
+flag also stops with an error; under `--dry-run` it is only a warning. Skills
+go to `~/.agents/skills` and to `~/.claude/skills`, the folder Claude Code loads.
+
 Existing configs are **merged**, never replaced, and overwritten files are
 backed up to `~/.claude/muri-saver-backups/`.
 

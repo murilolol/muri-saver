@@ -132,9 +132,8 @@ claude --version  # Claude Code CLI
 > [!WARNING]
 > **Se Node ou Python não existirem**: pare e avise o usuário — não tente
 > instalar runtimes de sistema sozinha sem confirmação explícita. Se
-> `python3` não existir mas `python` existir (comum no Windows), siga em
-> frente mas note isso pro usuário — o `statusLine` do `settings.json` chama
-> especificamente `python3`.
+> `python3` não existir mas `python` (ou `py`) existir, comum no Windows, siga
+> em frente: o instalador grava no `settings.json` o nome que respondeu.
 
 ## 2. Clonar e rodar o instalador
 
@@ -166,7 +165,8 @@ em bash, zsh e PowerShell.
 Isso, sozinho:
 - copia `skills/muri-saver/SKILL.md` (com o alias aplicado, se algum foi
   pedido) e `skills/grill-me/SKILL.md` → `~/.agents/skills/<alias>/SKILL.md`
-  e `~/.agents/skills/grill-me/SKILL.md`
+  e `~/.agents/skills/grill-me/SKILL.md`, e a mesma coisa em `~/.claude/skills/`
+  (o Claude Code só carrega skills de lá)
 - copia `hooks/*.mjs` e `hooks/guarda-contexto.py` → `~/.claude/hooks/`
 - copia `scripts/*` → `~/.claude/scripts/` (com permissão de execução)
 - mescla os hooks `SessionStart`/`Stop`/`SessionEnd`/`UserPromptSubmit`/`Notification` + `statusLine` em

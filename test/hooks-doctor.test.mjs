@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { run, tempDir, fixtureHome, FIXTURE_HOME, REPO_ROOT } from './_helpers.mjs';
 
@@ -59,6 +59,7 @@ test('doctor reports the saved config after an install', () => {
   const r = run('bin/doctor.mjs', [], { home });
   assert.match(r.out, /config encontrada/);
   assert.match(r.out, /alias — mendes-saver/);
+  for (const dir of ['.agents', '.claude']) assert.match(r.out, new RegExp(`OK +skill muri-saver instalada em ~/${dir}/skills sob alias customizado "mendes-saver"`));
   assert.match(r.out, /arquivos instalados íntegros/);
   assert.match(r.out, /Resumo: \d+ falha/);
 });
@@ -66,7 +67,9 @@ test('doctor reports the saved config after an install', () => {
 test('doctor accepts an installation without Obsidian', () => {
   const home = fixtureHome();
   run('bin/install.mjs', [], { home });
+  rmSync(join(home, '.claude', 'skills'), { recursive: true });
   const r = run('bin/doctor.mjs', [], { home });
+  assert.match(r.out, /FALHA nenhuma skill muri-saver .* em ~\/\.claude\/skills/, 'Claude Code only loads ~/.claude/skills');
   assert.match(r.out, /Obsidian opcional não configurado/);
   assert.doesNotMatch(r.out, /pasta do vault não encontrada/);
 });

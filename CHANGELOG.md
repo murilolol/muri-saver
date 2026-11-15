@@ -19,6 +19,25 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
   `Content-Type: application/json` (415). A recusa vai para o log do shim; o ai-memory 3.2.0
   manda `127.0.0.1` e `application/json` (conferido com `ai-memory llm-test`).
 
+### Instalador
+- Parser estrito: flag que pede valor e vem sem ele, ou seguida de outra flag, para com exit 1
+  antes de tocar em qualquer coisa. Antes, `--vault --dry-run` gravava o vault `--dry-run` e
+  fazia uma instalação real.
+- Flag desconhecida para com exit 1 e não instala nada; no `--dry-run` vira só aviso.
+- Merge e remoção dos hooks comparam o caminho do script (`.py`/`.mjs` em `command` ou `args`),
+  não o JSON inteiro. Reinstalar sobre uma forma antiga (outro `statusMessage`, `timeout`, ou
+  `python3 x.py` num comando só) troca a entrada em vez de duplicar, o que fazia o Stop rodar o
+  hook do vault duas vezes por turno. Hooks seus no mesmo grupo ficam. O `--uninstall` também
+  remove as formas antigas.
+- O log do merge lista o que muda em cada arquivo (`hooks.Stop`, `hooks.UserPromptSubmit`,
+  `statusLine`...), no lugar do rótulo fixo "hooks Stop/SessionStart".
+- Skills `muri-saver` (com o alias) e `grill-me` também em `~/.claude/skills`, a única pasta que
+  o Claude Code carrega (`~/.agents/skills` ele só usa para importar). O `doctor` confere as
+  duas pastas.
+- O hook do guarda e a status line chamam o Python que existe no PATH (`python3`/`python`, ou
+  `python`/`py`/`python3` no Windows), no lugar de `python3` fixo. A busca saiu do `cli.mjs` para
+  `lib/exec.mjs`.
+
 ### Documentação
 - `npx muri-saver` (o pacote não existe no npm) vira `node bin/cli.mjs` em READMEs, INSTALL,
   INSTALL-AI, docs e help do CLI; a rota sem clonar usa `npx github:murilolol/muri-saver`.
