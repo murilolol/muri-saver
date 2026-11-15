@@ -118,7 +118,9 @@ const SECRET_PATTERNS = [
   [/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g, 'JWT'],
   [/Bearer\s+[A-Za-z0-9._-]{20,}/g, 'BEARER_TOKEN'],
   [/-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g, 'PRIVATE_KEY'],
-  [/(?:senha|password|passwd)\s*[:=]\s*['"]?\S{6,}['"]?/gi, 'PASSWORD'],
+  [/(?:senha|password|passwd)['"]?\s*[:=]\s*['"]?\S{6,}['"]?/gi, 'PASSWORD'],
+  // Genérico chave=valor (env, YAML, JSON); pula o que um padrão acima já mascarou.
+  [/\b[\w-]{0,40}?(?:api[_-]?key|secret(?:[_-]?key)?|token|access[_-]?key)['"]?\s*[:=]\s*['"]?(?!\[REDACTED)[^\s'"]{8,}['"]?/gi, 'SECRET'],
 ];
 const DROP_BLOCKS_RE = /<(ADDITIONAL_METADATA|SYSTEM_MESSAGE|system-reminder|local-command-caveat|CONTEXT_SUMMARY)>[\s\S]*?<\/\1>/g;
 const SYSTEM_TAGS_RE = /<\/?(?:USER_REQUEST|ADDITIONAL_METADATA|CONTEXT_SUMMARY|SYSTEM_MESSAGE|PLAN|local-command-caveat|local-command-stdout|command-name|command-message|command-args|system-reminder)>/g;

@@ -2,7 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, spawn } from 'node:child_process';
+import http from 'node:http';
+import net from 'node:net';
 import { run, tempDir, cleanEnv, REPO_ROOT } from './_helpers.mjs';
 import { setTomlKey, TUNE } from '../scripts/ai-memory-llm-mode.mjs';
 import { idleSessionsSql } from '../scripts/ai-memory-finalize-idle.mjs';
@@ -72,6 +74,28 @@ test('muri-delegate parses options, refuses recursion and builds a read-only bri
   assert.deepEqual(mcpOffArgs('[mcp_servers.rea]\ncmd = "x"\n[mcp_servers.rea.env]\n[mcp_servers.ai-memory]\n'),
     ['-c', 'mcp_servers.rea.enabled=false', '-c', 'mcp_servers.ai-memory.enabled=false']);
   assert.equal(parseArgs(['codex', '--mcp', 'x']).mcp, true);
+  const secretFile = join(tempDir(), 'config.env');
+  writeFileSync(secretFile, 'API_KEY=abcd1234efgh5678\n');
+  const withFile = buildPrompt({ ...o, dir: '/x', files: [secretFile] });
+  assert.match(withFile, /\[REDACTED:SECRET\]/);
+  assert.doesNotMatch(withFile, /abcd1234efgh5678/);
+});
+
+test('llm shim refuses a non-local Host and a non-JSON body before touching the chain', async (t) => {
+  const port = await new Promise((resolve) => { const s = net.createServer().listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => resolve(p)); }); });
+  const child = spawn(process.execPath, [join(REPO_ROOT, 'scripts', 'ai-memory-llm-shim.mjs')], { env: cleanEnv(tempDir(), { AIM_SHIM_PORT: String(port) }), stdio: 'ignore' });
+  t.after(() => child.kill());
+  const req = (headers, body = '{"messages":[{"role":"user","content":"oi"}]}') => new Promise((resolve, reject) => {
+    const r = http.request({ host: '127.0.0.1', port, method: 'POST', path: '/v1/chat/completions', headers }, (res) => { res.resume(); res.on('end', () => resolve(res.statusCode)); });
+    r.on('error', reject);
+    r.end(body);
+  });
+  for (let i = 0; i < 50; i++) {
+    try { await req({ 'content-type': 'application/json' }); break; } catch { await new Promise((r) => setTimeout(r, 100)); }
+  }
+  assert.equal(await req({ host: 'evil.example:80', 'content-type': 'application/json' }), 403);
+  assert.equal(await req({ 'content-type': 'text/plain' }), 415);
+  assert.equal(await req({ 'content-type': 'application/json; charset=utf-8' }), 503); // passou da guarda; cadeia desligada
 });
 
 test('vault-backfill knows which notes still need a narrative and skips trivial sessions', () => {

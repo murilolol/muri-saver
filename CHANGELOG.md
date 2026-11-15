@@ -3,6 +3,19 @@
 Todas as mudanças relevantes do muri-saver. Formato inspirado em
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Unreleased]
+
+### Segurança
+- Máscara de segredos com padrão genérico chave=valor (`api_key=`, `*_TOKEN=`, `client_secret:`,
+  `"access_token": "..."`, também em JSON), nos hooks e no ingestor. Contagens como
+  `max_tokens=128000` não são mascaradas.
+- A cópia normalizada do transcript do Codex vai para uma pasta temporária 0700, com arquivo 0600,
+  e é apagada quando o hook termina (antes ficava em `muri-codex-*.jsonl`, legível e sem limpeza).
+- `muri-delegate`: o conteúdo de `--file` passa pela máscara de segredos antes de ir ao delegado;
+  resposta e log ficam numa pasta temporária 0700 por execução.
+- Shim LLM (`127.0.0.1:49380`): recusa `Host` fora do loopback (403) e POST sem
+  `Content-Type: application/json` (415).
+
 ## [3.2.0] — 2026-11-01
 
 Sincroniza o repo com o setup do autor no macOS (out/2026).

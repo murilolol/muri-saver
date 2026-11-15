@@ -21,7 +21,7 @@
 // Segredos (chaves, tokens, senhas) são mascarados antes de ir para o vault e
 // antes de ir para o LLM. Nunca bloqueia nem falha a sessão do agente.
 
-import { readFileSync, existsSync, mkdirSync, writeFileSync, readdirSync, appendFileSync, statSync, unlinkSync } from 'node:fs';
+import { readFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync, readdirSync, appendFileSync, statSync, unlinkSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';
@@ -343,8 +343,11 @@ function normalizeCodexRollout(rolloutPath, key) {
         });
       }
     }
-    const tmp = join(os.tmpdir(), `muri-codex-${key}.jsonl`);
-    writeFileSync(tmp, out.map((o) => JSON.stringify(o)).join('\n'));
+    // Cópia do transcript: pasta só do usuário (0700), arquivo 0600, apagada na saída.
+    const dir = mkdtempSync(join(os.tmpdir(), 'muri-codex-'));
+    process.on('exit', () => { try { rmSync(dir, { recursive: true, force: true }); } catch { /* já removida */ } });
+    const tmp = join(dir, `${key}.jsonl`);
+    writeFileSync(tmp, out.map((o) => JSON.stringify(o)).join('\n'), { mode: 0o600 });
     return tmp;
   } catch {
     return null;
@@ -833,7 +836,7 @@ function spawnSummaryWorker(input, key) {
     if (existsSync(lockPath) && Date.now() - statSync(lockPath).mtimeMs < WORKER_LOCK_MAX_AGE_MS) return true;
     writeFileSync(lockPath, String(process.pid));
     const inputPath = join(os.tmpdir(), `muri-vault-gen-${key}-${Date.now()}.json`);
-    writeFileSync(inputPath, JSON.stringify(input));
+    writeFileSync(inputPath, JSON.stringify(input), { mode: 0o600 });
     const child = spawn(process.execPath, [fileURLToPath(import.meta.url), inputPath], {
       detached: true, stdio: 'ignore', windowsHide: true,
       env: { ...process.env, MURI_VAULT_WORKER: '1', MURI_VAULT_LOCK: lockPath },

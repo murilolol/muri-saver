@@ -49,7 +49,12 @@ function toReq(body) {
   };
 }
 
+// Só clientes locais: Host fora do loopback indica DNS rebinding, e exigir
+// application/json obriga o navegador a um preflight CORS que o shim não responde.
+const LOCAL_HOST_RE = /^(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?$/i;
+
 const server = http.createServer((req, res) => {
+  if (!LOCAL_HOST_RE.test(req.headers.host || '')) return send(res, 403, { error: { message: 'host not allowed' } });
   if (req.method === 'GET' && req.url === '/health') {
     return send(res, 200, { ok: true, chain: chainStatus(chain(), CFG) });
   }
@@ -58,6 +63,9 @@ const server = http.createServer((req, res) => {
   }
   if (req.method !== 'POST' || !req.url.endsWith('/chat/completions')) {
     return send(res, 404, { error: { message: 'not found' } });
+  }
+  if (!/^application\/json\b/i.test(req.headers['content-type'] || '')) {
+    return send(res, 415, { error: { message: 'content-type must be application/json' } });
   }
   let size = 0;
   const chunks = [];

@@ -22,11 +22,11 @@
 // Exit: 0 ok · 2 uso/pré-condição · 3 o delegado alterou arquivos numa tarefa
 //       somente leitura · 64 recursão · 75 cota esgotada (troque de delegado)
 
-import { mkdirSync, writeFileSync, readFileSync, appendFileSync, existsSync, statSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, existsSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import os from 'node:os';
-import { RUNTIME_SCRIPTS_DIR, CHILD_ENV, bin, isMain, appendLog } from '../hooks/muri-common.mjs';
+import { RUNTIME_SCRIPTS_DIR, CHILD_ENV, bin, isMain, appendLog, maskSecrets } from '../hooks/muri-common.mjs';
 
 const RATE_RE = /rate.?limit|quota|429|usage limit|resource.?exhausted|too many requests/i;
 
@@ -74,7 +74,7 @@ BRIEF:
 ${o.brief}`;
   for (const f of o.files) {
     if (!existsSync(f)) die(`arquivo não encontrado: ${f}`);
-    prompt += `\n\n--- ARQUIVO: ${f} ---\n${readFileSync(f, 'utf8').slice(0, 200000)}`;
+    prompt += `\n\n--- ARQUIVO: ${f} ---\n${maskSecrets(readFileSync(f, 'utf8')).slice(0, 200000)}`;
   }
   return prompt;
 }
@@ -109,8 +109,8 @@ function main() {
   }
 
   const prompt = buildPrompt(o);
-  const outDir = join(os.tmpdir(), 'muri-delegate');
-  mkdirSync(outDir, { recursive: true });
+  // Resposta e log ficam para o grep de quem chamou, mas numa pasta 0700 só desta execução.
+  const outDir = mkdtempSync(join(os.tmpdir(), 'muri-delegate-'));
   const stamp = `${new Date().toISOString().replace(/[:.]/g, '-')}-${process.pid}`;
   const out = join(outDir, `${stamp}-${o.agent}.md`);
   const full = join(outDir, `${stamp}-${o.agent}.log`);
@@ -129,7 +129,7 @@ function main() {
     const r = spawnSync(agy.cmd, [...agy.pre, '--input-format', 'stream-json', '--output-format', 'stream-json', '--model', model, '--print-timeout', `${o.timeout}s`], {
       cwd: o.dir, env, input: `${line}\n`, encoding: 'utf8', timeout: (o.timeout + 30) * 1000, killSignal: 'SIGKILL', maxBuffer: 64 * 1024 * 1024, windowsHide: true,
     });
-    writeFileSync(full, `${r.stdout || ''}\n${r.stderr || ''}`);
+    writeFileSync(full, `${r.stdout || ''}\n${r.stderr || ''}`, { mode: 0o600 });
     let result = null;
     for (const l of String(r.stdout || '').split('\n')) {
       try { const ev = JSON.parse(l); if (ev.event === 'result') result = ev.result; } catch { /* parcial */ }
@@ -148,12 +148,12 @@ function main() {
     const r = spawnSync(codex.cmd, [...codex.pre, ...args], {
       env, input: prompt, encoding: 'utf8', timeout: o.timeout * 1000, killSignal: 'SIGKILL', maxBuffer: 64 * 1024 * 1024, windowsHide: true,
     });
-    writeFileSync(full, `${r.stdout || ''}\n${r.stderr || ''}`);
+    writeFileSync(full, `${r.stdout || ''}\n${r.stderr || ''}`, { mode: 0o600 });
     text = existsSync(out) ? readFileSync(out, 'utf8') : '';
     rc = r.error?.code === 'ETIMEDOUT' || r.signal ? 142 : (r.status ?? 1);
     model ||= 'padrão-codex';
   }
-  writeFileSync(out, text);
+  writeFileSync(out, text, { mode: 0o600 });
   const secs = Math.round((Date.now() - t0) / 1000);
   const mode = o.write ? 'write' : 'read';
   const status = statusOf(text);
