@@ -29,6 +29,12 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
   `evaluation.md` e `marketplace.md` entram na tabela de documentação.
 - CHANGELOG: `[Unreleased]`, datas da 2.0.0 e da 2.1.0 e links de comparação.
 
+### CI
+- O último run (2026-09-25) não chegou a rodar: os jobs foram recusados por bloqueio de
+  cobrança da conta, não por teste. O workflow sobe para `actions/checkout@v7` e
+  `actions/setup-node@v7` (runtime Node 24; as v4 rodavam no Node 20, descontinuado) e ganha
+  `workflow_dispatch`. Matriz mantida: macOS, Linux e Windows × Node 18, 22 e 24.
+
 ## [3.2.0] — 2026-11-01
 
 Sincroniza o repo com o setup do autor no macOS (out/2026).
