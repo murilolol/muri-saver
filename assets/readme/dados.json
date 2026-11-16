@@ -13,7 +13,8 @@
   "acima250k": { "turnos": 7013, "turnosTotal": 13400, "custoRelativo": 2.5 },
   "achados": [
     { "valor": 71, "sufixo": "%", "pt": ["do gasto em turnos", "acima de 250k"], "en": ["of spend on turns", "above 250k"], "destaque": true },
-    { "valor": 2.1, "casas": 1, "sufixo": { "pt": " bi", "en": "B" }, "pt": ["tokens de cache numa", "sessão de 42 h"], "en": ["cache tokens in a", "single 42 h session"] },
+    { "valor": 2.1, "casas": 1, "sufixo": { "pt": " bi", "en": "B" }, "pt": ["tokens de cache numa", "sessão de 42 h"], "en": ["cache tokens in a", "single 42 h session"],
+      "_fonte": "Varredura dos transcripts brutos do Claude Code em 29/08/2026 (31 sessões, ~37 mil mensagens): uma sessão sozinha consumiu 2,1 bilhões de tokens de cache em 42 h e 7.059 mensagens." },
     { "valor": 54, "sufixo": "×", "pt": ["o mesmo arquivo relido", "na mesma sessão"], "en": ["the same file re-read", "in one session"] },
     { "valor": 501, "pt": ["screenshots contra", "3 leituras de texto"], "en": ["screenshots against", "3 text reads"] },
     { "valor": 28, "sufixo": { "pt": " mi", "en": "M" }, "pt": ["tokens em 4 loops", "sem confirmação"], "en": ["tokens in 4 loops", "nobody confirmed"] },

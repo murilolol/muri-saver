@@ -29,7 +29,7 @@ const T = {
     painel250: 'Turnos acima de 250k',
     dosTurnos: 'dos turnos', doGasto: 'do gasto',
     cotaRodape1: 'tokens-eq: tokens pesados pelo custo na cota (cache lido 0,1, entrada 1, cache gravado 1,25 a 2, saída 5). Valores arredondados.',
-    cotaRodape2: (a, c) => `${a} de ${c} turnos passaram de 250k, e cada um custa ~2,5× um turno de 100–150k. Fonte: transcripts do autor.`,
+    cotaRodape2: (a, c, r) => `${a} de ${c} turnos passaram de 250k, e cada um custa ~${r}× um turno de 100–150k. Fonte: transcripts do autor.`,
     achadosKicker: 'ACHADOS · USO REAL DO AUTOR',
     hooksTitulo: 'Custo de cada hook por turno',
     achadosRodape: 'Auditorias de transcripts reais, 29/08 a 22/10/2026. Hooks medidos num transcript de 3 MB. Diagnóstico, não benchmark.',
@@ -44,7 +44,7 @@ const T = {
     painel250: 'Turns above 250k',
     dosTurnos: 'of turns', doGasto: 'of spend',
     cotaRodape1: 'tokens-eq: tokens weighted by their quota cost (cache read 0.1, input 1, cache write 1.25 to 2, output 5). Rounded values.',
-    cotaRodape2: (a, c) => `${a} of ${c} turns went above 250k, and each costs ~2.5× a 100–150k turn. Source: the author's transcripts.`,
+    cotaRodape2: (a, c, r) => `${a} of ${c} turns went above 250k, and each costs ~${r}× a 100–150k turn. Source: the author's transcripts.`,
     achadosKicker: 'FINDINGS · THE AUTHOR’S REAL USAGE',
     hooksTitulo: 'Cost of each hook per turn',
     achadosRodape: 'Audits of real transcripts, 2026-08-29 to 2026-10-22. Hooks timed on a 3 MB transcript. A diagnosis, not a benchmark.',
@@ -56,7 +56,8 @@ const numero = (v, lang, casas = 0) =>
 const sufixo = (a, lang) => (typeof a.sufixo === 'object' ? a.sufixo[lang] : a.sufixo ?? '');
 const valorAchado = (a, lang) => numero(a.valor, lang, a.casas ?? 0) + sufixo(a, lang);
 const porcentoTurnos = Math.round((dados.acima250k.turnos / dados.acima250k.turnosTotal) * 100);
-const milTurnos = lang => (lang === 'pt' ? '13,4 mil' : '13.4k');
+const milTurnos = lang => numero(dados.acima250k.turnosTotal / 1000, lang, 1) + (lang === 'pt' ? ' mil' : 'k');
+const gasto250k = dados.faixas.find(f => f.destaque).gasto;
 
 // Barra com o topo arredondado (mesmo desenho dos gráficos do interfef2026).
 const barra = (x, largura, base, altura) => {
@@ -130,10 +131,10 @@ ${painelDeBarras(t, { x0: 48, x1: 640, titulo: s.painelFaixas, itens: faixas })}
 <line x1="700" y1="130" x2="700" y2="420" stroke="${t.grade}" stroke-width="1.5"/>
 ${painelDeBarras(t, { x0: 760, x1: 1152, titulo: s.painel250, itens: [
     { rotulo: s.dosTurnos, valor: porcentoTurnos },
-    { rotulo: s.doGasto, valor: dados.faixas.find(f => f.destaque).gasto, destaque: true },
+    { rotulo: s.doGasto, valor: gasto250k, destaque: true },
   ] })}
 <text x="48" y="466" font-size="13" fill="${t.apoio}">${s.cotaRodape1}</text>
-<text x="48" y="486" font-size="13" fill="${t.apoio}">${s.cotaRodape2(numero(dados.acima250k.turnos, lang), milTurnos(lang))}</text>
+<text x="48" y="486" font-size="13" fill="${t.apoio}">${s.cotaRodape2(numero(dados.acima250k.turnos, lang), milTurnos(lang), numero(dados.acima250k.custoRelativo, lang, 1))}</text>
 </svg>
 `;
 }
@@ -172,8 +173,8 @@ ${hooks}
 function altCota(lang) {
   const f = dados.faixas.map(x => `${x[lang]} ${x.gasto}%`).join(', ');
   return lang === 'pt'
-    ? `Gasto do Claude Code em 30 dias por faixa de contexto do turno: ${f}. Os turnos acima de 250k foram ${porcentoTurnos}% dos turnos e 71% do gasto.`
-    : `Claude Code spend over 30 days by turn context size: ${f}. Turns above 250k were ${porcentoTurnos}% of turns and 71% of spend.`;
+    ? `Gasto do Claude Code em 30 dias por faixa de contexto do turno: ${f}. Os turnos acima de 250k foram ${porcentoTurnos}% dos turnos e ${gasto250k}% do gasto.`
+    : `Claude Code spend over 30 days by turn context size: ${f}. Turns above 250k were ${porcentoTurnos}% of turns and ${gasto250k}% of spend.`;
 }
 function altAchados(lang) {
   const a = dados.achados.map(x => `${valorAchado(x, lang)} ${x[lang].join(' ')}`).join('; ');

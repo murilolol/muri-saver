@@ -38,22 +38,44 @@ Anyone who uses a coding agent every day runs into three problems: the **quota r
 
 muri-saver came out of auditing real transcripts. One session alone burned 2.1 billion cache tokens in 42 hours; one file was re-read 54 times in the same session; browser automation took 501 screenshots where 3 text reads would do. Every rule in the kit answers one of those findings, and the rest runs on its own in hooks, so you don't have to remember.
 
-## In 90 seconds
+## In 77 seconds
+<a id="in-90-seconds"></a>
 
-https://github.com/user-attachments/assets/c69dbadb-41bb-4152-825b-ace8e280813f
+https://github.com/user-attachments/assets/2539e5ed-4393-4391-82ba-e5e1eb926f9a
 
-<sub>No narration, on-screen text in Portuguese. If the player doesn't load, <a href="https://github.com/user-attachments/assets/c69dbadb-41bb-4152-825b-ace8e280813f">open the video</a>. Terminal screens marked as simulations use the real scripts' colors, thresholds and text.</sub>
+<sub><b>Turn the sound on:</b> the video is narrated in Portuguese and GitHub's player starts muted. If it doesn't load, <a href="https://github.com/user-attachments/assets/2539e5ed-4393-4391-82ba-e5e1eb926f9a">open the video</a>. Real terminal screens on a fictional project; numbers come from the author's real usage (<a href="assets/readme/dados.json">source</a>).</sub>
+
+<details>
+<summary>English transcript</summary>
+
+Does Claude hit its limit too fast? It's not that you ask too much. It's the conversation swelling without you noticing.
+
+I measured thirty days of my own usage. One session lasted 42 hours. One file was re-read 54 times. And 71% of the spend came from giant conversations.
+
+That's why I built muri-saver: a kit that makes Claude Code lighter, cheaper and gives it memory.
+
+First, it shows you the problem: the status bar changes color as the conversation grows. Back after an hour? The context guard warns you before you pay for it. And `/compact` turns 200k tokens into 30k.
+
+But trimming can't erase what matters. ai-memory records each session's decisions, and the next one picks up where the last one stopped. No re-explaining.
+
+Claude becomes the coordinator. Research, reading and review go to Gemini and Codex, on their own quota. Your limit is saved for what only Claude does well.
+
+And everything gets recorded: every session becomes an Obsidian note, and the diary writes itself.
+
+Fewer tokens, less cost, and a Claude that remembers. muri-saver is free and open source. Link on screen. Follow me: @muriloodev.
+
+</details>
 
 <table>
   <tr>
-    <td width="33%"><img src="assets/video/statusline.png" alt="Status line with context, cache and quotas"><br><sub><b>Status line:</b> context, cache and quota at a glance</sub></td>
-    <td width="33%"><img src="assets/video/guarda-contexto.png" alt="Context guard holding a prompt on a cold cache"><br><sub><b>Context guard:</b> stops the expensive resume</sub></td>
-    <td width="33%"><img src="assets/video/compact.png" alt="/compact taking context from 218k to 34k"><br><sub><b><code>/compact</code> at the right time:</b> 218k → 34k</sub></td>
+    <td width="33%"><img src="assets/video/statusline.jpg" alt="Status line at 218k of 1M, in red, suggesting /clear"><br><sub><b>Status line:</b> changes color as the conversation grows</sub></td>
+    <td width="33%"><img src="assets/video/guarda-contexto.jpg" alt="Context guard holding a prompt after 1h12 idle, with the cache expired"><br><sub><b>Context guard:</b> stops the expensive resume</sub></td>
+    <td width="33%"><img src="assets/video/compact.jpg" alt="/compact taking context from 218k to 34k"><br><sub><b><code>/compact</code> at the right time:</b> 218k → 34k</sub></td>
   </tr>
   <tr>
-    <td><img src="assets/video/ai-memory.png" alt="A new ai-memory session remembering where it left off"><br><sub><b>Memory:</b> the next session knows where you stopped</sub></td>
-    <td><img src="assets/video/skills.png" alt="Skills, connectors and MCP"><br><sub><b>Skills and connectors</b> on demand</sub></td>
-    <td><img src="assets/video/cota.png" alt="71% of spend on turns above 250k"><br><sub><b>Where the quota goes:</b> 71% above 250k</sub></td>
+    <td><img src="assets/video/ai-memory.jpg" alt="A new session resuming the handoff saved in ai-memory"><br><sub><b>Memory:</b> the next session knows where you stopped</sub></td>
+    <td><img src="assets/video/delegacao.jpg" alt="Claude asking Gemini to review a file"><br><sub><b>Delegation:</b> research, reading and review on Gemini and Codex</sub></td>
+    <td><img src="assets/video/obsidian.jpg" alt="Obsidian session note with narrative, decisions and open items"><br><sub><b>Live note:</b> every session becomes an Obsidian note</sub></td>
   </tr>
 </table>
 
@@ -91,7 +113,7 @@ Narratives and consolidation use a [model chain](docs/llm-chain.md) that switche
 </picture>
 <!-- /gerado:cota -->
 
-Thirty days of usage measured turn by turn showed the problem isn't model choice, it's context size. Turns above 250k were half of all turns and **71% of spend**, because each one costs about 2.5 times a 100–150k turn. In the same analysis, 64 resumes on an already-cold cache cost 33.5 million tokens-eq, close to 11 points of the weekly quota over the month.
+Thirty days of usage measured turn by turn showed the problem isn't model choice, it's context size. Turns above 250k were half of all turns and **71% of spend**, because each one costs about 2.5 times a 100–150k turn. In the same analysis, 64 resumes on an already-cold cache cost 33.5 million tokens-eq. How many points of the weekly quota that makes depends on the plan, and the analysis ran on a smaller plan; the calibration in the [economy report](docs/economy-report.md) does that math on yours.
 
 Hence the status line that measures context against the compaction point, the context guard and the `autoCompactWindow` of each plan profile (below).
 
@@ -205,6 +227,62 @@ If the whole chain is in cooldown, the note keeps the dump and gets its narrativ
 </details>
 
 [Architecture in detail →](docs/architecture.md)
+
+## Skills I use alongside it
+
+muri-saver ships two skills of its own, `muri-saver` and `grill-me`. The rest are third-party: install each one straight from its source (`find-skills` helps) so you get the author's updates. In Claude Code, I turn off what I don't use with `skillOverrides` in `settings.json`, so the skill list doesn't weigh on the context. My video skill and this stack, with credit to each author, live in [murilolol/muri-skills](https://github.com/murilolol/muri-skills).
+
+### Orchestration, savings and memory
+
+| Skill | Source | What for |
+|---|---|---|
+| `muri-saver` | this repository | Context and quota saving mode: one short session per topic, no re-reads, text before screenshots, delegation to another quota |
+| `grill-me` | this repository | An interview through the native question modal (AskUserQuestion) before deciding |
+| ai-memory (MCP server + hooks, not a skill) | [akitaonrails/ai-memory](https://github.com/akitaonrails/ai-memory) | Memory across sessions, search and handoff |
+| `find-skills` | [vercel-labs/skills](https://github.com/vercel-labs/skills) | Finds and installs skills through `npx skills` |
+| `ponytail` (plugin) | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | The smallest change that solves it: YAGNI, stdlib first, no abstraction nobody asked for |
+| `codex` (Claude Code plugin) | [openai/codex-plugin-cc](https://github.com/openai/codex-plugin-cc) | Uses Codex from inside Claude Code for review and delegation |
+
+### Planning and code
+
+| Skill | Source | What for |
+|---|---|---|
+| `tdd`, `grill-with-docs`, `codebase-design` | [mattpocock/skills](https://github.com/mattpocock/skills) | TDD, an interview that becomes an ADR and a glossary, code design |
+| `test-driven-development` | [obra/superpowers](https://github.com/obra/superpowers) | The discipline of testing before implementing |
+| `graphify` | [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) | A knowledge graph of the code (query, path, explain) |
+| OpenSpec | [Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) | A spec before a big change |
+| `agent-browser` | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | Browser automation for QA |
+
+### Design and UI
+
+| Skill | Source | What for |
+|---|---|---|
+| `impeccable` | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Design, critique and polish interfaces |
+| `emil-design-eng`, `animate` | [emilkowalski/skills](https://github.com/emilkowalski/skills) | UI polish and motion decisions |
+| `design-taste-frontend` | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | Front-end that doesn't look templated |
+| `frontend-design` | [anthropics/skills](https://github.com/anthropics/skills) | Intentional visual direction |
+| `web-design-guidelines` | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | Review against the Web Interface Guidelines |
+| `diagram-design` (plugin) | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | Editorial diagrams in HTML, SVG and PNG |
+
+### Video
+
+| Skill | Source | What for |
+|---|---|---|
+| `muri-video` | [murilolol/muri-skills](https://github.com/murilolol/muri-skills) | Narrated video pipeline: briefing, script, TTS, Remotion, 16:9 and 9:16 render. The video above came out of it |
+| `remotion-best-practices` | [remotion-dev/skills](https://github.com/remotion-dev/skills) | Remotion best practices |
+| HyperFrames (Codex plugin) | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) | Video written in HTML + GSAP |
+| `video-shotcraft` | [Vincentwei1021/video-shotcraft](https://github.com/Vincentwei1021/video-shotcraft) | Product video from shot recipe cards |
+| `gsap-*` | [greensock/gsap-skills](https://github.com/greensock/gsap-skills) | Animation with GSAP |
+| `image-to-video` | [prime-skills/runcomfy-agent-skills](https://github.com/prime-skills/runcomfy-agent-skills) | Animates a still image (RunComfy) |
+
+### Documents and notes
+
+| Skill | Source | What for |
+|---|---|---|
+| `pdf`, `docx`, `pptx`, `xlsx` | [anthropics/skills](https://github.com/anthropics/skills) | Read and create office documents |
+| `convert-documents-to-markdown` | [firecrawl/anydoc](https://github.com/firecrawl/anydoc) | Converts Office, PDF and EPUB to Markdown |
+| `obsidian` (plugin) | [obsidianmd/obsidian-skills](https://github.com/obsidianmd/obsidian-skills) | Vault files: Markdown, Bases and Canvas |
+| `claude-obsidian` (plugin) | [AgriciDaniel/claude-obsidian](https://github.com/AgriciDaniel/claude-obsidian) | A local knowledge base in Obsidian with cited sources |
 
 ## Versions
 

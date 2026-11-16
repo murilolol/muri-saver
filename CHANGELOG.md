@@ -129,6 +129,19 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
 - CHANGELOG: `[Unreleased]`, datas da 2.0.0 e da 2.1.0 e links de comparação.
 - READMEs pt/en, `CLAUDE.md.template`, `settings.snippet.json`, `architecture`, `economy-report`,
   `troubleshooting` e a SKILL.md descrevem o guarda e a status line proporcionais.
+- README pt/en: o vídeo narrado de 77 s entra no lugar do antigo "sem narração", com aviso de que
+  o player do GitHub começa mudo, link de reserva e transcrição em `<details>` (em inglês no README
+  en, que avisa que a narração é em português). A seção vira "Em 77 segundos"/"In 77 seconds" e a
+  âncora `#em-90-segundos`, usada na release v3.2.0, continua funcionando.
+- Grade de quadros do vídeo novo em `assets/video/*.jpg` (status line, guarda, `/compact`,
+  ai-memory, delegação e nota no Obsidian), no lugar dos PNG do vídeo antigo.
+- "Onde a cota vai": sai o "perto de 11 pontos da cota semanal", que não batia com a calibração do
+  relatório de economia (1% ≈ 1,3M tokens-eq daria uns 26) e não dizia o plano; o texto aponta a
+  calibração do `report`. A fonte do 2,1 bi de tokens de cache entra no `dados.json`.
+- README pt/en: seção "Skills que eu uso junto", com a fonte de cada skill e o link para
+  [murilolol/muri-skills](https://github.com/murilolol/muri-skills).
+- `tools/build-readme.mjs`: o total de turnos, o 71% e o ~2,5× saem do `dados.json`, sem número
+  escrito à mão (os SVGs gerados não mudam).
 
 ### CI
 - O último run (2026-09-25) não chegou a rodar: os jobs foram recusados por bloqueio de
