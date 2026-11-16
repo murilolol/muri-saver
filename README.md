@@ -232,6 +232,8 @@ Se a cadeia inteira estiver em cooldown, a nota fica com o dump e ganha a narrat
 
 O muri-saver traz duas skills próprias, `muri-saver` e `grill-me`. As outras são de terceiros: instale cada uma direto da fonte (o `find-skills` ajuda) para receber as atualizações do autor. No Claude Code, eu desligo o que não uso com `skillOverrides` no `settings.json`, para a lista de skills não pesar no contexto. A minha skill de vídeo e essa stack, com crédito a cada autor, estão em [murilolol/muri-skills](https://github.com/murilolol/muri-skills).
 
+A lista curada das companheiras, com instalação, créditos e a colisão do `prototype`, fica em [`docs/skills-companion.md`](docs/skills-companion.md); o `--with-companion-skills` instala quatro delas (`find-skills`, `tdd`, `prototype` e `grill-with-docs`).
+
 ### Orquestração, economia e memória
 
 | Skill | Fonte | Pra quê |

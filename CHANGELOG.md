@@ -140,6 +140,8 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
   calibração do `report`. A fonte do 2,1 bi de tokens de cache entra no `dados.json`.
 - README pt/en: seção "Skills que eu uso junto", com a fonte de cada skill e o link para
   [murilolol/muri-skills](https://github.com/murilolol/muri-skills).
+- README pt/en: "Skills que eu uso junto" aponta para `docs/skills-companion.md` e para o
+  `--with-companion-skills`, que continuam sendo a fonte das companheiras.
 - `tools/build-readme.mjs`: o total de turnos, o 71% e o ~2,5× saem do `dados.json`, sem número
   escrito à mão (os SVGs gerados não mudam).
 
