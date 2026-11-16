@@ -34,7 +34,8 @@ import {
   mergeHooks, removeHooks, mergeAntigravityHooks, removeAntigravityHooks, resolveHomePlaceholder, jsonEqual,
   guardAiMemoryHooks, unguardAiMemoryHooks,
 } from '../lib/hooks-merge.mjs';
-import { JOBS, installJob, removeJob } from '../scripts/muri-jobs.mjs';
+import { JOBS, PLATFORM, installJob, removeJob, legacyLaunchAgents } from '../scripts/muri-jobs.mjs';
+import { bin } from '../hooks/muri-common.mjs';
 import { parseEntry } from '../hooks/muri-llm.mjs';
 import { findPython } from '../lib/exec.mjs';
 import { PLAN_PROFILES, detectPlan, profileOf } from '../lib/plan.mjs';
@@ -388,6 +389,13 @@ function installAntigravity(ctx, geminiDir, alias, claudeDir) {
 }
 
 const RECOMMENDED_JOBS = ['finalize-idle', 'reprocess-parked', 'quota-snapshot', 'economy-report'];
+const AI_MEMORY_JOBS = ['finalize-idle', 'reprocess-parked', 'llm-shim'];
+
+// O override MURI_SAVER_AI_MEMORY_BIN não confere se o arquivo existe; aqui confere.
+function hasAiMemory() {
+  const aim = bin('ai-memory');
+  return !!aim && existsSync(aim.pre[0] || aim.cmd);
+}
 
 function desiredJobs(args, prevCfg, { vault, llm }) {
   if (args.noJobs) return [];
@@ -398,7 +406,10 @@ function desiredJobs(args, prevCfg, { vault, llm }) {
     return list.filter((j) => JOBS[j]);
   }
   if (args.withJobs) {
-    return [...RECOMMENDED_JOBS, ...(vault ? ['vault-backfill'] : []), ...(llm?.shim ? ['llm-shim'] : [])];
+    const list = [...RECOMMENDED_JOBS, ...(vault ? ['vault-backfill'] : []), ...(llm?.shim ? ['llm-shim'] : [])];
+    if (hasAiMemory()) return list;
+    log(`ai-memory não encontrado: jobs ${AI_MEMORY_JOBS.filter((j) => list.includes(j)).join(', ')} ficam de fora (rode --update --with-jobs depois de instalar o binário).`);
+    return list.filter((j) => !AI_MEMORY_JOBS.includes(j));
   }
   return Array.isArray(prevCfg?.jobs) ? prevCfg.jobs.filter((j) => JOBS[j]) : [];
 }
@@ -416,6 +427,11 @@ function syncJobs(ctx, wanted, previous, claudeDir) {
     const err = installJob(job, { scriptsDir: join(claudeDir, 'scripts'), hooksDir: join(claudeDir, 'hooks') });
     if (err) log(`AVISO: job ${job} não foi registrado: ${err}`);
     else installed.push(job);
+  }
+  const legacy = PLATFORM === 'darwin' ? legacyLaunchAgents().filter((l) => wanted.includes(l.job)) : [];
+  if (legacy.length) {
+    log('AVISO: LaunchAgents antigos (com.muri.*) fazem o mesmo que jobs desta instalação e dobram o trabalho. O instalador não mexe neles; para desligar, rode:');
+    for (const l of legacy) log(`  launchctl bootout gui/$(id -u)/${l.label} && mv "${l.plist}" "${l.plist}.disabled"   # = ${l.job}`);
   }
   return installed;
 }

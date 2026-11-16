@@ -8,7 +8,7 @@ import net from 'node:net';
 import { run, tempDir, cleanEnv, REPO_ROOT } from './_helpers.mjs';
 import { setTomlKey, TUNE } from '../scripts/ai-memory-llm-mode.mjs';
 import { idleSessionsSql } from '../scripts/ai-memory-finalize-idle.mjs';
-import { parseArgs, buildPrompt, statusOf, mcpOffArgs, sweepOldRuns } from '../scripts/muri-delegate.mjs';
+import { parseArgs, buildPrompt, statusOf, mcpOffArgs, sweepOldRuns, quotaHit } from '../scripts/muri-delegate.mjs';
 import { hasNarrative, countUserMessages } from '../scripts/vault-backfill.mjs';
 
 test('aim-guard skips the wrapped command under MURI_AIM_NOCAPTURE and passes stdin through otherwise', () => {
@@ -79,6 +79,17 @@ test('muri-delegate parses options, refuses recursion and builds a read-only bri
   const withFile = buildPrompt({ ...o, dir: '/x', files: [secretFile] });
   assert.match(withFile, /\[REDACTED:SECRET\]/);
   assert.doesNotMatch(withFile, /abcd1234efgh5678/);
+});
+
+test('muri-delegate só vê cota no fim do stderr e no erro do agy, não no brief', () => {
+  assert.equal(quotaHit('[2026-11-15] user\nrevise o tratamento de quota e 429\n' + 'linha\n'.repeat(20) + 'error: stream disconnected'), false);
+  assert.equal(quotaHit('...\nERROR: You have hit your usage limit'), true);
+  assert.equal(quotaHit('\nRESOURCE_EXHAUSTED: quota exceeded'), true);
+  const home = tempDir();
+  const r = run('scripts/muri-delegate.mjs', ['gemini', 'oi'], {
+    home, env: { TMPDIR: home, TEMP: home, TMP: home, MURI_SAVER_AGY_BIN: join(REPO_ROOT, 'tools', 'test-bin', 'fake-agy.mjs'), FAKE_AGY_MODE: 'quota' },
+  });
+  assert.equal(r.status, 75, r.out);
 });
 
 test('muri-delegate sweeps only its own run folders older than the limit', () => {

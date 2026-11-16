@@ -30,6 +30,9 @@ import os from 'node:os';
 import { RUNTIME_SCRIPTS_DIR, CHILD_ENV, bin, isMain, appendLog, maskSecrets } from '../hooks/muri-common.mjs';
 
 const RATE_RE = /rate.?limit|quota|429|usage limit|resource.?exhausted|too many requests/i;
+// Cota só pela mensagem de erro e pelo fim do stderr: o log inteiro traz o brief e a
+// conversa, e uma tarefa que só fala de cota dava falso exit 75.
+export const quotaHit = (errText) => RATE_RE.test(String(errText || '').trim().split('\n').slice(-15).join('\n'));
 
 function die(msg, code = 2) {
   process.stderr.write(`[muri-delegate] ${msg}\n`);
@@ -136,6 +139,7 @@ function main() {
   const t0 = Date.now();
   let rc;
   let text = '';
+  let errText = '';
   let model = o.model;
 
   if (o.agent === 'gemini') {
@@ -152,6 +156,7 @@ function main() {
       try { const ev = JSON.parse(l); if (ev.event === 'result') result = ev.result; } catch { /* parcial */ }
     }
     text = result?.status === 'SUCCESS' ? String(result.response || '') : '';
+    errText = `${r.stderr || ''}\n${result?.error || ''}`;
     rc = r.error?.code === 'ETIMEDOUT' || r.signal ? 142 : (text ? 0 : (r.status || 1));
   } else {
     const codex = bin('codex');
@@ -167,6 +172,7 @@ function main() {
     });
     writeFileSync(full, `${r.stdout || ''}\n${r.stderr || ''}`, { mode: 0o600 });
     text = existsSync(out) ? readFileSync(out, 'utf8') : '';
+    errText = r.stderr || '';
     rc = r.error?.code === 'ETIMEDOUT' || r.signal ? 142 : (r.status ?? 1);
     model ||= 'padrão-codex';
   }
@@ -179,7 +185,7 @@ function main() {
 
   if (rc !== 0 || !text.trim()) {
     const log = readFileSync(full, 'utf8');
-    if (RATE_RE.test(log)) die(`cota esgotada: ${o.agent}, troque de delegado (log: ${full})`, 75);
+    if (quotaHit(errText)) die(`cota esgotada: ${o.agent}, troque de delegado (log: ${full})`, 75);
     if (rc === 142) process.stderr.write(`[muri-delegate] timeout após ${o.timeout}s: ${o.agent} (log: ${full})\n`);
     process.stderr.write(`[muri-delegate] falhou: ${o.agent} rc=${rc}; últimas linhas do log (${full}):\n${log.trim().split('\n').slice(-15).join('\n')}\n`);
     process.exit(rc || 1);

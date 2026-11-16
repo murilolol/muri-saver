@@ -40,7 +40,14 @@ muri-saver jobs run reprocess-parked  # roda agora, em primeiro plano
 
 \* Recomendados: `finalize-idle`, `reprocess-parked`, `quota-snapshot`,
 `economy-report`, mais `vault-backfill` se houver vault e `llm-shim` se
-`llm.shim` estiver ligado.
+`llm.shim` estiver ligado. Sem o binário do ai-memory, `finalize-idle`,
+`reprocess-parked` e `llm-shim` ficam de fora; rode `--update --with-jobs` de
+novo depois de instalá-lo.
+
+No macOS, se ainda houver LaunchAgents antigos `com.muri.*` (de antes da v3) que
+fazem o mesmo que um job pedido, o instalador avisa e mostra o
+`launchctl bootout` e o `mv ... .disabled` de cada um. Ele não roda nada: os
+dois carregados dobram o trabalho, então desligue os antigos você mesmo.
 
 Os jobs ficam listados em `jobs` no `muri-saver.json`, então o `--update` os
 re-registra (útil depois de trocar de versão do Node) e o `--uninstall` os remove.
@@ -66,6 +73,11 @@ nada quando não há o que fazer:
 Uma trava (`.ai-memory-reprocess.pid`) impede duas instâncias ao mesmo tempo, por
 exemplo o job e uma execução manual.
 
+O `vault-backfill` também tira da fila uma nota que sumiu do vault (vai para as
+falhas, sem chamar modelo). Se 36 rodadas seguidas (~3 dias) param no limite sem
+nenhuma narrativa nova, a cadeia está quebrada e não sem cota (ex.: `agy` sem
+login): o job se desativa e o log manda conferir com o `doctor`.
+
 ## Logs
 
 Tudo em `~/.claude/hooks/`:
@@ -81,8 +93,10 @@ Tudo em `~/.claude/hooks/`:
 ## Faxineiro (macOS/Linux, opcional)
 
 `scripts/faxineiro.sh` é uma rede de segurança contra processo preso: mata `agy`
-headless órfão ou rodando há mais de 15 min e worker da nota viva acima do teto.
-Dev server com mais de 3 dias só vira aviso (macOS, 1x por dia). Não entra no
+headless órfão ou rodando há mais de 15 min (`FAXINA_MAX_AGE_S`) e worker da nota
+viva com mais de 1 h (`FAXINA_WORKER_MAX_AGE_S`, duas passadas da cadeia com o
+orçamento de 20 min). Dev server com mais de 3 dias só vira aviso (macOS, 1x por
+dia). Precisa de bash, `pgrep` e `ps`: no Windows não roda. Não entra no
 `muri-saver jobs`: agende você mesmo a cada 10 min (LaunchAgent ou
 `*/10 * * * * bash ~/.claude/scripts/faxineiro.sh`). `--dry-run` só lista.
 

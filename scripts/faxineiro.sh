@@ -2,11 +2,16 @@
 # Faxineiro (2026-10-31): rede de segurança contra vazamento dos hooks.
 # Mata só o que é nosso: agy headless (-p / --input-format) com pai morto ou
 # acima do teto, e worker do vault acima do teto. Dev server antigo (>3 dias)
-# só vira aviso no macOS, 1x por dia. Roda pelo LaunchAgent com.muri.faxineiro.
+# só vira aviso no macOS, 1x por dia.
+# Só macOS e Linux (bash, pgrep e ps); no Windows não roda. Opcional e fora do
+# `muri-saver jobs`: agende você mesmo (LaunchAgent, systemd timer ou cron),
+# ver docs/background-jobs.md.
 # Uso: faxineiro.sh [--dry-run]   (dry-run lista e não mata nem avisa)
-# Teste: bash ~/.claude/scripts/test-vault-hooks.sh (seção Faxineiro)
 set -u
 MAX_AGE=${FAXINA_MAX_AGE_S:-900}    # agy do hook leva até ~8,5 min e o do shim até ~8,3
+# worker do vault: até 2 passadas de (orçamento 20 min + último elo ~10 min), ver
+# NARRATIVE_BUDGET_MS em hooks/obsidian-vault-check.mjs
+WORKER_MAX_AGE=${FAXINA_WORKER_MAX_AGE_S:-3600}
 DEV_AGE=${FAXINA_DEV_AGE_S:-259200} # 3 dias
 AGY_RE=${FAXINA_AGY_RE:-'(^|/)agy (-p |--input-format )'}
 WORKER_RE=${FAXINA_WORKER_RE:-'obsidian-vault-check\.mjs /'}
@@ -37,7 +42,7 @@ scan() {
 
 # worker primeiro: se o agy morrer antes, o worker tenta o próximo modelo e abre outro agy
 scan "$WORKER_RE" | while read -r p ppid age; do
-  [ "$age" -gt "$MAX_AGE" ] || continue
+  [ "$age" -gt "$WORKER_MAX_AGE" ] || continue
   log "mata worker do vault $p (${age}s)"
   [ "$DRY" -eq 1 ] || kill "$p" 2>/dev/null
 done

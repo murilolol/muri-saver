@@ -21,7 +21,7 @@
 // Segredos (chaves, tokens, senhas) são mascarados antes de ir para o vault e
 // antes de ir para o LLM. Nunca bloqueia nem falha a sessão do agente.
 
-import { readFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync, readdirSync, appendFileSync, statSync, unlinkSync } from 'node:fs';
+import { readFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync, readdirSync, appendFileSync, statSync, unlinkSync, utimesSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';
@@ -41,7 +41,11 @@ const NARRATIVE = CFG.narrative || {};
 const MAX_TRANSCRIPT_CHARS = Number(NARRATIVE.maxChars) || 200000;
 const REGEN_INTERVAL_MS = (Number(NARRATIVE.intervalMinutes) || 15) * 60 * 1000;
 const LANGUAGE = CFG.language || 'pt-BR';
-const WORKER_LOCK_MAX_AGE_MS = 12 * 60 * 1000;
+// Orçamento da cadeia por passada. O último elo pode começar no fim dele e levar
+// ~8,5 min (agy 480 s + 20 s), daí o lock = orçamento + 10 min, renovado a cada
+// passada. O faxineiro (FAXINA_WORKER_MAX_AGE_S) só mata acima de 2 passadas.
+const NARRATIVE_BUDGET_MS = 20 * 60 * 1000;
+const WORKER_LOCK_MAX_AGE_MS = NARRATIVE_BUDGET_MS + 10 * 60 * 1000;
 const EXIT_RATE_LIMITED = 75;
 const ERROR_LOG = join(RUNTIME_DIR, '.generate-summary-error.log');
 const VAULT_LLM_LOG = join(RUNTIME_DIR, '.vault-llm.log');
@@ -465,7 +469,7 @@ async function generateSummary(transcript, agentLabel, knownProjects, alreadyReg
   if (!transcript || chain.length === 0) return { summary: null, rateLimited: false };
   const prompt = buildSummaryPrompt(transcript, agentLabel, knownProjects, alreadyRegistered);
   const r = await complete({ messages: [{ role: 'user', content: prompt }], json: true }, {
-    chain, budgetMs: 20 * 60 * 1000, log: (l) => logError(`[narrativa] ${l}`), cfg: CFG,
+    chain, budgetMs: NARRATIVE_BUDGET_MS, log: (l) => logError(`[narrativa] ${l}`), cfg: CFG,
   });
   if (r.error) {
     logError(`[narrativa] nenhum modelo respondeu: ${r.tried.join(', ')}`);
@@ -935,6 +939,7 @@ async function main() {
 
   // --- worker (ou backfill) ---
   for (let pass = 0; pass < 2; pass++) {
+    if (process.env.MURI_VAULT_LOCK) try { utimesSync(process.env.MURI_VAULT_LOCK, new Date(), new Date()); } catch { /* sem lock */ }
     const startSize = statSync(transcriptPath).size;
     const st = readState(stateKey);
     const { summary, model, rateLimited } = await generateSummary(

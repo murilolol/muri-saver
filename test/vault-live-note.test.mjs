@@ -93,6 +93,37 @@ test('quota on every model leaves the dump, cools the model down and makes backf
   assert.equal(b.status, 75, 'backfill stops at the first limit');
 });
 
+test('vault-backfill tira da fila a nota apagada sem chamar modelo e desiste da cadeia parada no limite', () => {
+  const { home, vault } = setup();
+  stop(home, { session_id: SID, transcript_path: TRANSCRIPT, cwd: home });
+  const notePath = join(vault, 'claude', 'sessions', readdirSync(join(vault, 'claude', 'sessions'))[0]);
+  const stateDir = join(home, 'state');
+  const queueFile = join(stateDir, 'backfill.json');
+  const gone = join(vault, 'claude', 'sessions', 'apagada.md');
+  const item = (note) => ({ agent: 'claude', note, sessionId: SID, transcript: TRANSCRIPT, cwd: home, attempts: 0 });
+  writeFile(queueFile, JSON.stringify({ queue: [item(gone), item(notePath)], done: [], failed: [], skipped: {}, stuckRounds: 34 }));
+  const backfill = () => run('scripts/vault-backfill.mjs', [], {
+    home,
+    env: {
+      MURI_SAVER_STATE_DIR: stateDir, MURI_SAVER_RUNTIME_DIR: home, MURI_SAVER_NOW: '2026-09-20T13:20:00Z',
+      MURI_SAVER_NARRATIVE_CHAIN: 'agy:fake-model', MURI_SAVER_AGY_BIN: FAKE_AGY, FAKE_AGY_MODE: 'quota',
+      MURI_SAVER_COOLDOWN_FILE: join(home, 'cooldowns.json'),
+    },
+  });
+  let r = backfill();
+  assert.equal(r.status, 0, r.out);
+  assert.match(r.out, /nota sumiu: apagada\.md/);
+  let state = JSON.parse(readFileSync(queueFile, 'utf8'));
+  assert.deepEqual(state.failed, [gone]);
+  assert.deepEqual(state.queue.map((i) => i.note), [notePath], 'a nota com limite fica na fila');
+  assert.equal(state.stuckRounds, 35);
+  r = backfill();
+  assert.match(r.out, /36 rodadas seguidas paradas no limite/);
+  state = JSON.parse(readFileSync(queueFile, 'utf8'));
+  assert.equal(state.stuckRounds, 0);
+  assert.equal(state.queue.length, 1);
+});
+
 test('the skill name inside injected instructions no longer tags the session (only what the user typed)', () => {
   const { home, vault } = setup();
   const transcript = writeFile(join(home, 't.jsonl'), [

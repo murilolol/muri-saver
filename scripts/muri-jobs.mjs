@@ -16,7 +16,7 @@
 // MURI_SAVER_SCHEDULER=dry grava os arquivos mas não chama launchctl/systemctl/
 // schtasks/crontab (usado nos testes).
 
-import { existsSync, mkdirSync, writeFileSync, readFileSync, renameSync, unlinkSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync, readFileSync, renameSync, unlinkSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -25,7 +25,7 @@ import { RUNTIME_DIR as HOOKS_DIR, IS_WINDOWS, resolveBin, loadConfig, isMain } 
 
 const SCRIPTS_DIR = dirname(fileURLToPath(import.meta.url));
 const DRY = process.env.MURI_SAVER_SCHEDULER === 'dry';
-const PLATFORM = process.env.MURI_SAVER_PLATFORM || process.platform; // testes geram os 3 formatos
+export const PLATFORM = process.env.MURI_SAVER_PLATFORM || process.platform; // testes geram os 3 formatos
 
 // every: minutos entre execuções · at: minuto fixo de toda hora · weekly: dia/hora
 // keepAlive: serviço que fica de pé (reinicia se cair)
@@ -58,6 +58,22 @@ export const JOBS = {
 };
 
 const label = (job) => `com.muri-saver.${job}`;
+
+// LaunchAgents de antes da v3 (com.muri.<nome>, alguns com o prefixo ai-memory-)
+// que fazem o mesmo que um job daqui: com os dois carregados, o trabalho dobra.
+// Só lista; o bootout fica com o usuário. Os sem equivalente (ex.: faxineiro) ficam de fora.
+export function legacyLaunchAgents(home = os.homedir()) {
+  const dir = join(home, 'Library', 'LaunchAgents');
+  let files = [];
+  try { files = readdirSync(dir); } catch { return []; }
+  return files.flatMap((f) => {
+    const m = /^com\.muri\.(.+)\.plist$/.exec(f);
+    if (!m) return [];
+    const name = m[1].replace(/^ai-memory-/, '');
+    const job = Object.keys(JOBS).find((j) => j === name || j.startsWith(`${name}-`));
+    return job ? [{ job, label: `com.muri.${m[1]}`, plist: join(dir, f) }] : [];
+  });
+}
 const unitName = (job) => `muri-saver-${job}`;
 const taskName = (job) => `\\muri-saver\\${job}`;
 // Os jobs rodam os scripts INSTALADOS (o instalador passa scriptsDir/hooksDir);

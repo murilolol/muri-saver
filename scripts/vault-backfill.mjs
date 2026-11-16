@@ -38,6 +38,9 @@ const GEMINI_DIR = expandHome(CFG.paths?.geminiDir) || join(HOME, '.gemini');
 const GAP_MS = 60 * 1000;
 const MAX_ATTEMPTS = 2;
 const EXIT_RATE_LIMITED = 75;
+// Rodadas seguidas paradas no limite sem nenhuma narrativa nova (~3 dias a cada
+// 2h): passa da cota diária, então é a cadeia quebrada (ex.: agy sem login).
+const MAX_STUCK_ROUNDS = 36;
 const NARR_START = '<!-- auto-narrativa:start -->';
 
 const args = process.argv.slice(2);
@@ -184,6 +187,13 @@ async function main() {
     let processed = 0;
     while (state.queue.length && processed < LIMIT) {
       const item = state.queue[0];
+      if (!existsSync(item.note)) {
+        state.queue.shift();
+        state.failed.push(item.note);
+        log(`nota sumiu: ${basename(item.note)}, sai da fila`);
+        writeFileSync(QUEUE_FILE, JSON.stringify(state, null, 2));
+        continue;
+      }
       const input = {
         session_id: item.sessionId,
         transcript_path: item.transcript,
@@ -204,12 +214,21 @@ async function main() {
       const secs = Math.round((Date.now() - t0) / 1000);
       const name = basename(item.note);
       if (r.status === EXIT_RATE_LIMITED) {
-        log(`limite do modelo em ${name}, parando; retoma na próxima rodada do job`);
+        state.stuckRounds = (state.stuckRounds || 0) + 1;
+        if (state.stuckRounds >= MAX_STUCK_ROUNDS) {
+          log(`${state.stuckRounds} rodadas seguidas paradas no limite sem nenhuma narrativa, desativando o job vault-backfill; confira a cadeia (muri-saver doctor) e religue com \`muri-saver jobs install vault-backfill\``);
+          state.stuckRounds = 0;
+          disableJob('vault-backfill');
+        } else {
+          log(`limite do modelo em ${name}, parando; retoma na próxima rodada do job`);
+        }
+        writeFileSync(QUEUE_FILE, JSON.stringify(state, null, 2));
         break;
       }
       state.queue.shift();
-      if (r.status === 0 && hasNarrative(readFileSync(item.note, 'utf8'))) {
+      if (r.status === 0 && existsSync(item.note) && hasNarrative(readFileSync(item.note, 'utf8'))) {
         state.done.push(item.note);
+        state.stuckRounds = 0;
         log(`ok ${name} (${secs}s)`);
       } else if (++item.attempts < MAX_ATTEMPTS) {
         state.queue.push(item);

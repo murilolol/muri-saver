@@ -2,7 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { run, tempDir, writeFile } from './_helpers.mjs';
+import { run, tempDir, writeFile, REPO_ROOT } from './_helpers.mjs';
+
+const FAKE_AIM = join(REPO_ROOT, 'tools', 'test-bin', 'fake-ai-memory.mjs');
 import { guardAiMemoryHooks, unguardAiMemoryHooks } from '../lib/hooks-merge.mjs';
 
 const AGY_AIM_GROUP = {
@@ -27,7 +29,7 @@ test('install v3: SessionEnd hook, Codex forwarder pointed at the real hooks dir
   writeFile(join(home, '.gemini', 'config', 'hooks.json'), JSON.stringify(AGY_AIM_GROUP));
   writeFile(join(home, '.claude', 'muri-saver.json'), JSON.stringify({ version: '2.1.0', alias: 'muri-saver', narrative: { intervalMinutes: 30 }, manifest: [] }));
   const r = run('bin/install.mjs', ['--with-all', '--with-jobs', '--narrative-chain', 'agy:gemini-4-argon-high,bogus', '--language', 'en'], {
-    home, env: { MURI_SAVER_PLATFORM: 'linux' },
+    home, env: { MURI_SAVER_PLATFORM: 'linux', MURI_SAVER_AI_MEMORY_BIN: FAKE_AIM },
   });
   assert.equal(r.status, 0, r.out);
   assert.match(r.out, /entrada\(s\) inválida\(s\) em --narrative-chain ignorada\(s\): bogus/);
@@ -62,6 +64,24 @@ test('install v3: SessionEnd hook, Codex forwarder pointed at the real hooks dir
   assert.deepEqual(JSON.parse(readFileSync(join(home, '.claude', 'muri-saver.json'), 'utf8')).jobs, cfg.jobs);
   run('bin/install.mjs', ['--update', '--no-jobs'], { home, env: { MURI_SAVER_PLATFORM: 'linux' } });
   assert.equal(existsSync(join(home, '.config', 'systemd', 'user', 'muri-saver-reprocess-parked.timer')), false);
+});
+
+test('--with-jobs sem ai-memory deixa os jobs dele de fora e, no macOS, só mostra o bootout dos com.muri.* que duplicam', () => {
+  const home = tempDir();
+  const agents = join(home, 'Library', 'LaunchAgents');
+  for (const f of ['com.muri.quota-snapshot.plist', 'com.muri.ai-memory-finalize-idle.plist', 'com.muri.faxineiro.plist',
+    'com.muri.ai-memory-reprocess.plist.disabled', 'com.muri-saver.economy-report.plist']) writeFile(join(agents, f), '<plist/>');
+  const r = run('bin/install.mjs', ['--with-jobs', '--dry-run'], {
+    home, env: { MURI_SAVER_PLATFORM: 'darwin', MURI_SAVER_AI_MEMORY_BIN: join(home, 'sem-ai-memory') },
+  });
+  assert.equal(r.status, 0, r.out);
+  assert.match(r.out, /ai-memory não encontrado: jobs finalize-idle, reprocess-parked ficam de fora/);
+  assert.doesNotMatch(r.out, /registrar job (finalize-idle|reprocess-parked)/);
+  assert.match(r.out, /launchctl bootout gui\/\$\(id -u\)\/com\.muri\.quota-snapshot && mv /);
+  assert.doesNotMatch(r.out, /bootout.*(finalize-idle|faxineiro|reprocess|com\.muri-saver)/, 'só o que esta instalação agenda');
+  assert.ok(existsSync(join(agents, 'com.muri.quota-snapshot.plist')), 'o instalador não move nada');
+  const comAim = run('bin/install.mjs', ['--with-jobs', '--dry-run'], { home, env: { MURI_SAVER_PLATFORM: 'darwin', MURI_SAVER_AI_MEMORY_BIN: FAKE_AIM } });
+  assert.match(comAim.out, /bootout gui\/\$\(id -u\)\/com\.muri\.ai-memory-finalize-idle && mv .*# = finalize-idle/);
 });
 
 test('uninstall unwraps the Antigravity ai-memory hooks and removes jobs', () => {

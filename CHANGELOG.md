@@ -106,6 +106,26 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
   anterior depois de um `--plan` sem `--apply-compact` (com o `--update --apply-compact`).
 - Teste confere que os marcos e a folga do `plan-profiles.json` são os do `guarda-contexto.py`.
 
+### Jobs e backfill
+- `--with-jobs` sem o binário do ai-memory deixa `finalize-idle`, `reprocess-parked` e `llm-shim`
+  de fora e diz como incluí-los depois. Um `MURI_SAVER_AI_MEMORY_BIN` que aponta para um arquivo
+  que não existe conta como ausente.
+- No macOS, o instalador lista os LaunchAgents antigos `com.muri.*` que fazem o mesmo que um job
+  pedido (o prefixo `ai-memory-` conta; o faxineiro, sem equivalente, fica de fora) e mostra o
+  `launchctl bootout` e o `mv ... .disabled` de cada um. Ele só mostra: não roda nada.
+- `vault-backfill`: nota apagada do vault sai da fila e vai para as falhas sem chamar modelo (antes
+  o `readFileSync` derrubava a rodada). Rodadas que param no limite são contadas (`stuckRounds`,
+  zera a cada narrativa nova); com 36 seguidas (~3 dias) o job se desativa, porque aí é a cadeia
+  quebrada e não a cota.
+- Nota viva: o lock do worker vale o orçamento da cadeia (20 min) mais 10 min do último elo e é
+  renovado a cada passada; antes expirava em 12 min, com a cadeia ainda rodando, e o Stop seguinte
+  abria um segundo worker. O faxineiro só mata o worker com mais de 1 h
+  (`FAXINA_WORKER_MAX_AGE_S`, duas passadas); o teto do `agy` continua 15 min.
+- Faxineiro: o cabeçalho diz macOS/Linux (sem Windows) e sai a menção ao LaunchAgent e ao teste
+  que só existiam numa máquina.
+- `muri-delegate`: cota só pela mensagem de erro do `agy` e pelas últimas 15 linhas do stderr. O
+  log inteiro trazia o brief e a conversa, e uma tarefa que falava de cota dava falso exit 75.
+
 ### Documentação
 - README pt/en: seção "Plano do Claude e contexto" (a janela vem do modelo, o plano define a cota,
   o perfil ajusta só o `autoCompactWindow`), com a tabela de cotas e os nomes novos.
