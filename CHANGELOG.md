@@ -88,16 +88,23 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
   Pro tem base medida; os outros estão marcados como palpite. Nomes atuais: o Max 5x virou Max e o
   Max 20x virou Ultra (30/10/2026).
 - Instalador: `--plan <perfil>` grava `plan` no `muri-saver.json`; perfil inválido ou sem valor
-  para com exit 1 sem escrever nada. Sem `--plan`, vale o salvo; sem nada salvo, o plano é
-  detectado em cascata (`claude auth status`, `claude auth status --text`, `~/.claude.json`) e,
-  se nada responder, fica `auto`, que mantém o comportamento de hoje. Deslogado ou com token
-  avulso (`authMethod` `none`/`oauth_token`), também fica `auto`.
+  para com exit 1 sem escrever nada (`__proto__` e `constructor` também não são perfis). Sem
+  `--plan`, vale o salvo; sem nada salvo, o plano é detectado em cascata (`claude auth status`,
+  `claude auth status --text`, `~/.claude.json`) e, se nada responder, fica `auto`, que mantém o
+  comportamento de hoje e não fica salvo: o próximo `--update` detecta de novo. Deslogado ou com
+  token avulso (`authMethod` `none`/`oauth_token`), também fica `auto`; o JSON vale mesmo com o
+  exit 1 que o `claude auth status` dá deslogado (antes caía no `oauthAccount` antigo do
+  `~/.claude.json`). Sem `~/.claude.json`, o Claude Code nunca rodou ali e a detecção nem chama
+  o `claude`, que criaria a config dele no HOME: o `--dry-run` e o `doctor` não escrevem nada.
 - `--apply-compact` grava o `autoCompactWindow` do perfil no `settings.json` global, só se não houver
   valor seu (`CLAUDE_CODE_AUTO_COMPACT_WINDOW`, `modelSettings` ou o global). O valor que o
   muri-saver gravou acompanha uma troca de perfil, e o `--uninstall` o remove enquanto não for
   editado.
 - `doctor`: linha "plano do Claude" com o perfil salvo, o `autoCompactWindow` e os avisos dele e o
-  plano detectado. Com o perfil em `auto` e um plano detectado, dá AVISO com o `--update --plan`.
+  plano detectado. Dá AVISO quando o perfil salvo difere do plano detectado (com o
+  `--update --plan`) e quando o `autoCompactWindow` que o muri-saver gravou ficou com o perfil
+  anterior depois de um `--plan` sem `--apply-compact` (com o `--update --apply-compact`).
+- Teste confere que os marcos e a folga do `plan-profiles.json` são os do `guarda-contexto.py`.
 
 ### Documentação
 - README pt/en: seção "Plano do Claude e contexto" (a janela vem do modelo, o plano define a cota,

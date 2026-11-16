@@ -37,7 +37,7 @@ import {
 import { JOBS, installJob, removeJob } from '../scripts/muri-jobs.mjs';
 import { parseEntry } from '../hooks/muri-llm.mjs';
 import { findPython } from '../lib/exec.mjs';
-import { PLAN_PROFILES, detectPlan } from '../lib/plan.mjs';
+import { PLAN_PROFILES, detectPlan, profileOf } from '../lib/plan.mjs';
 
 const REPO_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const VERSION = readPackageVersion(REPO_ROOT);
@@ -577,7 +577,7 @@ function main() {
     process.exitCode = 1;
     return;
   }
-  if (args.plan && !PLAN_PROFILES.perfis[args.plan.toLowerCase()]) {
+  if (args.plan && !profileOf(args.plan.toLowerCase())) {
     log(`FALHA: --plan "${args.plan}" não é um perfil válido (${Object.keys(PLAN_PROFILES.perfis).join(', ')}). Nada foi feito.`);
     process.exitCode = 1;
     return;
@@ -616,7 +616,7 @@ function main() {
   log(`Fuso: ${timezone}${vault ? ` — vault: ${vault}` : ''}`);
   const detected = args.plan || prevCfg?.plan ? null : detectPlan();
   const plan = args.plan?.toLowerCase() || prevCfg?.plan || detected.plan;
-  const profile = PLAN_PROFILES.perfis[plan] || PLAN_PROFILES.perfis.auto;
+  const profile = profileOf(plan) || PLAN_PROFILES.perfis.auto;
   log(`Plano: ${plan} (${args.plan ? '--plan' : prevCfg?.plan ? 'salvo' : detected.source ? `detectado por ${detected.source}` : 'não detectado'})`);
   if (args.applyCompact && !profile.autoCompactWindow) log(`--apply-compact: o perfil ${plan} não define autoCompactWindow — nada a gravar (use --plan).`);
 
@@ -662,7 +662,7 @@ function main() {
     vault,
     timezone,
     language,
-    plan,
+    plan: detected?.plan === 'auto' ? undefined : plan, // auto sem detecção não fica salvo: o próximo --update detecta de novo
     llm,
     jobs,
     agents,

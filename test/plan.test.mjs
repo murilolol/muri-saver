@@ -2,16 +2,17 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { run, tempDir, writeFile } from './_helpers.mjs';
+import { REPO_ROOT, run, tempDir, writeFile } from './_helpers.mjs';
 import { PLAN_PROFILES, planFromName, detectPlan } from '../lib/plan.mjs';
 
-// Um `claude` falso: `auth status` imprime `json` (ou sai com 1), `--text` imprime `text`.
-function fakeClaude(dir, { json, text }) {
+// Um `claude` falso: `auth status` imprime `json`, `--text` imprime `text`; sem saída, sai com 1.
+// `code` força o código de saída: o CLI real deslogado imprime o JSON e sai com 1.
+function fakeClaude(dir, { json, text, code }) {
   return writeFile(join(dir, 'fake-claude.mjs'), `
 const isText = process.argv.includes('--text');
 const out = isText ? ${JSON.stringify(text ?? null)} : ${JSON.stringify(json ? JSON.stringify(json) : null)};
-if (out === null) process.exit(1);
-console.log(out);
+if (out !== null) console.log(out);
+process.exitCode = ${code ?? 'null'} ?? (out === null ? 1 : 0);
 `);
 }
 
@@ -31,18 +32,29 @@ test('profiles: every plan has a window except auto, and names map to profiles (
   assert.equal(planFromName(undefined), null);
 });
 
+test('plan-profiles.json keeps the same marks and margin as guarda-contexto.py', () => {
+  const py = readFileSync(join(REPO_ROOT, 'hooks', 'guarda-contexto.py'), 'utf8');
+  assert.equal(Number(py.match(/^FOLGA = ([\d_]+)/m)[1].replaceAll('_', '')), PLAN_PROFILES.folga);
+  assert.deepEqual(py.match(/^MARCOS_FRAC = \(([^)]*)\)/m)[1].split(',').map(Number), PLAN_PROFILES.marcos);
+});
+
 test('detectPlan cascades auth status JSON → --text → ~/.claude.json → auto', () => {
   const home = tempDir();
   const missing = join(home, 'no-claude');
   const det = (fake) => detectPlan({ claudeBin: fake, home });
+  const ultra = { json: { authMethod: 'claude.ai', subscriptionType: 'max', planTier: 'max_20x' } };
 
-  assert.deepEqual(det(fakeClaude(home, { json: { authMethod: 'claude.ai', subscriptionType: 'max', planTier: 'max_20x' } })),
-    { plan: 'ultra', source: 'claude auth status' });
+  assert.deepEqual(det(fakeClaude(home, ultra)), { plan: 'auto', source: null }, 'no ~/.claude.json: claude never ran here');
+  // Conta antiga no ~/.claude.json: só vale quando o CLI não responde.
+  writeFile(join(home, '.claude.json'), JSON.stringify({ oauthAccount: { planDisplayName: 'Pro' } }));
+  assert.deepEqual(det(fakeClaude(home, ultra)), { plan: 'ultra', source: 'claude auth status' });
   assert.equal(det(fakeClaude(home, { json: { authMethod: 'api_key' } })).plan, 'api');
-  assert.deepEqual(det(fakeClaude(home, { json: { authMethod: 'none' }, text: 'Login method: Claude Pro account' })),
-    { plan: 'auto', source: null }, 'logged out: no guessing from older data');
-  assert.deepEqual(det(fakeClaude(home, { text: 'Login method: Claude Pro account' })), { plan: 'pro', source: 'claude auth status --text' });
+  assert.deepEqual(det(fakeClaude(home, { json: { loggedIn: false, authMethod: 'none' }, text: 'Not logged in.', code: 1 })),
+    { plan: 'auto', source: null }, 'logged out (exit 1): no guessing from older data');
+  assert.deepEqual(det(fakeClaude(home, { text: 'Login method: Claude Max account' })), { plan: 'max', source: 'claude auth status --text' });
+  assert.deepEqual(det(missing), { plan: 'pro', source: '~/.claude.json' });
 
+  writeFile(join(home, '.claude.json'), '{}');
   assert.deepEqual(det(missing), { plan: 'auto', source: null });
   writeFile(join(home, '.claude.json'), '{not json');
   assert.deepEqual(det(missing), { plan: 'auto', source: null }, 'invalid ~/.claude.json does not throw');
@@ -54,11 +66,26 @@ test('detectPlan cascades auth status JSON → --text → ~/.claude.json → aut
 
 test('install --plan: invalid value exits 1 and writes nothing', () => {
   const home = tempDir();
-  for (const args of [['--plan', 'gold'], ['--plan'], ['--plan', '--dry-run']]) {
+  for (const args of [['--plan', 'gold'], ['--plan'], ['--plan', '--dry-run'], ['--plan', '__proto__'], ['--plan', 'constructor']]) {
     const r = run('bin/install.mjs', args, { home });
     assert.equal(r.status, 1, `${args.join(' ')}\n${r.out}`);
   }
   assert.equal(existsSync(join(home, '.claude')), false);
+});
+
+test('install --dry-run does not run claude in a HOME where it never ran (it would create ~/.claude.json)', () => {
+  const home = tempDir();
+  // Igual ao CLI real: rodar o claude cria a config dele no HOME.
+  const fake = writeFile(join(tempDir(), 'fake-claude.mjs'), `
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+writeFileSync(join(process.env.HOME, '.claude.json'), '{}');
+console.log(JSON.stringify({ authMethod: 'claude.ai', planTier: 'max_20x' }));
+`);
+  const r = run('bin/install.mjs', ['--dry-run'], { home, env: { MURI_SAVER_CLAUDE_BIN: fake } });
+  assert.equal(r.status, 0, r.out);
+  assert.match(r.out, /Plano: auto \(não detectado\)/);
+  assert.equal(existsSync(join(home, '.claude.json')), false);
 });
 
 test('install saves the plan (detected, flag or kept) and --apply-compact writes only when the value is ours', () => {
@@ -66,10 +93,15 @@ test('install saves the plan (detected, flag or kept) and --apply-compact writes
   const cfgPath = join(home, '.claude', 'muri-saver.json');
   const settingsPath = join(home, '.claude', 'settings.json');
   const fake = fakeClaude(home, { json: { authMethod: 'claude.ai', planTier: 'max_20x' } });
+  writeFile(join(home, '.claude.json'), '{}');
 
-  let r = run('bin/install.mjs', [], { home, env: { MURI_SAVER_CLAUDE_BIN: fake } });
+  let r = run('bin/install.mjs', [], { home });
   assert.equal(r.status, 0, r.out);
-  assert.match(r.out, /Plano: ultra \(detectado por claude auth status\)/);
+  assert.match(r.out, /Plano: auto \(não detectado\)/);
+  assert.equal(readJson(cfgPath).plan, undefined, 'auto sem detecção não fica salvo');
+  r = run('bin/install.mjs', ['--update'], { home, env: { MURI_SAVER_CLAUDE_BIN: fake } });
+  assert.equal(r.status, 0, r.out);
+  assert.match(r.out, /Plano: ultra \(detectado por claude auth status\)/, 'o --update seguinte detecta de novo');
   assert.equal(readJson(cfgPath).plan, 'ultra');
   assert.equal(readJson(settingsPath).autoCompactWindow, undefined, 'sem --apply-compact o settings não ganha autoCompactWindow');
 
@@ -84,8 +116,14 @@ test('install saves the plan (detected, flag or kept) and --apply-compact writes
   r = run('bin/install.mjs', ['--update', '--plan', 'pro', '--apply-compact'], { home });
   assert.equal(readJson(settingsPath).autoCompactWindow, 250000, 'o valor gravado pelo muri-saver acompanha o perfil');
   assert.equal(readJson(cfgPath).plan, 'pro');
+  assert.match(run('bin/doctor.mjs', [], { home, env: { MURI_SAVER_CLAUDE_BIN: fake } }).out,
+    /AVISO plano do Claude — perfil pro: .* · detectado: ultra .* --update --plan ultra/, 'salvo diverge do detectado');
   assert.equal(run('bin/install.mjs', ['--update'], { home }).status, 0);
   assert.equal(readJson(cfgPath).plan, 'pro', '--update sem --plan mantém o salvo');
+
+  run('bin/install.mjs', ['--update', '--plan', 'ultra'], { home });
+  assert.match(run('bin/doctor.mjs', [], { home }).out, /AVISO plano do Claude — perfil ultra: .* settings\.json ainda tem 250k; .* --apply-compact/,
+    '--plan sem --apply-compact deixa o valor do perfil anterior');
 
   const settings = readJson(settingsPath);
   writeFile(settingsPath, JSON.stringify({ ...settings, autoCompactWindow: 300000 }));

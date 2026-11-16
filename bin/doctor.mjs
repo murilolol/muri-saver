@@ -22,7 +22,7 @@ import { loadSqlite } from '../lib/parsers.mjs';
 import { aiMemoryPaths, shimPort } from '../hooks/muri-common.mjs';
 import { resolveChain, chainStatus } from '../hooks/muri-llm.mjs';
 import { configuredJobs, jobStatus } from '../scripts/muri-jobs.mjs';
-import { PLAN_PROFILES, detectPlan } from '../lib/plan.mjs';
+import { PLAN_PROFILES, detectPlan, profileOf } from '../lib/plan.mjs';
 
 const PLATFORM = process.platform; // 'darwin' | 'linux' | 'win32'
 const HOME = os.homedir();
@@ -295,13 +295,16 @@ async function main() {
   // O plano muda a cota, não a janela: o perfil só sugere o autoCompactWindow (avisos em 70%/90% do ponto).
   const detected = detectPlan();
   const plan = config?.plan || 'auto';
-  const profile = PLAN_PROFILES.perfis[plan] || PLAN_PROFILES.perfis.auto;
+  const profile = profileOf(plan) || PLAN_PROFILES.perfis.auto;
   const win = profile.autoCompactWindow;
   const k = (n) => `${Math.round(n / 1000)}k`;
   const planDetail = `${win
     ? `perfil ${plan}: autoCompactWindow ${k(win)}${profile.palpite ? ' (palpite)' : ''}, avisos em ~${PLAN_PROFILES.marcos.map((f) => k(f * (win - PLAN_PROFILES.folga))).join(' e ~')}`
     : `perfil ${plan}: sem autoCompactWindow próprio`} · detectado: ${detected.plan}${detected.source ? ` (${detected.source})` : ''}`;
-  if (plan === 'auto' && detected.plan !== 'auto') warn('plano do Claude', `${planDetail} — rode node bin/install.mjs --update --plan ${detected.plan}`);
+  const cur = settings?.autoCompactWindow;
+  if (detected.plan !== 'auto' && plan !== detected.plan) warn('plano do Claude', `${planDetail} — rode node bin/install.mjs --update --plan ${detected.plan}`);
+  // --plan sem --apply-compact: o valor que o muri-saver gravou antes ficou com o perfil anterior.
+  else if (win && cur !== undefined && cur !== win && cur === config?.autoCompactInstalled) warn('plano do Claude', `${planDetail} — settings.json ainda tem ${k(cur)}; para gravar o do perfil: node bin/install.mjs --update --apply-compact`);
   else if (win && settings && settings.autoCompactWindow === undefined) ok('plano do Claude', `${planDetail} — para gravar o valor do perfil: node bin/install.mjs --update --apply-compact`);
   else ok('plano do Claude', planDetail);
 
