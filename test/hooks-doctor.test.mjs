@@ -74,6 +74,40 @@ test('doctor accepts an installation without Obsidian', () => {
   assert.doesNotMatch(r.out, /pasta do vault não encontrada/);
 });
 
+test('doctor: ai-memory é opcional (AVISO), mostra a versão, confere o schema e cobra o aim-guard do Antigravity', async (t) => {
+  const home = fixtureHome();
+  run('bin/install.mjs', [], { home });
+  const doctor = (env) => run('bin/doctor.mjs', [], { home, env }).out;
+  let out = doctor({ MURI_SAVER_AI_MEMORY_BIN: join(home, 'sem-ai-memory') });
+  assert.match(out, /AVISO binário ai-memory não encontrado — opcional/);
+  assert.doesNotMatch(out, /FALHA.*ai-memory/);
+
+  const data = join(home, 'aim-data');
+  const fake = { MURI_SAVER_AI_MEMORY_BIN: join(REPO_ROOT, 'tools', 'test-bin', 'fake-ai-memory.mjs'), FAKE_AIM_DATA: data };
+  out = doctor({ ...fake, FAKE_AIM_VERSION: '4.0.1' });
+  assert.match(out, /AVISO binário ai-memory — .*\(v4\.0\.1\); o muri-saver foi testado com a 3\.2\.x/);
+  assert.match(out, /AVISO banco do ai-memory ainda não existe/);
+
+  writeFileSync(join(home, '.gemini', 'config', 'hooks.json'), JSON.stringify({ 'ai-memory': { Stop: [{ type: 'command', command: '/bin/ai-memory hook --event stop' }] } }));
+  assert.match(doctor(fake), /AVISO hooks do ai-memory no Antigravity sem o aim-guard/);
+  run('bin/install.mjs', ['--update'], { home });
+  assert.match(doctor(fake), /OK +aim-guard nos hooks do ai-memory \(Antigravity\)/);
+
+  let DatabaseSync;
+  try { ({ DatabaseSync } = await import('node:sqlite')); } catch { t.skip('node:sqlite indisponível nesta versão do Node'); return; }
+  mkdirSync(join(data, 'db'), { recursive: true });
+  const db = new DatabaseSync(join(data, 'db', 'memory.sqlite'));
+  db.exec(`CREATE TABLE workspaces (id BLOB, name TEXT); CREATE TABLE projects (id BLOB, name TEXT);
+    CREATE TABLE sessions (id BLOB, agent_kind TEXT, workspace_id BLOB, project_id BLOB, started_at INTEGER);
+    CREATE TABLE observations (session_id BLOB, created_at INTEGER);`);
+  assert.match(doctor(fake), /AVISO schema do ai-memory diferente do esperado/, 'sem sessions.ended_at');
+  db.exec('ALTER TABLE sessions ADD COLUMN ended_at INTEGER');
+  db.close();
+  out = doctor(fake);
+  assert.match(out, /OK +binário ai-memory — .*\(v3\.2\.0\)/);
+  assert.match(out, /OK +schema do ai-memory/);
+});
+
 test('Stop hooks report a blocked vault path without blocking the agent', () => {
   const home = tempDir();
   const blockedVault = join(home, 'blocked-vault');

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // `ai-memory` falso para os testes.
+//   --version                → ai-memory $FAKE_AIM_VERSION (padrão 3.2.0)
 //   status --json            → {"data_dir": FAKE_AIM_DATA}
 //   auto-improve --session-id <id>
 //     id "fail*"    → falha da própria sessão (exit 1)
@@ -12,7 +13,9 @@ const args = process.argv.slice(2);
 const arg = (name) => args[args.indexOf(name) + 1];
 if (process.env.FAKE_AIM_LOG) appendFileSync(process.env.FAKE_AIM_LOG, `${JSON.stringify(args)}\n`);
 
-if (args[0] === 'status') {
+if (args[0] === '--version') {
+  console.log(`ai-memory ${process.env.FAKE_AIM_VERSION || '3.2.0'}`);
+} else if (args[0] === 'status') {
   console.log(JSON.stringify({ version: '0.0.0-fake', data_dir: process.env.FAKE_AIM_DATA || '/nonexistent' }));
 } else if (args[0] === 'auto-improve') {
   const sid = arg('--session-id');

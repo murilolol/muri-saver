@@ -144,6 +144,40 @@ node bin/doctor.mjs
 node bin/cli.mjs audit --instructions-only
 ```
 
+## 7. Servidor, recuperação e upgrade
+
+**Quem sobe o servidor.** No Claude Code, o hook SessionStart
+`ai-memory-ensure-server.mjs` do muri-saver sobe o `ai-memory serve` sob
+demanda. Codex e Antigravity não têm esse hook: com o servidor fora, os hooks
+do ai-memory gravam num spool local e nada se perde, mas busca e handoff ficam
+sem resposta até ele voltar. Para mantê-lo sempre de pé existe o
+`ai-memory setup`: roda o `init`, instala um serviço de usuário (systemd
+`--user` ou LaunchAgent) e configura hooks, MCP e skills de todo agente que
+detectar. Ele mostra o plano e pergunta antes (salvo com `--yes`). Como
+reescreve os hooks, rode `node bin/install.mjs --update` depois, para o
+aim-guard voltar aos hooks do Antigravity.
+
+**Depois de uma queda.** `ai-memory recover` esvazia o spool dos hooks,
+reprocessa os transcripts das sessões que rodaram com o servidor fora e termina
+as importações que falharam. Pode rodar mais de uma vez.
+
+**Upgrade.** O muri-saver lê o SQLite interno do ai-memory (`finalize-idle` e a
+ponte da nota viva) e foi testado com a 3.2.x. Para trocar de versão:
+
+```bash
+ai-memory backup                # snapshot de wiki/, db/ e config.toml
+ai-memory upgrade               # troca o binário e reaplica os hooks dele
+node bin/install.mjs --update   # religa o aim-guard que o upgrade tirou
+node bin/doctor.mjs             # versão, schema do SQLite e aim-guard
+```
+
+O `upgrade` só vale para a instalação nativa pelo release do GitHub; Homebrew,
+AUR e afins atualizam pelo próprio gerenciador (depois, os mesmos dois últimos
+passos). Se o `doctor` disser "schema do ai-memory diferente do esperado", os
+jobs que leem o banco podem falhar nessa versão: volte com
+`ai-memory upgrade --version 3.2.0` (ou `ai-memory restore` do backup) e abra
+uma issue.
+
 Se SessionStart já entregou um handoff, use esse conteúdo: ele normalmente
 já foi consumido. Sem esse bloco, liste os handoffs no escopo confirmado e
 aceite o ID exato. Grave páginas duráveis manualmente só sob pedido explícito.
@@ -156,3 +190,15 @@ workspace/project pair; never hardcode a historical bucket. The Claude Code
 session-aware bridge forwards the real lifecycle ID. Preview compact managed
 instructions and skills before applying them. Obsidian and model enrichment
 are optional for public installs; preserve existing personal integrations.
+
+Server, recovery and upgrade: in Claude Code the muri-saver SessionStart hook
+starts `ai-memory serve` on demand; Codex and Antigravity have no such hook, so
+their ai-memory hooks spool locally while the server is down. `ai-memory setup`
+installs a user service (systemd `--user` or LaunchAgent) plus hooks, MCP and
+skills for every detected agent; it rewrites hooks, so run
+`node bin/install.mjs --update` afterwards to restore the aim-guard.
+`ai-memory recover` drains the spool after an outage and is safe to re-run.
+muri-saver reads ai-memory's internal SQLite and is tested with 3.2.x. To
+upgrade: `ai-memory backup`, `ai-memory upgrade` (GitHub-release installs only),
+`node bin/install.mjs --update`, then `node bin/doctor.mjs`, which reports the
+version, the SQLite schema and the aim-guard.

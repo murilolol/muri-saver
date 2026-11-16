@@ -134,9 +134,13 @@ function writeToAiMemory(s, markdown) {
   if (!aiMemoryAvailable) return { written: false, reason: 'binário ai-memory não encontrado' };
   const args = ['write-page', '--path', `sessions/imported-${s.agent}-${s.dateStr}-${s.idShort}.md`, '--body', '-', '--tier', 'episodic'];
   for (const t of ['session', s.agent, 'muri-saver', 'imported', ...(s.project ? [s.project] : [])]) args.push('-t', t);
-  if (s.project) args.push('--project', s.project);
+  // Com a pasta da sessão ainda no disco, o ai-memory roda nela e resolve o projeto
+  // sozinho (repo-root/remote), como nos hooks; sem ela, fica o nome da pasta.
+  let cwdOk = false;
+  try { cwdOk = !!s.cwd && statSync(s.cwd).isDirectory(); } catch { /* pasta sumiu */ }
+  if (s.project && !cwdOk) args.push('--project', s.project);
   try {
-    execTool(bin, args, { input: markdown, stdio: ['pipe', 'pipe', 'pipe'] });
+    execTool(bin, args, { input: markdown, stdio: ['pipe', 'pipe', 'pipe'], ...(cwdOk ? { cwd: s.cwd } : {}) });
     return { written: true, path: args[2] };
   } catch (err) {
     return { written: false, reason: (err?.stderr?.toString?.() || err?.message || String(err)).split('\n')[0].slice(0, 200) };
@@ -247,6 +251,7 @@ async function main() {
       agent: ref.agent, id: ref.id, idShort: ref.idShort, dateStr, timeStr, todayStr,
       exchanges: parsed.exchanges, toolCallCount: parsed.toolCallCount || 0,
       project: ref.agent === 'desktop' ? null : projectLabelFromCwd(parsed.cwd),
+      cwd: ref.agent === 'desktop' ? null : parsed.cwd,
       title: parsed.title || ref.title || null,
     };
 

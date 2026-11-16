@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { run, fixtureHome, tempDir, writeFile, FIXTURES } from './_helpers.mjs';
 
@@ -94,7 +94,7 @@ test('ai-memory writes go through the CLI with session tags and project', () => 
 import { appendFileSync, readFileSync } from 'node:fs';
 const args = process.argv.slice(2);
 if (args[0] === '--version') { console.log('ai-memory 0.0.0-fake'); process.exit(0); }
-appendFileSync(${JSON.stringify(log)}, JSON.stringify({ args, bodyLength: readFileSync(0, 'utf8').length }) + '\\n');
+appendFileSync(${JSON.stringify(log)}, JSON.stringify({ args, cwd: process.cwd(), bodyLength: readFileSync(0, 'utf8').length }) + '\\n');
 `);
   const r = run('bin/ingest-sessions.mjs', ['--agent', 'codex', '--skip-vault', ...TZ], { home, env: { MURI_SAVER_AI_MEMORY_BIN: fake } });
   assert.equal(r.status, 0, r.out);
@@ -103,6 +103,20 @@ appendFileSync(${JSON.stringify(log)}, JSON.stringify({ args, bodyLength: readFi
   assert.ok(call.args.includes('--project') && call.args.includes('api-server'));
   assert.ok(call.args.includes('imported'));
   assert.ok(call.bodyLength > 100);
+
+  // Pasta da sessão ainda existe: sem --project, o ai-memory roda nela e resolve o repo-root.
+  const repo = join(home, 'work', 'api-server');
+  mkdirSync(join(repo, 'src'), { recursive: true });
+  const rollout = join(home, '.codex', 'sessions', '2026', '09', '20', 'rollout-2026-09-20T18-00-00-7c7c7c7c-3333-4ccc-8ddd-444444444444.jsonl');
+  writeFileSync(rollout, readFileSync(rollout, 'utf8').replaceAll('C:\\\\Users\\\\dev\\\\Documents\\\\api-server', JSON.stringify(join(repo, 'src')).slice(1, -1)));
+  writeFileSync(log, '');
+  const again = run('bin/ingest-sessions.mjs', ['--agent', 'codex', '--skip-vault', '--force', ...TZ], {
+    home, env: { MURI_SAVER_AI_MEMORY_BIN: fake },
+  });
+  assert.equal(again.status, 0, again.out);
+  const [local] = readFileSync(log, 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+  assert.equal(local.args.includes('--project'), false);
+  assert.equal(realpathSync(local.cwd), realpathSync(join(repo, 'src')));
 });
 
 test('--enrich writes a narrative note plus taxonomy notes for known projects', () => {

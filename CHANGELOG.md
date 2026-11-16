@@ -126,6 +126,23 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
 - `muri-delegate`: cota só pela mensagem de erro do `agy` e pelas últimas 15 linhas do stderr. O
   log inteiro trazia o brief e a conversa, e uma tarefa que falava de cota dava falso exit 75.
 
+### ai-memory
+- `doctor`: o binário é achado como nos scripts (PATH, `~/.local/bin`, `~/.cargo/bin` ou
+  `MURI_SAVER_AI_MEMORY_BIN`) e mostra a versão; fora da 3.2.x dá AVISO. Um `SELECT ... LIMIT 0`
+  nas colunas que `finalize-idle` e a ponte da nota viva leem confere o schema do SQLite: banco
+  ausente, leitor ausente (sem `node:sqlite` nem `sqlite3`) e schema mudado viram avisos distintos.
+- `doctor`: sem o ai-memory, o binário e o MCP `ai-memory` ausentes dão AVISO, não FALHA (o README o
+  trata como opcional e os scripts já degradam sem ele). A linha do servidor só aparece com o binário.
+- `doctor`: avisa quando o grupo `ai-memory` dos hooks do Antigravity perdeu o aim-guard (o
+  `install-hooks --apply` e o `upgrade` do ai-memory reescrevem o grupo) e manda rodar `--update`.
+- Ingestor: com a pasta da sessão ainda no disco, o `write-page` roda nela sem `--project`, e o
+  próprio ai-memory resolve o projeto (repo-root/remote) como nos hooks. Antes ia o nome da pasta,
+  que numa subpasta do repositório criava outro projeto. Sem a pasta, continua o nome dela.
+- `ai-memory-obsidian-setup.md`: seção "Servidor, recuperação e upgrade" com o `ai-memory setup`
+  (serviço de usuário; reescreve hooks, então `--update` depois), o `ai-memory recover` e o roteiro
+  `backup` → `upgrade` → `--update` → `doctor`, mais a volta para a 3.2.0. Resumo no bloco em inglês.
+  INSTALL-AI lista as checagens novas do `doctor`.
+
 ### Documentação
 - README pt/en: seção "Plano do Claude e contexto" (a janela vem do modelo, o plano define a cota,
   o perfil ajusta só o `autoCompactWindow`), com a tabela de cotas e os nomes novos.

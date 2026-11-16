@@ -15,11 +15,12 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import os from 'node:os';
 import net from 'node:net';
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { configPath, readConfig, resolveVault, sha256File, readPackageVersion } from '../lib/config.mjs';
 import { loadSqlite } from '../lib/parsers.mjs';
-import { aiMemoryPaths, shimPort } from '../hooks/muri-common.mjs';
+import { aiMemoryPaths, shimPort, bin, resolveBin, sqliteQuery } from '../hooks/muri-common.mjs';
+import { guardAiMemoryHooks, jsonEqual } from '../lib/hooks-merge.mjs';
 import { resolveChain, chainStatus } from '../hooks/muri-llm.mjs';
 import { configuredJobs, jobStatus } from '../scripts/muri-jobs.mjs';
 import { PLAN_PROFILES, detectPlan, profileOf } from '../lib/plan.mjs';
@@ -30,6 +31,12 @@ const REPO_ROOT = dirname(dirname(fileURLToPath(import.meta.url))); // bin/docto
 
 let failures = 0;
 let warnings = 0;
+
+// Versão do ai-memory com que o muri-saver foi testado, e as colunas do SQLite
+// interno dele que finalize-idle e a ponte da nota viva leem (LIMIT 0: só valida).
+const AIM_TESTED = '3.2.';
+const AIM_SCHEMA_PROBE = 'SELECT s.id, s.agent_kind, s.started_at, s.ended_at, s.project_id, s.workspace_id, '
+  + 'p.id, p.name, w.id, w.name, o.session_id, o.created_at FROM sessions s, projects p, workspaces w, observations o LIMIT 0';
 
 function ok(label, detail) {
   console.log(`  OK    ${label}${detail ? ` — ${detail}` : ''}`);
@@ -208,17 +215,32 @@ async function main() {
   else warn('Claude Code CLI não encontrado no PATH', 'pode estar instalado só pro app desktop — confirme com o usuário');
 
   section('ai-memory');
-  const aiMemoryBinCandidates = PLATFORM === 'win32'
-    ? [join(HOME, '.cargo', 'bin', 'ai-memory.exe')]
-    : [join(HOME, '.local', 'bin', 'ai-memory')];
-  const aiMemoryBinFound = aiMemoryBinCandidates.find(existsSync);
-  if (aiMemoryBinFound) ok('binário ai-memory', aiMemoryBinFound);
-  else if (cmdExists('ai-memory', '--version')) ok('binário ai-memory', 'encontrado no PATH');
-  else fail('binário ai-memory não encontrado', `esperado em ${aiMemoryBinCandidates.join(' ou ')}, nem no PATH — ver docs/ai-memory-obsidian-setup.md`);
+  // bin() procura no PATH, em ~/.local/bin e ~/.cargo/bin; o override de env não confere se o arquivo existe.
+  const aim = bin('ai-memory');
+  const aimFile = aim && (aim.pre[0] || aim.cmd);
+  const hasAiMemory = !!aimFile && existsSync(aimFile);
+  if (!hasAiMemory) {
+    warn('binário ai-memory não encontrado', 'opcional: sem ele não há memória entre sessões e os jobs dele ficam de fora; para instalar, ver docs/ai-memory-obsidian-setup.md');
+  } else {
+    let version = '';
+    try {
+      version = execFileSync(aim.cmd, [...aim.pre, '--version'], { encoding: 'utf8', timeout: 8000, stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true });
+    } catch { /* abaixo */ }
+    const v = /\d+\.\d+\.\d+/.exec(version)?.[0];
+    if (!v) warn('binário ai-memory', `${aimFile}, mas \`ai-memory --version\` não respondeu`);
+    else if (v.startsWith(AIM_TESTED)) ok('binário ai-memory', `${aimFile} (v${v})`);
+    else warn('binário ai-memory', `${aimFile} (v${v}); o muri-saver foi testado com a ${AIM_TESTED}x e lê o SQLite interno dele — ver "Upgrade" em docs/ai-memory-obsidian-setup.md`);
 
-  const serverUp = await tcpUp('127.0.0.1', 49374);
-  if (serverUp) ok('servidor ai-memory respondendo', 'http://127.0.0.1:49374');
-  else warn('servidor ai-memory não está de pé agora', 'normal se nenhuma sessão do Claude Code rodou ainda — o hook SessionStart sobe sozinho');
+    const { dbPath } = aiMemoryPaths();
+    if (!existsSync(dbPath)) warn('banco do ai-memory ainda não existe', `${dbPath} — o servidor cria na primeira sessão`);
+    else if (!(await loadSqlite()) && !resolveBin('sqlite3', 'MURI_SAVER_SQLITE_BIN')) warn('schema do ai-memory não conferido', 'precisa de Node >= 22.5 (node:sqlite) ou do sqlite3 no PATH');
+    else if (await sqliteQuery(dbPath, AIM_SCHEMA_PROBE)) ok('schema do ai-memory', 'as colunas que finalize-idle e a nota viva leem existem');
+    else warn('schema do ai-memory diferente do esperado', `${dbPath} — finalize-idle e a ponte da nota viva podem falhar nesta versão; ver "Upgrade" em docs/ai-memory-obsidian-setup.md`);
+
+    const serverUp = await tcpUp('127.0.0.1', 49374);
+    if (serverUp) ok('servidor ai-memory respondendo', 'http://127.0.0.1:49374');
+    else warn('servidor ai-memory não está de pé agora', 'normal se nenhuma sessão do Claude Code rodou ainda — o hook SessionStart sobe sozinho');
+  }
 
   section('Configuração do muri-saver (muri-saver.json)');
   if (!config) {
@@ -316,7 +338,7 @@ async function main() {
   } else {
     const mcp = claudeJson.mcpServers || {};
     if (mcp['ai-memory']) ok('MCP "ai-memory" registrado em ~/.claude.json');
-    else fail('MCP "ai-memory" NÃO registrado', 'mescle mcp/mcp-servers.example.json em ~/.claude.json → mcpServers');
+    else (hasAiMemory ? fail : warn)('MCP "ai-memory" NÃO registrado', 'rode `ai-memory install-mcp --client claude-code --session-aware --apply` (ou mescle mcp/mcp-servers.example.json em ~/.claude.json → mcpServers)');
     if (mcp['obsidian']) ok('MCP "obsidian" (@bitbonsai/mcpvault) registrado em ~/.claude.json');
     else warn('MCP "obsidian" NÃO registrado', 'opcional mas recomendado — mescle mcp/mcp-servers.example.json');
   }
@@ -371,6 +393,13 @@ async function main() {
   }
   if (existsSync(join(geminiDir, 'GEMINI.md'))) ok('~/.gemini/GEMINI.md existe (governança Antigravity instalada)');
   else warn('~/.gemini/GEMINI.md não existe ainda', 'rode node install.mjs --with-antigravity (ele cria a partir do template se não existir)');
+  // `ai-memory install-hooks --apply` e `ai-memory upgrade` reescrevem o grupo e levam o aim-guard junto.
+  const agyHooks = readJsonSafe(join(config?.paths?.geminiDir || geminiDir, 'config', 'hooks.json'));
+  if (agyHooks?.['ai-memory']) {
+    const guard = join(config?.paths?.claudeDir || claudeDir, 'hooks', 'aim-guard.mjs');
+    if (jsonEqual(guardAiMemoryHooks(agyHooks, guard), agyHooks)) ok('aim-guard nos hooks do ai-memory (Antigravity)');
+    else warn('hooks do ai-memory no Antigravity sem o aim-guard', 'as chamadas headless do muri-saver (agy -p) viram sessões no ai-memory — rode node bin/install.mjs --update');
+  }
 
   // Codex
   const codexSessionsDir = join(HOME, '.codex', 'sessions');

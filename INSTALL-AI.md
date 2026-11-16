@@ -305,7 +305,8 @@ node bin/doctor.mjs          # ou: --vault "<caminho-do-vault>" se configurado
 
 Isso substitui checar item por item manualmente — o script já detecta o SO e
 reporta `OK` / `AVISO` / `FALHA` para: Node, Python, Claude Code CLI, binário
-e servidor do `ai-memory`, hooks registrados em `settings.json`, plugin
+(com a versão), schema do SQLite e servidor do `ai-memory` (sem o binário, é só
+`AVISO`: ele é opcional), aim-guard nos hooks do Antigravity, hooks registrados em `settings.json`, plugin
 `claude-obsidian`, MCP servers em `~/.claude.json`, app Obsidian instalado, a
 estrutura de pastas do vault, o alias configurado (padrão ou customizado), o perfil de plano (salvo e detectado), as
 sessões brutas + governança de cada agente (Claude Code/Antigravity/Codex), e
