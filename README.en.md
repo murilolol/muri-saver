@@ -296,6 +296,7 @@ From a loose set of rules to the context guard. Each version is detailed in the 
 | [2.1.0](CHANGELOG.md#210) | 2026-10-02 | Skills with a short core; templates from 59 KB to 8 KB; `audit` command |
 | [3.1.0](CHANGELOG.md#310--2026-10-03) | 2026-10-03 | Live notes, LLM chain, background jobs on macOS, Linux and Windows, delegation |
 | [3.2.0](CHANGELOG.md#320--2026-11-01) | 2026-11-01 | Context guard, new status line, notification and process reaper |
+| [3.3.0](CHANGELOG.md#330--2026-11-15) | 2026-11-15 | Generic secret masking, strict installer, plan profiles and ai-memory doctor |
 
 ## Technology
 

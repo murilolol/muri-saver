@@ -296,6 +296,7 @@ Do kit de regras soltas à guarda de contexto. O detalhe de cada uma está no [h
 | [2.1.0](CHANGELOG.md#210) | 02/10/2026 | Skills com núcleo curto; templates de 59 KB para 8 KB; comando `audit` |
 | [3.1.0](CHANGELOG.md#310--2026-10-03) | 03/10/2026 | Nota viva, cadeia de LLMs, jobs de fundo em macOS, Linux e Windows, delegação |
 | [3.2.0](CHANGELOG.md#320--2026-11-01) | 01/11/2026 | Guarda de contexto, status line nova, notificação e faxineiro |
+| [3.3.0](CHANGELOG.md#330--2026-11-15) | 15/11/2026 | Máscara de segredos genérica, instalador estrito, perfil de plano e doctor do ai-memory |
 
 ## Tecnologia
 

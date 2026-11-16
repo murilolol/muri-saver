@@ -3,7 +3,7 @@
 Todas as mudanças relevantes do muri-saver. Formato inspirado em
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
-## [Unreleased]
+## [3.3.0] — 2026-11-15
 
 ### Segurança
 - Máscara de segredos com padrão genérico chave=valor (`api_key=`, `*_TOKEN=` com nome de qualquer
@@ -355,7 +355,7 @@ fila de sessões estacionadas no formato antigo (2 colunas) continua válida.
 - Ingestor lendo o SQLite do Codex, pulando subagentes, `--enrich` opcional.
 - Suíte `node --test` e CI em macOS, Linux e Windows.
 
-[Unreleased]: https://github.com/murilolol/muri-saver/compare/v3.2.0...HEAD
+[3.3.0]: https://github.com/murilolol/muri-saver/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/murilolol/muri-saver/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/murilolol/muri-saver/compare/1f462ed...v3.1.0
 [2.1.0]: https://github.com/murilolol/muri-saver/compare/v2.0.0...1f462ed
