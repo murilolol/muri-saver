@@ -37,6 +37,7 @@ import {
 import { JOBS, installJob, removeJob } from '../scripts/muri-jobs.mjs';
 import { parseEntry } from '../hooks/muri-llm.mjs';
 import { findPython } from '../lib/exec.mjs';
+import { PLAN_PROFILES, detectPlan } from '../lib/plan.mjs';
 
 const REPO_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const VERSION = readPackageVersion(REPO_ROOT);
@@ -56,6 +57,10 @@ Instalação
   --with-companion-skills   Instala find-skills/tdd/prototype/grill-with-docs via npx skills
   --skip-claude-md          Não cria o CLAUDE.md
   --language <tag>          Idioma das narrativas do vault (padrão: pt-BR; ex: en, es)
+
+Plano do Claude (ver README, seção "Plano do Claude e contexto")
+  --plan <perfil>           ${Object.keys(PLAN_PROFILES.perfis).join(', ')} (padrão: o salvo, ou o detectado; sem detecção, auto)
+  --apply-compact           Grava o autoCompactWindow do perfil no settings.json, só se você não tiver um
 
 Modelos (cadeia de LLMs; ver docs/llm-chain.md)
   --narrative-chain <lista> Modelos da narrativa do vault, ex: "agy:gemini-4-argon-high,gemini-api:gemini-2.5-flash"
@@ -83,12 +88,12 @@ function parseArgs(argv) {
     '--claude-dir': 'claudeDir', '--skills-dir': 'skillsDir', '--codex-dir': 'codexDir', '--gemini-dir': 'geminiDir',
     '--vault': 'vault', '--alias': 'alias', '--skill-name': 'alias', '--author-name': 'authorName', '--timezone': 'timezone',
     '--jobs': 'jobs', '--language': 'language', '--narrative-chain': 'narrativeChain', '--ai-memory-chain': 'aiMemoryChain',
-    '--llm-key-file': 'llmKeyFile',
+    '--llm-key-file': 'llmKeyFile', '--plan': 'plan',
   };
   const flags = {
     '--dry-run': 'dryRun', '--skip-claude-md': 'skipClaudeMd', '--with-codex': 'withCodex', '--with-antigravity': 'withAntigravity',
     '--with-companion-skills': 'withCompanionSkills', '--update': 'update', '--uninstall': 'uninstall', '--help': 'help', '-h': 'help',
-    '--with-jobs': 'withJobs', '--no-jobs': 'noJobs',
+    '--with-jobs': 'withJobs', '--no-jobs': 'noJobs', '--apply-compact': 'applyCompact',
   };
   const unknown = [];
   for (let i = 0; i < argv.length; i++) {
@@ -325,10 +330,13 @@ function installFlatDir(ctx, srcDir, destDir, kind) {
   }
 }
 
-function installClaudeSettings(ctx, claudeDir, prevCfg) {
+// compactWindow: autoCompactWindow do perfil, só com --apply-compact. Grava o global e só se não
+// houver valor seu (env, modelSettings ou global); o que o muri-saver gravou antes pode ser trocado.
+function installClaudeSettings(ctx, claudeDir, prevCfg, compactWindow) {
   const snippet = loadSnippet(join('claude-config', 'settings.snippet.json'));
   const path = join(claudeDir, 'settings.json');
   let statusLineInstalled = Boolean(prevCfg?.statusLineInstalled);
+  let autoCompactInstalled = prevCfg?.autoCompactInstalled ?? null;
   mergeJsonFile(ctx, path, 'hooks e statusLine do muri-saver', (existing) => {
     const result = { ...existing, hooks: mergeHooks(existing.hooks, snippet.hooks) };
     if (!existing.statusLine) {
@@ -338,9 +346,19 @@ function installClaudeSettings(ctx, claudeDir, prevCfg) {
       log('settings.json já tem um statusLine seu — mantido. Veja claude-config/settings.snippet.json pra adotar o do muri-saver.');
       statusLineInstalled = false;
     }
+    if (compactWindow) {
+      const own = process.env.CLAUDE_CODE_AUTO_COMPACT_WINDOW || existing.env?.CLAUDE_CODE_AUTO_COMPACT_WINDOW ? 'CLAUDE_CODE_AUTO_COMPACT_WINDOW'
+        : Object.values(existing.modelSettings || {}).some((m) => m?.autoCompactWindow !== undefined) ? 'modelSettings'
+          : existing.autoCompactWindow !== undefined && existing.autoCompactWindow !== autoCompactInstalled ? `autoCompactWindow ${existing.autoCompactWindow}` : null;
+      if (own) log(`--apply-compact: você já tem um valor (${own}) — mantido.`);
+      else {
+        result.autoCompactWindow = compactWindow;
+        autoCompactInstalled = compactWindow;
+      }
+    }
     return result;
   });
-  return { hookTarget: { kind: 'claude-settings', path }, statusLineInstalled };
+  return { hookTarget: { kind: 'claude-settings', path }, statusLineInstalled, autoCompactInstalled };
 }
 
 function installCodex(ctx, codexDir, alias, claudeDir) {
@@ -504,6 +522,7 @@ function uninstall(args, claudeDir) {
       after = { ...data, hooks: removeHooks(data.hooks, snippet.hooks) };
       if (Object.keys(after.hooks).length === 0) delete after.hooks;
       if (target.kind === 'claude-settings' && cfg.statusLineInstalled && jsonEqual(data.statusLine, snippet.statusLine)) delete after.statusLine;
+      if (target.kind === 'claude-settings' && cfg.autoCompactInstalled && data.autoCompactWindow === cfg.autoCompactInstalled) delete after.autoCompactWindow;
     }
     if (jsonEqual(data, after)) continue;
     log(`remover hooks do muri-saver de ${target.path}`);
@@ -558,6 +577,11 @@ function main() {
     process.exitCode = 1;
     return;
   }
+  if (args.plan && !PLAN_PROFILES.perfis[args.plan.toLowerCase()]) {
+    log(`FALHA: --plan "${args.plan}" não é um perfil válido (${Object.keys(PLAN_PROFILES.perfis).join(', ')}). Nada foi feito.`);
+    process.exitCode = 1;
+    return;
+  }
   if (args.timezone && !isValidTimezone(args.timezone)) {
     log(`FALHA: --timezone "${args.timezone}" não é um fuso IANA válido (ex: America/Sao_Paulo, Europe/Lisbon, UTC).`);
     process.exitCode = 1;
@@ -590,6 +614,11 @@ function main() {
   if (prevCfg) log(`Instalação anterior encontrada (${prevCfg.version || '?'}, alias "${prevCfg.alias}") — reaproveitando a config salva.`);
   if (alias !== DEFAULT_ALIAS) log(`Alias personalizado: "${alias}"${authorName ? ` (autor: ${authorName})` : ''} — "muri-saver" continua como alias alternativo.`);
   log(`Fuso: ${timezone}${vault ? ` — vault: ${vault}` : ''}`);
+  const detected = args.plan || prevCfg?.plan ? null : detectPlan();
+  const plan = args.plan?.toLowerCase() || prevCfg?.plan || detected.plan;
+  const profile = PLAN_PROFILES.perfis[plan] || PLAN_PROFILES.perfis.auto;
+  log(`Plano: ${plan} (${args.plan ? '--plan' : prevCfg?.plan ? 'salvo' : detected.source ? `detectado por ${detected.source}` : 'não detectado'})`);
+  if (args.applyCompact && !profile.autoCompactWindow) log(`--apply-compact: o perfil ${plan} não define autoCompactWindow — nada a gravar (use --plan).`);
 
   installSkills(ctx, paths.skillsDir, alias);
   // O Claude Code só carrega skills de ~/.claude/skills; ~/.agents/skills ele usa para importar.
@@ -597,7 +626,7 @@ function main() {
   if (claudeSkills !== paths.skillsDir) installSkills(ctx, claudeSkills, alias, true);
   installFlatDir(ctx, join(REPO_ROOT, 'hooks'), join(claudeDir, 'hooks'), 'hook');
   installFlatDir(ctx, join(REPO_ROOT, 'scripts'), join(claudeDir, 'scripts'), 'script');
-  const settings = installClaudeSettings(ctx, claudeDir, prevCfg);
+  const settings = installClaudeSettings(ctx, claudeDir, prevCfg, args.applyCompact && profile.autoCompactWindow);
   const hookTargets = [settings.hookTarget];
   if (args.skipClaudeMd) log('--skip-claude-md: CLAUDE.md não foi tocado.');
   else writeGovernance(ctx, join(REPO_ROOT, 'claude-config', 'CLAUDE.md.template'), join(claudeDir, 'CLAUDE.md'), alias);
@@ -633,11 +662,13 @@ function main() {
     vault,
     timezone,
     language,
+    plan,
     llm,
     jobs,
     agents,
     paths,
     statusLineInstalled: settings.statusLineInstalled,
+    autoCompactInstalled: settings.autoCompactInstalled,
     hookTargets,
     manifest: ctx.manifest,
   };

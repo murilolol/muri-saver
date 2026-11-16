@@ -93,7 +93,29 @@ A narrativa e a consolidação usam uma [cadeia de modelos](docs/llm-chain.md) q
 
 Trinta dias de uso medidos turno a turno mostraram que o problema não é a escolha de modelo, é o tamanho do contexto. Os turnos acima de 250k foram metade dos turnos e **71% do gasto**, porque cada um custa cerca de 2,5 vezes um turno de 100 a 150k. Na mesma análise, 64 retomadas com o cache já frio custaram 33,5 milhões de tokens-eq, perto de 11 pontos da cota semanal no mês.
 
-Daí a status line que mede o contexto contra o ponto de compactação, o guarda de contexto e o `autoCompactWindow` de 250k recomendado no [`settings.snippet.json`](claude-config/settings.snippet.json).
+Daí a status line que mede o contexto contra o ponto de compactação, o guarda de contexto e o `autoCompactWindow` de cada perfil de plano (abaixo).
+
+## Plano do Claude e contexto
+
+**A janela vem do modelo, não do plano.** Os modelos mais novos rodam com 1M de contexto em qualquer plano pago; outros têm 500K ou 200K. O ponto em que o Claude Code compacta vem do `autoCompactWindow` do seu `settings.json` (sem ele, perto de 967k num modelo de 1M). **O plano define a cota:**
+
+| Plano | Cota de 5 horas | Cota semanal |
+|---|---|---|
+| Pro | 1x | 1x |
+| Max (antigo Max 5x) | 5x o Pro | 5x o Pro |
+| Ultra (antigo Max 20x) | não tem, na conta verificada | 10x o Pro |
+| Team | 1,25x (Standard) ou 6,25x (Premium) o Pro | por membro |
+| Enterprise e API | uso pago por token | — |
+
+Os nomes mudaram em 30/10/2026: o Max 5x virou Max e o Max 20x virou Ultra.
+
+**O que o perfil ajusta:** um número só, o `autoCompactWindow` (Pro 250k, Max 400k, Ultra 500k, Team 250k, Enterprise 300k, API 250k; os valores ficam em [`hooks/plan-profiles.json`](hooks/plan-profiles.json)). Os avisos do guarda e as cores da status line ficam em 70% e 90% do ponto de compactação, em qualquer perfil. O instalador detecta o plano (`claude auth status`) e o grava no `muri-saver.json`; o valor só vai para o `settings.json` com `--apply-compact`, e nunca por cima de um seu. O `doctor` mostra o perfil salvo e o detectado.
+
+```bash
+node bin/install.mjs --update --plan pro --apply-compact
+```
+
+Só o 250k tem base medida: veio da análise de 30 dias acima, feita num plano menor. Os outros valores são palpites até haver medição (`node bin/cli.mjs report` por uma ou duas semanas em cada plano). Um turno acima de 250k custa cerca de 2,5 vezes um de 100 a 150k em qualquer plano; o plano maior só dá mais cota para gastar.
 
 ## Os achados
 

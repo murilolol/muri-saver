@@ -137,13 +137,13 @@ test('a flag missing its value fails before doing anything (--vault --dry-run us
 
 test('unknown flag: exit 1 on a real run, only a warning with --dry-run', () => {
   const home = tempDir();
-  const real = run('bin/install.mjs', ['--plan', 'max'], { home });
+  const real = run('bin/install.mjs', ['--tier', 'max'], { home });
   assert.equal(real.status, 1, real.out);
-  assert.match(real.out, /flag\(s\) desconhecida\(s\): --plan, max/);
+  assert.match(real.out, /flag\(s\) desconhecida\(s\): --tier, max/);
   assert.deepEqual(readdirSync(home), []);
-  const dry = run('bin/install.mjs', ['--plan', '--dry-run'], { home });
+  const dry = run('bin/install.mjs', ['--tier', '--dry-run'], { home });
   assert.equal(dry.status, 0, dry.out);
-  assert.match(dry.out, /AVISO: flag\(s\) desconhecida\(s\): --plan/);
+  assert.match(dry.out, /AVISO: flag\(s\) desconhecida\(s\): --tier/);
   assert.deepEqual(readdirSync(home), []);
 });
 

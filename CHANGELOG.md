@@ -81,7 +81,32 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
   chave `cachedUsageUtilization` mostra "sem dado" em vez de `KeyError`; % fracionário arredondado
   (antes, `ValueError`); "plano sem janela 5h (so semanal)" quando só o semanal vem preenchido.
 
+### Perfil de plano
+- `hooks/plan-profiles.json` com os perfis `pro`, `max`, `ultra`, `team`, `enterprise`, `api` e
+  `auto`. Cada perfil escolhe só o `autoCompactWindow` (Pro 250k, Max 400k, Ultra 500k, Team 250k,
+  Enterprise 300k, API 250k); os avisos seguem em 70% e 90% do ponto de compactação. Só o 250k do
+  Pro tem base medida; os outros estão marcados como palpite. Nomes atuais: o Max 5x virou Max e o
+  Max 20x virou Ultra (30/10/2026).
+- Instalador: `--plan <perfil>` grava `plan` no `muri-saver.json`; perfil inválido ou sem valor
+  para com exit 1 sem escrever nada. Sem `--plan`, vale o salvo; sem nada salvo, o plano é
+  detectado em cascata (`claude auth status`, `claude auth status --text`, `~/.claude.json`) e,
+  se nada responder, fica `auto`, que mantém o comportamento de hoje. Deslogado ou com token
+  avulso (`authMethod` `none`/`oauth_token`), também fica `auto`.
+- `--apply-compact` grava o `autoCompactWindow` do perfil no `settings.json` global, só se não houver
+  valor seu (`CLAUDE_CODE_AUTO_COMPACT_WINDOW`, `modelSettings` ou o global). O valor que o
+  muri-saver gravou acompanha uma troca de perfil, e o `--uninstall` o remove enquanto não for
+  editado.
+- `doctor`: linha "plano do Claude" com o perfil salvo, o `autoCompactWindow` e os avisos dele e o
+  plano detectado. Com o perfil em `auto` e um plano detectado, dá AVISO com o `--update --plan`.
+
 ### Documentação
+- README pt/en: seção "Plano do Claude e contexto" (a janela vem do modelo, o plano define a cota,
+  o perfil ajusta só o `autoCompactWindow`), com a tabela de cotas e os nomes novos.
+- INSTALL-AI: as perguntas "Plano" (o detectado como recomendado) e "Compactar em" no passo 0, no
+  estilo da `grill-me`. A pergunta do fuso saiu: o fuso detectado vai para o resumo e o
+  `--timezone` só entra se o usuário corrigir.
+- SKILL.md e referência sem os números fixos (`autoCompactWindow: 250000`, 55 min): falam do
+  perfil do plano e do aviso `[guarda-contexto]`.
 - `npx muri-saver` (o pacote não existe no npm) vira `node bin/cli.mjs` em READMEs, INSTALL,
   INSTALL-AI, docs e help do CLI; a rota sem clonar usa `npx github:murilolol/muri-saver`.
 - Dica final do instalador (passo 6) e nota dos READMEs sobre `report`/`audit` também com

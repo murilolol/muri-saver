@@ -10,6 +10,8 @@ Installer options, commands, configuration and per-OS details. To install, start
 | `--vault <path>` | off | Obsidian vault used by hooks and the ingestor |
 | `--timezone <IANA>` | system zone | File names and daily notes |
 | `--language <tag>` | `pt-BR` | Narrative language (e.g. `en`) |
+| `--plan <profile>` | the saved one, or the detected one; otherwise `auto` | `pro`, `max`, `ultra`, `team`, `enterprise`, `api` or `auto` ([plan and context](../README.en.md#claude-plan-and-context)) |
+| `--apply-compact` | no | Writes the profile's `autoCompactWindow` to `settings.json`, only if you don't have one |
 | `--alias <name>` | `muri-saver` | Install under your own name; the original still works |
 | `--narrative-chain <list>` | `agy` Argon → `agy` Flash → Gemini API | Vault narrative models; `off` keeps only the local dump |
 | `--ai-memory-chain <list>` | Gemini API → `agy` | Models the shim offers to ai-memory |
@@ -44,6 +46,7 @@ Everything lives in `~/.claude/muri-saver.json`; `--update` keeps what you edit:
   "vault": "/path/to/vault",
   "timezone": "Europe/Lisbon",
   "language": "en",
+  "plan": "pro",
   "llm": { "narrative": ["agy:gemini-4-argon-high", "gemini-api:gemini-2.5-flash"], "shim": true },
   "narrative": { "intervalMinutes": 15 },
   "jobs": ["finalize-idle", "reprocess-parked"]
@@ -55,7 +58,7 @@ Everything lives in `~/.claude/muri-saver.json`; `--update` keeps what you edit:
 
 In `~/.claude/settings.json` the installer merges hooks and the status line,
 nothing else. The `_recomendado` block in [`claude-config/settings.snippet.json`](../claude-config/settings.snippet.json)
-is the author's setup to copy by hand: `autoCompactWindow` 250k,
+is the author's setup to copy by hand: `autoCompactWindow` (`--apply-compact` writes your plan's value),
 `askUserQuestionTimeout` 10m, empty attribution and `permissions.ask` for
 `git reset --hard`, `git push --force`, `git clean -f` and `rm -rf`.
 

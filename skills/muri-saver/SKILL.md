@@ -37,10 +37,11 @@ apply them together with the universal rules.
   natural cut-off point, close even if "it could continue". Large context:
   a pointed question → memory query; otherwise close with a handoff.
   A 30-day audit: turns above 250k context were 71% of the spend and cold-cache
-  resumes cost 33.5M tokens-eq. Hence `autoCompactWindow: 250000`, the
-  `guarda-contexto.py` hook (holds the first prompt after 55 min idle with
-  over 40% of the auto-compact point; nudges a fresh session at 70% and 90% of
-  it) and the status line measured against that point. Off switch: `MURI_GUARDA=0`.
+  resumes cost 33.5M tokens-eq. Hence the `autoCompactWindow` of the plan
+  profile, the `guarda-contexto.py` hook (holds the first prompt once the cache
+  went cold with a large context; when `[guarda-contexto]` shows up at the
+  profile's marks, suggest a fresh session) and the status line measured
+  against the auto-compact point. Off switch: `MURI_GUARDA=0`.
 - **Never** skip a needed test, drop a requirement or stop early to save tokens.
 
 ## Task profiles

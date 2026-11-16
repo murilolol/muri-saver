@@ -41,15 +41,22 @@ harness:
 - Sem uma interface nativa, faça perguntas claras no formato suportado.
   Reutilize respostas e autorização já dadas; não invente preferências.
 
-Antes de perguntar, descubra o fuso do sistema (vai virar a opção
-recomendada da pergunta 6):
+Antes de perguntar, descubra o plano do Claude (vai virar a opção
+recomendada da pergunta 6) e o fuso do sistema (vai pro resumo, sem pergunta):
 
 ```bash
+claude auth status --text   # "Login method: Claude Ultra account" → ultra
 node -e "console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)"
 ```
 
-Faça estas 8 perguntas (com as opções sugeridas entre parênteses; marque a
-primeira opção como recomendada quando aplicável):
+Desde 30/10/2026, o antigo Max 5x se chama Max e o antigo Max 20x se chama
+Ultra. Login por chave de API vira `api`. Sem resposta clara, não chute: a
+opção recomendada passa a ser "Não sei". Sem `--plan`, o instalador faz a
+mesma detecção sozinho (`claude auth status`, depois `--text`, depois
+`~/.claude.json`) e grava `auto` quando nada responde.
+
+Faça estas 9 perguntas no estilo da skill `grill-me` (com as opções sugeridas
+entre parênteses; a opção recomendada vem primeiro):
 
 1. **Identidade da skill**: "Você quer manter o nome padrão `muri-saver` ou
    personalizar (ex: `mendes-saver`, `lucas-saver`, `dev-saver`, ou só um
@@ -72,10 +79,23 @@ primeira opção como recomendada quando aplicável):
    recomendadas (`find-skills`, `tdd`, `prototype`, `grill-with-docs`)?" —
    (Recomendado: sim, elas ajudam com descoberta de skills, TDD e
    prototipagem — mas nenhuma é obrigatória pro muri-saver funcionar.)
-6. **Fuso horário**: "Os nomes de arquivo e os diários usam o fuso
-   `<fuso detectado>`. Está certo?" — (Recomendado: o detectado; outra opção
-   é o usuário informar um nome IANA como `America/Sao_Paulo`.)
-7. **Modelos para narrativa e memória** (só se houver vault ou ai-memory):
+6. **Plano** (header `Plano`): "Qual plano do Claude você usa nesta máquina?
+   Ele decide quando o muri-saver sugere compactar e abrir sessão nova." —
+   opções: `Detectado: <plano> (Recomendado)` (sem detecção,
+   `Não sei, usar o padrão (Recomendado)`, que grava `auto`) /
+   `Pro / Team Standard` / `Max (antigo Max 5x) / Team Premium` /
+   `Ultra (antigo Max 20x)`. A opção igual à detectada sai da lista. "API" ou
+   "Enterprise" em texto livre gravam `api` ou `enterprise`.
+7. **Compactar em** (header `Compactar`; só se o plano tiver perfil, ou seja,
+   não for `auto`, e o modelo tiver janela de 1M): mostre antes o valor que
+   vale hoje, nesta ordem: a variável `CLAUDE_CODE_AUTO_COMPACT_WINDOW`, o
+   `modelSettings.<modelo>.autoCompactWindow` e o `autoCompactWindow` do
+   `~/.claude/settings.json`; sem nenhum, vale o padrão do Claude Code, perto
+   de 967k. "A janela vem do modelo; o perfil do seu plano sugere compactar em
+   `<N>k`. Gravo esse valor?" — opções: `Só se eu não tiver um (Recomendado)` /
+   `Não mexer`. O instalador nunca troca um valor seu: quem quiser o do perfil
+   apaga o próprio e roda de novo.
+8. **Modelos para narrativa e memória** (só se houver vault ou ai-memory):
    "Qual cota usar para escrever as narrativas e consolidar a memória?" —
    opções: Google (Recomendado: `agy` e/ou `GEMINI_API_KEY`, nunca a cota do
    Claude) / modelo local ou OpenRouter (`openai:` com `llm.openai.baseUrl`) /
@@ -83,16 +103,31 @@ primeira opção como recomendada quando aplicável):
    consolidação). Nunca peça para o usuário colar a chave na conversa: peça o
    caminho de um arquivo `KEY=valor` (`--llm-key-file`) ou que ele exporte a
    variável no próprio shell.
-8. **Jobs de fundo**: "Registro os jobs de fundo no agendador do sistema?"
+9. **Jobs de fundo**: "Registro os jobs de fundo no agendador do sistema?"
    (multi-seleção: recomendados (Recomendado) / shim do ai-memory como serviço /
    nenhum). Explique em uma linha: encerram sessões ociosas, refazem sessões
    que ficaram sem cota, dão narrativa a notas antigas e geram o relatório
    semanal; os de fila se desativam sozinhos.
 
+No resumo das respostas, mostre também o fuso detectado. Se o usuário
+corrigir, passe `--timezone <nome IANA>` (ex: `America/Sao_Paulo`) no passo 2.
+
 Com as respostas em mãos, os passos abaixo já te dizem exatamente qual flag
 usar pra cada resposta — não precisa adivinhar.
 
-Mapeamento das perguntas 7 e 8 para comandos (depois do passo 2):
+Perguntas 6 e 7 viram flags do passo 2:
+
+| Resposta | Flag |
+|---|---|
+| Detectado / Não sei | `--plan <detectado>` / `--plan auto` |
+| Pro / Team Standard | `--plan pro` / `--plan team` |
+| Max / Team Premium | `--plan max` |
+| Ultra | `--plan ultra` |
+| API / Enterprise | `--plan api` / `--plan enterprise` |
+| Compactar: só se eu não tiver um | `--apply-compact` |
+| Compactar: não mexer | nada |
+
+Mapeamento das perguntas 8 e 9 para comandos (depois do passo 2):
 
 | Resposta | Comando |
 |---|---|
@@ -147,8 +182,9 @@ Leia a saída do `--dry-run` (lista cada arquivo que seria copiado/mesclado —
 nada é escrito ainda). Depois rode de verdade, **traduzindo as respostas do
 Passo 0 em flags**:
 
-Comece com `node bin/install.mjs --timezone "<fuso-da-pergunta-6>"` e acrescente
-somente as flags escolhidas: `--alias`, `--author-name`, `--with-antigravity`,
+Comece com `node bin/install.mjs --plan <perfil-da-pergunta-6>` e acrescente
+somente as flags escolhidas: `--apply-compact` (pergunta 7), `--timezone`
+(se o usuário corrigiu o fuso), `--alias`, `--author-name`, `--with-antigravity`,
 `--with-codex`, `--vault` e `--with-companion-skills`. Use `--with-all` para
 Claude Code, Antigravity e Codex juntos. O mesmo comando em uma linha funciona
 em bash, zsh e PowerShell.
@@ -271,7 +307,7 @@ Isso substitui checar item por item manualmente — o script já detecta o SO e
 reporta `OK` / `AVISO` / `FALHA` para: Node, Python, Claude Code CLI, binário
 e servidor do `ai-memory`, hooks registrados em `settings.json`, plugin
 `claude-obsidian`, MCP servers em `~/.claude.json`, app Obsidian instalado, a
-estrutura de pastas do vault, o alias configurado (padrão ou customizado), as
+estrutura de pastas do vault, o alias configurado (padrão ou customizado), o perfil de plano (salvo e detectado), as
 sessões brutas + governança de cada agente (Claude Code/Antigravity/Codex), e
 a presença do ingestor. Trate cada `FALHA` como bloqueante e cada `AVISO`
 como algo a mencionar pro usuário mas não necessariamente resolver sozinha.

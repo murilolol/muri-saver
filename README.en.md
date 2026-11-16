@@ -93,7 +93,29 @@ Narratives and consolidation use a [model chain](docs/llm-chain.md) that switche
 
 Thirty days of usage measured turn by turn showed the problem isn't model choice, it's context size. Turns above 250k were half of all turns and **71% of spend**, because each one costs about 2.5 times a 100–150k turn. In the same analysis, 64 resumes on an already-cold cache cost 33.5 million tokens-eq, close to 11 points of the weekly quota over the month.
 
-Hence the status line that measures context against the compaction point, the context guard and the 250k `autoCompactWindow` recommended in [`settings.snippet.json`](claude-config/settings.snippet.json).
+Hence the status line that measures context against the compaction point, the context guard and the `autoCompactWindow` of each plan profile (below).
+
+## Claude plan and context
+
+**The window comes from the model, not the plan.** The newest models run with 1M context on any paid plan; others have 500K or 200K. The point where Claude Code compacts comes from the `autoCompactWindow` in your `settings.json` (without it, around 967k on a 1M model). **The plan sets the quota:**
+
+| Plan | 5-hour quota | Weekly quota |
+|---|---|---|
+| Pro | 1x | 1x |
+| Max (formerly Max 5x) | 5x Pro | 5x Pro |
+| Ultra (formerly Max 20x) | none, on a verified account | 10x Pro |
+| Team | 1.25x (Standard) or 6.25x (Premium) Pro | per member |
+| Enterprise and API | usage paid per token | — |
+
+The names changed on 2026-10-30: Max 5x became Max and Max 20x became Ultra.
+
+**What the profile adjusts:** a single number, the `autoCompactWindow` (Pro 250k, Max 400k, Ultra 500k, Team 250k, Enterprise 300k, API 250k; the values live in [`hooks/plan-profiles.json`](hooks/plan-profiles.json)). The guard's reminders and the status line colors sit at 70% and 90% of the compaction point on every profile. The installer detects the plan (`claude auth status`) and saves it in `muri-saver.json`; the value only goes into `settings.json` with `--apply-compact`, and never over one of yours. `doctor` shows the saved and the detected profile.
+
+```bash
+node bin/install.mjs --update --plan pro --apply-compact
+```
+
+Only 250k has a measured basis: it came from the 30-day analysis above, run on a smaller plan. The other values are guesses until measured (`node bin/cli.mjs report` for a week or two on each plan). A turn above 250k costs about 2.5 times a 100–150k turn on any plan; a bigger plan only gives you more quota to spend.
 
 ## The findings
 

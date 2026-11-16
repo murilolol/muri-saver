@@ -10,6 +10,8 @@ Opções do instalador, comandos, configuração e detalhes por sistema. Para in
 | `--vault <caminho>` | desligado | Vault do Obsidian usado pelos hooks e pelo ingestor |
 | `--timezone <IANA>` | fuso do sistema | Nomes de arquivo e Dailies (ex.: `America/Sao_Paulo`) |
 | `--language <tag>` | `pt-BR` | Idioma das narrativas |
+| `--plan <perfil>` | o salvo, ou o detectado; sem detecção, `auto` | `pro`, `max`, `ultra`, `team`, `enterprise`, `api` ou `auto` ([plano e contexto](../README.md#plano-do-claude-e-contexto)) |
+| `--apply-compact` | não | Grava o `autoCompactWindow` do perfil no `settings.json`, só se você não tiver um |
 | `--alias <nome>` | `muri-saver` | Instala com o seu nome (`--alias mendes-saver`); o original continua funcionando |
 | `--narrative-chain <lista>` | `agy` Argon → `agy` Flash → Gemini API | Modelos da narrativa do vault; `off` deixa só o dump local |
 | `--ai-memory-chain <lista>` | Gemini API → `agy` | Modelos que o shim oferece ao ai-memory |
@@ -53,6 +55,7 @@ Tudo fica em `~/.claude/muri-saver.json`. O `--update` preserva o que você edit
   "vault": "/caminho/do/vault",
   "timezone": "America/Sao_Paulo",
   "language": "pt-BR",
+  "plan": "pro",
   "agents": ["claude", "codex", "antigravity"],
   "llm": {
     "narrative": ["agy:gemini-4-argon-high", "gemini-api:gemini-2.5-flash"],
@@ -69,7 +72,7 @@ Tudo fica em `~/.claude/muri-saver.json`. O `--update` preserva o que você edit
 
 No `~/.claude/settings.json`, o instalador mescla hooks e status line e mais
 nada. O bloco `_recomendado` de [`claude-config/settings.snippet.json`](../claude-config/settings.snippet.json)
-é o setup do autor pra copiar à mão: `autoCompactWindow` 250k,
+é o setup do autor pra copiar à mão: `autoCompactWindow` (o `--apply-compact` grava o do seu plano),
 `askUserQuestionTimeout` 10m, attribution vazio e `permissions.ask` pra
 `git reset --hard`, `git push --force`, `git clean -f` e `rm -rf`.
 

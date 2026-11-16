@@ -121,6 +121,8 @@ node bin/install.mjs --with-all           # os três de uma vez
 | `--with-companion-skills` | Instala `find-skills`/`tdd`/`prototype`/`grill-with-docs` via `npx skills add` |
 | `--skip-claude-md` | Pula a criação do `CLAUDE.md` |
 | `--language <tag>` | Idioma das narrativas do vault (padrão `pt-BR`) |
+| `--plan <perfil>` | Perfil do plano do Claude: `pro`, `max`, `ultra`, `team`, `enterprise`, `api` ou `auto` (padrão: o salvo, ou o detectado) |
+| `--apply-compact` | Grava o `autoCompactWindow` do perfil no `settings.json`, só se você não tiver um |
 | `--narrative-chain <lista>` | Modelos da narrativa do vault (`off` = só dump local) — [docs/llm-chain.md](./docs/llm-chain.md) |
 | `--ai-memory-chain <lista>` | Modelos que o shim oferece ao ai-memory |
 | `--llm-key-file <caminho>` | Arquivo `KEY=valor` com a `GEMINI_API_KEY` (a chave nunca é copiada) |

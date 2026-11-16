@@ -1,0 +1,56 @@
+{
+  "_comment": "Perfis de plano do Claude. A janela de contexto vem do modelo; o plano só muda a cota. O perfil escolhe um número, o autoCompactWindow, que o instalador grava em settings.json só com --apply-compact. Os avisos ficam em marcos x (autoCompactWindow - folga), como no guarda-contexto.py (MARCOS_FRAC e FOLGA). palpite=true: valor sem base medida. Max 5x virou Max e Max 20x virou Ultra em 2026-10-30.",
+  "marcos": [0.7, 0.9],
+  "folga": 33000,
+  "perfis": {
+    "auto": {
+      "nome": "Automático (sem perfil)",
+      "cota": "não definida",
+      "autoCompactWindow": null,
+      "palpite": false,
+      "base": "comportamento de hoje: vale o autoCompactWindow que você tiver, ou o padrão do Claude Code"
+    },
+    "pro": {
+      "nome": "Pro",
+      "cota": "1x por 5 h e 1x por semana",
+      "autoCompactWindow": 250000,
+      "palpite": false,
+      "base": "medido: na análise de 30 dias, turnos acima de 250k foram 71% do gasto"
+    },
+    "max": {
+      "nome": "Max (antigo Max 5x)",
+      "cota": "5x o Pro por 5 h e por semana",
+      "autoCompactWindow": 400000,
+      "palpite": true,
+      "base": "palpite: entre o Pro medido e o Ultra em uso"
+    },
+    "ultra": {
+      "nome": "Ultra (antigo Max 20x)",
+      "cota": "10x o Pro por semana; sem janela de 5 h na conta verificada",
+      "autoCompactWindow": 500000,
+      "palpite": true,
+      "base": "palpite: é o valor em uso numa conta Ultra, sem medição de custo"
+    },
+    "team": {
+      "nome": "Team",
+      "cota": "Standard 1,25x e Premium 6,25x o Pro por sessão; semanal por membro",
+      "autoCompactWindow": 250000,
+      "palpite": true,
+      "base": "palpite: o valor do Pro, sem medição em Team (no Premium, use max)"
+    },
+    "enterprise": {
+      "nome": "Enterprise",
+      "cota": "assento mais uso a preço de API",
+      "autoCompactWindow": 300000,
+      "palpite": true,
+      "base": "palpite: as análises divergem entre 300k e 450k; fica o menor porque o uso é pago"
+    },
+    "api": {
+      "nome": "API (chave, por token)",
+      "cota": "sem cota de plano: cada token é pago",
+      "autoCompactWindow": 250000,
+      "palpite": true,
+      "base": "palpite: as análises divergem entre 250k e 300k; fica o menor porque o uso é pago"
+    }
+  }
+}

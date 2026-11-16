@@ -25,13 +25,17 @@ const LEAKY_ENV = [
   'MURI_SAVER_NARRATIVE_CHAIN', 'MURI_SAVER_AIM_CHAIN', 'MURI_SAVER_BACKFILL_CHAIN', 'MURI_SAVER_PLATFORM',
   'MURI_SAVER_RUNTIME_DIR', 'MURI_SAVER_RUNTIME_SCRIPTS_DIR', 'MURI_SAVER_STATE_DIR', 'MURI_SAVER_COOLDOWN_FILE',
   'MURI_DELEGATE', 'MURI_SAVER_OBSIDIAN_GEN', 'MURI_AIM_NOCAPTURE', 'MURI_VAULT_WORKER', 'MURI_VAULT_BACKFILL',
-  'GEMINI_API_KEY', 'GOOGLE_API_KEY', 'AIM_SHIM_PORT', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME',
+  'GEMINI_API_KEY', 'GOOGLE_API_KEY', 'AIM_SHIM_PORT', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'CLAUDE_CODE_AUTO_COMPACT_WINDOW',
 ];
 
 // Testes nunca registram jobs de verdade nem chamam um LLM: o agendador roda em
 // modo "dry" (só grava os arquivos) e a cadeia de narrativa começa desligada.
 // Um teste que precisa de LLM passa um provedor falso explicitamente.
-export const HERMETIC_ENV = { MURI_SAVER_SCHEDULER: 'dry', MURI_SAVER_NARRATIVE_CHAIN: 'off', MURI_SAVER_AIM_CHAIN: 'off' };
+// O `claude` aponta para um caminho que não existe: a detecção do plano não lê a conta real.
+export const HERMETIC_ENV = {
+  MURI_SAVER_SCHEDULER: 'dry', MURI_SAVER_NARRATIVE_CHAIN: 'off', MURI_SAVER_AIM_CHAIN: 'off',
+  MURI_SAVER_CLAUDE_BIN: join(REPO_ROOT, 'test', 'fixtures', 'sem-claude'),
+};
 
 export function cleanEnv(home, env = {}) {
   const base = { ...process.env };
