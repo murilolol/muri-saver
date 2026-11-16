@@ -230,7 +230,7 @@ If the whole chain is in cooldown, the note keeps the dump and gets its narrativ
 
 ## Skills I use alongside it
 
-muri-saver ships two skills of its own, `muri-saver` and `grill-me`. The rest are third-party: install each one straight from its source (`find-skills` helps) so you get the author's updates. In Claude Code, I turn off what I don't use with `skillOverrides` in `settings.json`, so the skill list doesn't weigh on the context. My video skill and this stack, with credit to each author, live in [murilolol/muri-skills](https://github.com/murilolol/muri-skills).
+muri-saver ships two skills of its own, `muri-saver` and `grill-me`. The rest are third-party: install each one straight from its source (`find-skills` helps) so you get the author's updates. In Claude Code, I turn off what I don't use with `skillOverrides` in `settings.json`, so the skill list doesn't weigh on the context ([how](docs/skills-companion.md#podar-o-que-você-não-usa-skilloverrides)). My video skill and this stack, with credit to each author, live in [murilolol/muri-skills](https://github.com/murilolol/muri-skills).
 
 The curated list of companion skills, with install commands, credits and the `prototype` name clash, is in [`docs/skills-companion.md`](docs/skills-companion.md); `--with-companion-skills` installs four of them (`find-skills`, `tdd`, `prototype` and `grill-with-docs`).
 

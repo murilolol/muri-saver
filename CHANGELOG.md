@@ -80,6 +80,9 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
 - `usage-status.py`: fuso do `MURI_SAVER_TZ` ou do `muri-saver.json` (antes, Brasília fixo); sem a
   chave `cachedUsageUtilization` mostra "sem dado" em vez de `KeyError`; % fracionário arredondado
   (antes, `ValueError`); "plano sem janela 5h (so semanal)" quando só o semanal vem preenchido.
+- Status line: a branch aparece também em worktree (o `.git` é um arquivo `gitdir:`), e o `*` vem
+  de `git status --porcelain -uno` (mudança rastreada de verdade) no lugar da comparação de mtime
+  entre o index e o HEAD, que errava nos dois sentidos.
 
 ### Perfil de plano
 - `hooks/plan-profiles.json` com os perfis `pro`, `max`, `ultra`, `team`, `enterprise`, `api` e
@@ -143,6 +146,18 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
   `backup` → `upgrade` → `--update` → `doctor`, mais a volta para a 3.2.0. Resumo no bloco em inglês.
   INSTALL-AI lista as checagens novas do `doctor`.
 
+### Qualidade e skills
+- Testes novos: `notify` (MURI_NOTIFY=0 e Orca não notificam, aspas saem da mensagem),
+  `ai-memory-ensure-server` (nunca falha a sessão, avisa só quando ela começa na home), git da
+  status line, links da SKILL.md para `references/` e formato de `evals/`.
+- Os testes apagam os diretórios temporários ao sair (antes, dezenas ficavam no `$TMPDIR` a cada
+  `npm test`).
+- `--with-companion-skills` roda `npx -y skills@1.7.4 add` (CLI com versão fixa) e mostra o repo de
+  origem de cada pacote.
+- SKILL.md do muri-saver: cabeçalho na 3.2, sem a repetição do template (guarda) nem da
+  `delegation.md` (os playbooks foram para a referência), gatilhos "se instalada" e a dica de
+  `skillOverrides` na revisão periódica.
+
 ### Documentação
 - README pt/en: seção "Plano do Claude e contexto" (a janela vem do modelo, o plano define a cota,
   o perfil ajusta só o `autoCompactWindow`), com a tabela de cotas e os nomes novos.
@@ -155,6 +170,10 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
   INSTALL-AI, docs e help do CLI; a rota sem clonar usa `npx github:murilolol/muri-saver`.
 - Dica final do instalador (passo 6) e nota dos READMEs sobre `report`/`audit` também com
   `node bin/cli.mjs`, que funciona num clone sem nada no PATH.
+- `docs/skills-companion.md`: seções "Versão fixa do CLI" e "Podar o que você não usa
+  (`skillOverrides`)", com os quatro valores e o menu `/skills`; os READMEs linkam para ela.
+- `docs/evaluation.md`: diz que `evals/` não tem runner (cada cenário precisa de modelo e avaliador)
+  e roda pelo `skill-creator` ou à mão.
 - Instalador e `settings.snippet.json`: a dica do ai-memory leva `--apply` e soma
   `install-mcp --client claude-code --session-aware --apply`; com Codex ou Antigravity detectados,
   cita `--agent codex`/`antigravity-cli` e o `--update` que religa o aim-guard.

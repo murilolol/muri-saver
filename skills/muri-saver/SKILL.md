@@ -3,7 +3,7 @@ name: muri-saver
 description: Aggressive saving mode for tokens, cost and plan limits (5h/weekly) in coding-agent work. Activate on "muri saver", "muri-saver", "/muri-saver" or an explicit request to save tokens/cost/context/limits; stays active until the user turns it off.
 ---
 
-# muri-saver (3.1)
+# muri-saver (3.2)
 
 Sticky mode: valid for the whole conversation after activation. Don't reload
 this skill on repeated mentions. It ends only on "sair do muri-saver",
@@ -36,12 +36,10 @@ apply them together with the universal rules.
   suggest a fresh session (the automatic handoff keeps continuity). At a
   natural cut-off point, close even if "it could continue". Large context:
   a pointed question → memory query; otherwise close with a handoff.
-  A 30-day audit: turns above 250k context were 71% of the spend and cold-cache
-  resumes cost 33.5M tokens-eq. Hence the `autoCompactWindow` of the plan
-  profile, the `guarda-contexto.py` hook (holds the first prompt once the cache
-  went cold with a large context; when `[guarda-contexto]` shows up at the
-  profile's marks, suggest a fresh session) and the status line measured
-  against the auto-compact point. Off switch: `MURI_GUARDA=0`.
+  Turns above 250k context were 71% of a 30-day spend: hence the plan
+  profile's `autoCompactWindow` and the `guarda-contexto.py` hook. When
+  `[guarda-contexto]` shows up, suggest a fresh session with the handoff.
+  Off switch: `MURI_GUARDA=0`.
 - **Never** skip a needed test, drop a requirement or stop early to save tokens.
 
 ## Task profiles
@@ -80,20 +78,16 @@ Brief template (the delegate never sees this conversation): `Goal:` · `Done whe
 `May touch:` (paths) · `Do not touch:` · `Check:` (command). The delegate ends with
 `STATUS: DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT`, shown in the header: on DONE read only the
 summary; on BLOCKED/NEEDS_CONTEXT resend with what was missing. Codex delegates start without MCP
-servers; pass `--mcp` only when the brief needs one.
+servers; pass `--mcp` only when the brief needs one. Ask `codex` for a read-only review only when
+the diff is over ~80 lines or touches security or money.
 
-Playbooks: unfamiliar code → `gemini --effort low` maps it (path:line), then `codex --write` builds
-(scout-then-build). Mechanical change → `codex --write` plus the `Check:`; on failure, one retry with
-the error in the brief (cascade). Ask `codex` for a read-only review only when the diff is over ~80
-lines or touches security or money (review gate).
-
-Details, exit codes and what never to delegate:
+Playbooks, exit codes and what never to delegate:
 [references/delegation.md](references/delegation.md).
 
 ## Skills under trigger
 
-Invoke only when the trigger really matches (they're installed separately;
-see the repo's docs/skills-companion.md).
+Invoke only when the trigger really matches and the skill is installed
+(they're installed separately; see the repo's docs/skills-companion.md).
 
 | Situation | Skill |
 |---|---|
@@ -122,6 +116,8 @@ configured vault and never assume its location.
 ## Periodic review
 
 Suggest a usage review every few weeks or when consumption changes for no
-obvious reason (`~/.claude/scripts/muri-economy-report.py`, the host's usage view). A new actionable
+obvious reason (`~/.claude/scripts/muri-economy-report.py`, the host's usage view). In Claude Code,
+skills listed but never used weigh on every session: suggest `skillOverrides` (`"off"` or
+`"name-only"`) in `settings.json` for them, or the `/skills` menu. A new actionable
 finding becomes a one-line rule in the right place: always-on → global
 instructions; used on most activations → this file; rare detail → a reference.

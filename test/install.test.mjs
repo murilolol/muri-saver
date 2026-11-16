@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, appendFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { run, tempDir } from './_helpers.mjs';
+import { run, tempDir, REPO_ROOT } from './_helpers.mjs';
 
 function freshHome() {
   const home = tempDir();
@@ -119,9 +119,10 @@ test('--uninstall removes installed files and hook entries, keeps edited ones', 
 
 test('--dry-run writes nothing and names what would change in settings.json', () => {
   const home = tempDir();
-  const r = run('bin/install.mjs', ['--dry-run', '--with-all'], { home });
+  const r = run('bin/install.mjs', ['--dry-run', '--with-all', '--with-companion-skills'], { home });
   assert.deepEqual(readdirSync(home), []);
   assert.match(r.out, /settings\.json \(.*hooks\.UserPromptSubmit, hooks\.Notification, statusLine\)/);
+  assert.match(r.out, /npx skills@\d+\.\d+\.\d+ add mattpocock\/skills@tdd +\(https:\/\/github\.com\/mattpocock\/skills\)/, 'CLI com versão fixa e a origem visível');
 });
 
 test('a flag missing its value fails before doing anything (--vault --dry-run used to install for real)', () => {
@@ -194,4 +195,14 @@ test('another grill-me in ~/.claude/skills is kept (and survives --uninstall)', 
   assert.equal(readFileSync(join(home, '.agents', 'skills', 'grill-me', 'SKILL.md'), 'utf8'), readFileSync('skills/grill-me/SKILL.md', 'utf8'));
   assert.equal(run('bin/install.mjs', ['--uninstall'], { home }).status, 0);
   assert.match(readFileSync(theirs, 'utf8'), /de terceiros/);
+});
+
+test('SKILL.md só aponta para references que existem e os cenários de evals/ seguem o formato do skill-creator', () => {
+  const dir = join(REPO_ROOT, 'skills', 'muri-saver');
+  const links = [...readFileSync(join(dir, 'SKILL.md'), 'utf8').matchAll(/\]\((references\/[^)]+)\)/g)].map((m) => m[1]);
+  assert.ok(links.length >= 4);
+  for (const l of links) assert.ok(existsSync(join(dir, l)), l);
+  const evals = readJson(join(REPO_ROOT, 'evals', 'muri-saver.json'));
+  assert.equal(evals.skill_name, 'muri-saver');
+  for (const e of evals.evals) assert.ok(e.id && e.prompt && e.expected_output && Array.isArray(e.files), JSON.stringify(e).slice(0, 80));
 });

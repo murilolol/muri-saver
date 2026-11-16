@@ -118,7 +118,7 @@ node bin/install.mjs --with-all           # os três de uma vez
 | `--with-codex` | Força suporte a Codex CLI mesmo sem `~/.codex` detectado |
 | `--with-antigravity` | Força suporte a Antigravity mesmo sem `~/.gemini` detectado |
 | `--with-all` | Os dois acima de uma vez |
-| `--with-companion-skills` | Instala `find-skills`/`tdd`/`prototype`/`grill-with-docs` via `npx skills add` |
+| `--with-companion-skills` | Instala `find-skills`/`tdd`/`prototype`/`grill-with-docs` via `npx skills add` (CLI com versão fixa, ver [skills-companion](docs/skills-companion.md#versão-fixa-do-cli)) |
 | `--skip-claude-md` | Pula a criação do `CLAUDE.md` |
 | `--language <tag>` | Idioma das narrativas do vault (padrão `pt-BR`) |
 | `--plan <perfil>` | Perfil do plano do Claude: `pro`, `max`, `ultra`, `team`, `enterprise`, `api` ou `auto` (padrão: o salvo, ou o detectado) |

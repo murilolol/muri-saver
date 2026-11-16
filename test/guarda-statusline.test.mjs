@@ -158,6 +158,27 @@ test('status line: autoCompactWindow <= 33k não zera o ponto (piso na metade)',
   }
 });
 
+test('status line: branch de worktree (.git é arquivo gitdir:) e * só com mudança rastreada', { skip }, () => {
+  const { home } = setup();
+  const repo = join(home, 'repo');
+  const wt = join(home, 'wt');
+  mkdirSync(join(repo, '.git', 'worktrees', 'wt'), { recursive: true });
+  mkdirSync(join(wt, 'src'), { recursive: true });
+  writeFileSync(join(repo, '.git', 'worktrees', 'wt', 'HEAD'), 'ref: refs/heads/feature/x\n');
+  writeFileSync(join(wt, '.git'), `gitdir: ${join(repo, '.git', 'worktrees', 'wt')}\n`);
+  assert.match(statusline(home, { cwd: join(wt, 'src') }), /🌿 feature\/x(?!\*)/);
+
+  const git = (...a) => spawnSync('git', ['-c', 'user.email=t@example.com', '-c', 'user.name=t', '-c', 'commit.gpgsign=false', ...a], { cwd: join(home, 'real'), encoding: 'utf8' });
+  mkdirSync(join(home, 'real'));
+  if (git('init', '-q', '-b', 'main').status !== 0) return; // sem git no PATH
+  writeFileSync(join(home, 'real', 'a.txt'), '1');
+  git('add', 'a.txt');
+  git('commit', '-q', '-m', 'x');
+  assert.match(statusline(home, { cwd: join(home, 'real') }), /🌿 main(?!\*)/, 'repo limpo sem *');
+  writeFileSync(join(home, 'real', 'a.txt'), '2');
+  assert.match(statusline(home, { cwd: join(home, 'real') }), /🌿 main\*/);
+});
+
 test('usage-status: fuso do muri-saver.json, % fracionário arredondado e plano sem janela de 5h', { skip }, () => {
   const home = tempDir();
   mkdirSync(join(home, '.claude'));

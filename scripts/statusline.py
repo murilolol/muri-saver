@@ -23,6 +23,7 @@ import os
 import sys
 import shutil
 import socket
+import subprocess
 import time
 import importlib.util
 from datetime import datetime, timezone
@@ -119,31 +120,38 @@ def context_tier(pct_used, fracs):
 
 
 def get_git_info(cwd):
-    """Detector rápido de branch/dirty (mesma lógica do usage-status.py do AGY)."""
+    """Branch lida do HEAD (em worktree o .git é um arquivo `gitdir:`) e * com mudança rastreada."""
+    # shortcut: roda `git status -uno` a cada refresh, sem cache; cachear por HEAD/index se pesar em repo gigante.
     try:
         cur = os.path.abspath(cwd)
-        while cur:
-            git_dir = os.path.join(cur, ".git")
-            if os.path.isdir(git_dir):
-                head_file = os.path.join(git_dir, "HEAD")
-                if os.path.exists(head_file):
-                    with open(head_file, "r", encoding="utf-8", errors="ignore") as f:
-                        ref = f.read().strip()
-                    if ref.startswith("ref: refs/heads/"):
-                        branch = ref[len("ref: refs/heads/"):]
-                    elif len(ref) >= 7:
-                        branch = ref[:7]
-                    else:
-                        branch = "detached"
-                    dirty = ""
-                    try:
-                        index_file = os.path.join(git_dir, "index")
-                        if os.path.exists(index_file) and abs(os.path.getmtime(index_file) - os.path.getmtime(head_file)) > 1:
-                            dirty = "*"
-                    except Exception:
-                        pass
-                    return f"🌿 {branch}{dirty}"
-                break
+        while True:
+            dot_git = os.path.join(cur, ".git")
+            if os.path.exists(dot_git):
+                git_dir = dot_git
+                if os.path.isfile(dot_git):
+                    with open(dot_git, "r", encoding="utf-8", errors="ignore") as f:
+                        line = f.read().strip()
+                    if not line.startswith("gitdir:"):
+                        return None
+                    git_dir = os.path.join(cur, line[len("gitdir:"):].strip())
+                with open(os.path.join(git_dir, "HEAD"), "r", encoding="utf-8", errors="ignore") as f:
+                    ref = f.read().strip()
+                if ref.startswith("ref: refs/heads/"):
+                    branch = ref[len("ref: refs/heads/"):]
+                elif len(ref) >= 7:
+                    branch = ref[:7]
+                else:
+                    branch = "detached"
+                dirty = ""
+                try:
+                    r = subprocess.run(["git", "--no-optional-locks", "status", "--porcelain", "-uno"], cwd=cur,
+                                       capture_output=True, text=True, timeout=1,
+                                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+                    if r.returncode == 0 and r.stdout.strip():
+                        dirty = "*"
+                except Exception:
+                    pass
+                return f"🌿 {branch}{dirty}"
             parent = os.path.dirname(cur)
             if parent == cur:
                 break

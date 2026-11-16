@@ -21,6 +21,15 @@ in a read-only task (the diff is printed) · `64` recursion refused ·
 `75` the delegate's quota ran out → switch gemini↔codex or use a cheap
 subagent · `142` timeout.
 
+## Playbooks
+
+- **Scout-then-build**: unfamiliar code → `gemini --effort low` maps it
+  (path:line), then `codex --write` builds.
+- **Cascade**: mechanical change → `codex --write` plus the `Check:`; on
+  failure, one retry with the error in the brief.
+- **Review gate**: a read-only `codex` review only when the diff is over ~80
+  lines or touches security or money.
+
 ## Briefs
 
 - **Self-contained**: goal, paths, constraints and what "done" means. The

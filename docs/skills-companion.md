@@ -103,6 +103,50 @@ outras skills companheiras: documentação aqui, código na fonte oficial.
 
 <br>
 
+## Versão fixa do CLI
+
+O `--with-companion-skills` do instalador roda `npx -y skills@1.7.4 add <pacote> -y`,
+com o CLI numa versão fixa (um `npx skills` sem versão roda o que estiver
+publicado no dia) e mostra o repositório de origem de cada pacote antes de
+instalar. As skills em si vêm da fonte do autor, então recebem as atualizações
+dele. Para subir o CLI, troque `SKILLS_CLI` em `bin/install.mjs`.
+
+<br>
+
+## Podar o que você não usa (`skillOverrides`)
+
+Cada skill instalada entra na lista que o Claude Code manda para o modelo
+(nome e descrição), em toda sessão. Com dezenas de skills, isso pesa no
+contexto mesmo sem nenhuma ser usada. O Claude Code resolve isso sem mexer na
+SKILL.md, com `skillOverrides` no `settings.json`
+([doc oficial](https://code.claude.com/docs/en/skills#override-skill-visibility-from-settings)):
+
+```json
+{
+  "skillOverrides": {
+    "skill-que-nunca-uso": "off",
+    "skill-que-so-chamo-na-mao": "user-invocable-only",
+    "skill-rara": "name-only"
+  }
+}
+```
+
+| Valor | O modelo vê | No menu `/` |
+|---|---|---|
+| `"on"` (ou ausente) | nome e descrição | sim |
+| `"name-only"` | só o nome | sim |
+| `"user-invocable-only"` | nada | sim |
+| `"off"` | nada | não |
+
+O menu `/skills` grava isso para você: selecione a skill, `Espaço` troca o
+estado e `Esc` salva em `.claude/settings.local.json` (para valer em todo
+projeto, mova a chave para `~/.claude/settings.json`). A chave é o nome da
+skill; skills de plugin não obedecem `skillOverrides` e são geridas pelo
+`/plugin`. O instalador do muri-saver não mexe nessa chave: quais skills você
+usa é decisão sua. Um bom momento para podar é a revisão periódica de consumo.
+
+<br>
+
 ## Se um `npx skills add` falhar
 
 O comando `@<nome>` às vezes precisa do caminho completo dentro do

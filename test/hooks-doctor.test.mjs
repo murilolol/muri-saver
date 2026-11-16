@@ -1,8 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
-import { run, tempDir, fixtureHome, FIXTURE_HOME, REPO_ROOT } from './_helpers.mjs';
+import { spawnSync } from 'node:child_process';
+import { run, tempDir, fixtureHome, cleanEnv, FIXTURE_HOME, REPO_ROOT } from './_helpers.mjs';
 
 const TRANSCRIPT = join(FIXTURE_HOME, '.claude', 'projects', '-home-dev-demo-app', '0f1e2d3c-1111-4aaa-8bbb-222222222222.jsonl');
 
@@ -106,6 +107,40 @@ test('doctor: ai-memory é opcional (AVISO), mostra a versão, confere o schema 
   out = doctor(fake);
   assert.match(out, /OK +binário ai-memory — .*\(v3\.2\.0\)/);
   assert.match(out, /OK +schema do ai-memory/);
+});
+
+test('notify só chama o notificador do SO fora do Orca e sem MURI_NOTIFY=0, sem aspas na mensagem', { skip: process.platform === 'win32' && 'sem toast no Windows' }, () => {
+  const home = tempDir();
+  const fakeBin = join(home, 'bin');
+  const marker = join(home, 'notificou.txt');
+  mkdirSync(fakeBin);
+  for (const name of ['osascript', 'notify-send']) {
+    writeFileSync(join(fakeBin, name), `#!/bin/sh\nprintf '%s\\n' "$@" > "${marker}"\n`, { mode: 0o755 });
+  }
+  const notify = (env) => run('hooks/notify.mjs', [], {
+    home, input: JSON.stringify({ message: 'Precisa de "você"' }), env: { PATH: `${fakeBin}:${process.env.PATH}`, ORCA_PANE_KEY: '', ...env },
+  });
+  assert.equal(notify({ MURI_NOTIFY: '0' }).status, 0);
+  assert.equal(notify({ ORCA_PANE_KEY: 'pane-1' }).status, 0);
+  assert.equal(existsSync(marker), false, 'MURI_NOTIFY=0 e o Orca não notificam');
+  assert.equal(notify({}).status, 0);
+  const sent = readFileSync(marker, 'utf8');
+  assert.match(sent, /Precisa de você/);
+  assert.doesNotMatch(sent, /"você"/);
+});
+
+test('ensure-server nunca falha a sessão e só avisa quando ela começa na home', () => {
+  const home = realpathSync(tempDir()); // o cwd do processo vem resolvido (/var → /private/var no macOS)
+  mkdirSync(join(home, 'projeto'));
+  const start = (cwd) => spawnSync(process.execPath, [join(REPO_ROOT, 'hooks', 'ai-memory-ensure-server.mjs')], {
+    cwd, encoding: 'utf8', timeout: 15000, env: cleanEnv(home, { MURI_SAVER_AI_MEMORY_BIN: join(home, 'sem-ai-memory') }),
+  });
+  const naHome = start(home);
+  assert.equal(naHome.status, 0, naHome.stderr);
+  assert.match(JSON.parse(naHome.stdout).hookSpecificOutput.additionalContext, /começou na home/);
+  const noProjeto = start(join(home, 'projeto'));
+  assert.equal(noProjeto.status, 0, noProjeto.stderr);
+  assert.equal(noProjeto.stdout, '');
 });
 
 test('Stop hooks report a blocked vault path without blocking the agent', () => {

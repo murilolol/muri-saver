@@ -1,4 +1,4 @@
-import { mkdtempSync, cpSync, writeFileSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, cpSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import os from 'node:os';
 import { spawnSync, spawn } from 'node:child_process';
@@ -8,8 +8,18 @@ export const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const FIXTURES = join(REPO_ROOT, 'test', 'fixtures');
 export const FIXTURE_HOME = join(FIXTURES, 'home');
 
+// node --test roda cada arquivo num processo: os temporários somem quando ele sai.
+const TEMP_DIRS = [];
+process.on('exit', () => {
+  for (const d of TEMP_DIRS) {
+    try { rmSync(d, { recursive: true, force: true }); } catch {}
+  }
+});
+
 export function tempDir(prefix = 'muri-saver-test-') {
-  return mkdtempSync(join(os.tmpdir(), prefix));
+  const dir = mkdtempSync(join(os.tmpdir(), prefix));
+  TEMP_DIRS.push(dir);
+  return dir;
 }
 
 // A writable copy of the fixture home, so tests never touch the real one.

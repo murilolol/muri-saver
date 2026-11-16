@@ -452,13 +452,16 @@ const COMPANION_SKILLS = [
   'mattpocock/skills@grill-with-docs',
 ];
 
+// CLI fixado: um `npx skills` sem versão roda o que estiver publicado no dia.
+const SKILLS_CLI = 'skills@1.7.4';
+
 function installCompanionSkills(dryRun) {
-  log('Skills companheiras de terceiros via `npx skills add` (créditos e licenças em docs/skills-companion.md):');
+  log(`Skills companheiras de terceiros via \`npx ${SKILLS_CLI} add\` (créditos e licenças em docs/skills-companion.md):`);
   for (const pkg of COMPANION_SKILLS) {
-    log(`  npx skills add ${pkg}`);
+    log(`  npx ${SKILLS_CLI} add ${pkg}   (https://github.com/${pkg.split('@')[0]})`);
     if (dryRun) continue;
     try {
-      execSync(`npx skills add ${pkg} -y`, { stdio: 'inherit' });
+      execSync(`npx -y ${SKILLS_CLI} add ${pkg} -y`, { stdio: 'inherit' });
     } catch {
       log(`  AVISO: falhou instalar ${pkg} — rode manualmente depois, ou "npx skills find <nome> --owner <owner>".`);
     }
