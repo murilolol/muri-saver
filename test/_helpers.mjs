@@ -41,10 +41,12 @@ const LEAKY_ENV = [
 // Testes nunca registram jobs de verdade nem chamam um LLM: o agendador roda em
 // modo "dry" (só grava os arquivos) e a cadeia de narrativa começa desligada.
 // Um teste que precisa de LLM passa um provedor falso explicitamente.
-// O `claude` aponta para um caminho que não existe: a detecção do plano não lê a conta real.
+// `claude` e `ai-memory` apontam para caminhos que não existem: a detecção do plano não lê a
+// conta real e o doctor não roda o ai-memory instalado na máquina.
 export const HERMETIC_ENV = {
   MURI_SAVER_SCHEDULER: 'dry', MURI_SAVER_NARRATIVE_CHAIN: 'off', MURI_SAVER_AIM_CHAIN: 'off',
   MURI_SAVER_CLAUDE_BIN: join(REPO_ROOT, 'test', 'fixtures', 'sem-claude'),
+  MURI_SAVER_AI_MEMORY_BIN: join(REPO_ROOT, 'test', 'fixtures', 'sem-ai-memory'),
 };
 
 export function cleanEnv(home, env = {}) {

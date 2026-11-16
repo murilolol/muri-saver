@@ -463,7 +463,7 @@ function installCompanionSkills(dryRun) {
     try {
       execSync(`npx -y ${SKILLS_CLI} add ${pkg} -y`, { stdio: 'inherit' });
     } catch {
-      log(`  AVISO: falhou instalar ${pkg} — rode manualmente depois, ou "npx skills find <nome> --owner <owner>".`);
+      log(`  AVISO: falhou instalar ${pkg} — rode manualmente depois, ou "npx ${SKILLS_CLI} find <nome> --owner <owner>".`);
     }
   }
 }

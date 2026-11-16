@@ -118,8 +118,8 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
   `launchctl bootout` e o `mv ... .disabled` de cada um. Ele só mostra: não roda nada.
 - `vault-backfill`: nota apagada do vault sai da fila e vai para as falhas sem chamar modelo (antes
   o `readFileSync` derrubava a rodada). Rodadas que param no limite são contadas (`stuckRounds`,
-  zera a cada narrativa nova); com 36 seguidas (~3 dias) o job se desativa, porque aí é a cadeia
-  quebrada e não a cota.
+  zera a cada narrativa nova); com 96 seguidas (~8 dias, mais que a janela de 7 dias da cota
+  semanal) o job se desativa, porque aí é a cadeia quebrada e não a cota.
 - Nota viva: o lock do worker vale o orçamento da cadeia (20 min) mais 10 min do último elo e é
   renovado a cada passada; antes expirava em 12 min, com a cadeia ainda rodando, e o Stop seguinte
   abria um segundo worker. O faxineiro só mata o worker com mais de 1 h
@@ -144,16 +144,21 @@ Todas as mudanças relevantes do muri-saver. Formato inspirado em
 - `ai-memory-obsidian-setup.md`: seção "Servidor, recuperação e upgrade" com o `ai-memory setup`
   (serviço de usuário; reescreve hooks, então `--update` depois), o `ai-memory recover` e o roteiro
   `backup` → `upgrade` → `--update` → `doctor`, mais a volta para a 3.2.0. Resumo no bloco em inglês.
+  O parágrafo do handoff do SessionStart voltou para a seção 3 (histórico), fora do upgrade.
   INSTALL-AI lista as checagens novas do `doctor`.
 
 ### Qualidade e skills
 - Testes novos: `notify` (MURI_NOTIFY=0 e Orca não notificam, aspas saem da mensagem),
   `ai-memory-ensure-server` (nunca falha a sessão, avisa só quando ela começa na home), git da
-  status line, links da SKILL.md para `references/` e formato de `evals/`.
+  status line, links da SKILL.md para `references/` e formato de `evals/`. O da status line usa
+  um worktree de verdade (`git worktree add`), sem `init -b` (git < 2.28), e pula só sem git no
+  PATH; o do backfill confere que o job foi desativado no agendador.
+- Os testes apontam `MURI_SAVER_AI_MEMORY_BIN` para um caminho que não existe: o `doctor` não roda
+  o ai-memory instalado na máquina nem lê o banco dele.
 - Os testes apagam os diretórios temporários ao sair (antes, dezenas ficavam no `$TMPDIR` a cada
   `npm test`).
 - `--with-companion-skills` roda `npx -y skills@1.7.4 add` (CLI com versão fixa) e mostra o repo de
-  origem de cada pacote.
+  origem de cada pacote. Se um pacote falhar, a dica `npx skills@1.7.4 find` usa a mesma versão.
 - SKILL.md do muri-saver: cabeçalho na 3.2, sem a repetição do template (guarda) nem da
   `delegation.md` (os playbooks foram para a referência), gatilhos "se instalada" e a dica de
   `skillOverrides` na revisão periódica.

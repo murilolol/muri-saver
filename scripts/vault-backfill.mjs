@@ -38,9 +38,10 @@ const GEMINI_DIR = expandHome(CFG.paths?.geminiDir) || join(HOME, '.gemini');
 const GAP_MS = 60 * 1000;
 const MAX_ATTEMPTS = 2;
 const EXIT_RATE_LIMITED = 75;
-// Rodadas seguidas paradas no limite sem nenhuma narrativa nova (~3 dias a cada
-// 2h): passa da cota diária, então é a cadeia quebrada (ex.: agy sem login).
-const MAX_STUCK_ROUNDS = 36;
+// Rodadas seguidas paradas no limite sem nenhuma narrativa nova (~8 dias a cada
+// 2h): passa da janela da cota semanal (7 dias), então é a cadeia quebrada
+// (ex.: agy sem login) e não cota esgotada.
+const MAX_STUCK_ROUNDS = 96;
 const NARR_START = '<!-- auto-narrativa:start -->';
 
 const args = process.argv.slice(2);

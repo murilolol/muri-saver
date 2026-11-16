@@ -74,9 +74,10 @@ Uma trava (`.ai-memory-reprocess.pid`) impede duas instâncias ao mesmo tempo, p
 exemplo o job e uma execução manual.
 
 O `vault-backfill` também tira da fila uma nota que sumiu do vault (vai para as
-falhas, sem chamar modelo). Se 36 rodadas seguidas (~3 dias) param no limite sem
-nenhuma narrativa nova, a cadeia está quebrada e não sem cota (ex.: `agy` sem
-login): o job se desativa e o log manda conferir com o `doctor`.
+falhas, sem chamar modelo). Se 96 rodadas seguidas (~8 dias, mais que a janela de
+7 dias da cota semanal) param no limite sem nenhuma narrativa nova, a cadeia está
+quebrada e não sem cota (ex.: `agy` sem login): o job se desativa e o log manda
+conferir com o `doctor`.
 
 ## Logs
 

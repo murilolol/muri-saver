@@ -73,6 +73,10 @@ somente em um par workspace/project confirmado e com termos do assunto.
 Quando apropriado, uma busca global pode descobrir o escopo; omita
 workspace/project/scopes nessa chamada. O nome `muri` não é um padrão público.
 
+Se SessionStart já entregou um handoff, use esse conteúdo: ele normalmente
+já foi consumido. Sem esse bloco, liste os handoffs no escopo confirmado e
+aceite o ID exato. Grave páginas duráveis manualmente só sob pedido explícito.
+
 ## 4. Roteamento curto, detalhes sob demanda
 
 O ai-memory 3.2.x oferece preview das instruções compactas e das skills
@@ -177,10 +181,6 @@ passos). Se o `doctor` disser "schema do ai-memory diferente do esperado", os
 jobs que leem o banco podem falhar nessa versão: volte com
 `ai-memory upgrade --version 3.2.0` (ou `ai-memory restore` do backup) e abra
 uma issue.
-
-Se SessionStart já entregou um handoff, use esse conteúdo: ele normalmente
-já foi consumido. Sem esse bloco, liste os handoffs no escopo confirmado e
-aceite o ID exato. Grave páginas duráveis manualmente só sob pedido explícito.
 
 ## English quick reference
 

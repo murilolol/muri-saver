@@ -101,13 +101,14 @@ test('vault-backfill tira da fila a nota apagada sem chamar modelo e desiste da 
   const queueFile = join(stateDir, 'backfill.json');
   const gone = join(vault, 'claude', 'sessions', 'apagada.md');
   const item = (note) => ({ agent: 'claude', note, sessionId: SID, transcript: TRANSCRIPT, cwd: home, attempts: 0 });
-  writeFile(queueFile, JSON.stringify({ queue: [item(gone), item(notePath)], done: [], failed: [], skipped: {}, stuckRounds: 34 }));
+  writeFile(queueFile, JSON.stringify({ queue: [item(gone), item(notePath)], done: [], failed: [], skipped: {}, stuckRounds: 94 }));
+  const plist = writeFile(join(home, 'Library', 'LaunchAgents', 'com.muri-saver.vault-backfill.plist'), '<plist/>');
   const backfill = () => run('scripts/vault-backfill.mjs', [], {
     home,
     env: {
       MURI_SAVER_STATE_DIR: stateDir, MURI_SAVER_RUNTIME_DIR: home, MURI_SAVER_NOW: '2026-09-20T13:20:00Z',
       MURI_SAVER_NARRATIVE_CHAIN: 'agy:fake-model', MURI_SAVER_AGY_BIN: FAKE_AGY, FAKE_AGY_MODE: 'quota',
-      MURI_SAVER_COOLDOWN_FILE: join(home, 'cooldowns.json'),
+      MURI_SAVER_COOLDOWN_FILE: join(home, 'cooldowns.json'), MURI_SAVER_PLATFORM: 'darwin',
     },
   });
   let r = backfill();
@@ -116,9 +117,11 @@ test('vault-backfill tira da fila a nota apagada sem chamar modelo e desiste da 
   let state = JSON.parse(readFileSync(queueFile, 'utf8'));
   assert.deepEqual(state.failed, [gone]);
   assert.deepEqual(state.queue.map((i) => i.note), [notePath], 'a nota com limite fica na fila');
-  assert.equal(state.stuckRounds, 35);
+  assert.equal(state.stuckRounds, 95);
+  assert.ok(existsSync(plist), 'abaixo do limite o job continua');
   r = backfill();
-  assert.match(r.out, /36 rodadas seguidas paradas no limite/);
+  assert.match(r.out, /96 rodadas seguidas paradas no limite/);
+  assert.ok(existsSync(`${plist}.disabled`) && !existsSync(plist), 'o agendador (dry) desativou o job');
   state = JSON.parse(readFileSync(queueFile, 'utf8'));
   assert.equal(state.stuckRounds, 0);
   assert.equal(state.queue.length, 1);
